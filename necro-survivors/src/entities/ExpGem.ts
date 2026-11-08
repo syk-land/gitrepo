@@ -21,8 +21,8 @@ export class ExpGem {
     // 색상 결정: 10 미만 청록, 50 미만 황금, 50 이상 보라/루비
     const color = this.getColorForExp(exp);
 
-    this.glowSprite = scene.add.circle(x, y, 7, color, 0.35);
-    this.sprite = scene.add.circle(x, y, 4, color, 1.0);
+    this.glowSprite = scene.add.circle(x, y, 10, color, 0.4).setDepth(11);
+    this.sprite = scene.add.circle(x, y, 5, color, 1.0).setDepth(12);
   }
 
   private getColorForExp(exp: number): number {

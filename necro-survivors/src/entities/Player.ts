@@ -32,9 +32,11 @@ export class Player implements ISkillCaster {
     this.x = x;
     this.y = y;
 
-    // 시작 스킬 세팅: 본 스피어 Lv.1 기본 장착
+    // 시작 스킬 세팅: 본 스피어 Lv.1 + 해골 병사 소환 Lv.1 기본 장착
     this.activeSkills.set('necro_spear', 1);
     this.skillCooldowns.set('necro_spear', 0);
+    this.activeSkills.set('summon_skeleton', 1);
+    this.skillCooldowns.set('summon_skeleton', 0);
 
     const initialStats = this.getEffectiveStats();
     this.maxHp = initialStats.maxHp;

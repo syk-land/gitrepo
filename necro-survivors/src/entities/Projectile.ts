@@ -25,6 +25,8 @@ export class Projectile {
   private hitEnemies = new Set<Enemy>();
   private tickTimer: number = 0;
 
+  private scene: Phaser.Scene;
+
   constructor(
     scene: Phaser.Scene,
     textureKey: string,
@@ -43,6 +45,7 @@ export class Projectile {
     orbitCaster?: ISkillCaster,
     orbitOffset: number = 0
   ) {
+    this.scene = scene;
     this.x = x;
     this.y = y;
     this.behavior = behavior;
@@ -145,6 +148,9 @@ export class Projectile {
       const dist = Math.sqrt(dx * dx + dy * dy) || 1;
 
       enemy.takeDamage(this.damage, (dx / dist) * this.knockback, (dy / dist) * this.knockback);
+      if (typeof (this.scene as any).showDamageText === 'function') {
+        (this.scene as any).showDamageText(enemy.x, enemy.y - 12, `${this.damage}`, 0xf5ede2);
+      }
 
       if (this.statusEffect && Math.random() <= this.statusEffect.chance) {
         enemy.applyStatus(this.statusEffect.type, this.statusEffect.duration, this.statusEffect.value);
@@ -182,6 +188,9 @@ export class Projectile {
 
       hitList.add(nextTarget);
       nextTarget.takeDamage(this.damage, 0, 0);
+      if (typeof (this.scene as any).showDamageText === 'function') {
+        (this.scene as any).showDamageText(nextTarget.x, nextTarget.y - 12, `${this.damage}`, 0xbf55ec);
+      }
       if (this.statusEffect && Math.random() <= this.statusEffect.chance) {
         nextTarget.applyStatus(this.statusEffect.type, this.statusEffect.duration, this.statusEffect.value);
       }

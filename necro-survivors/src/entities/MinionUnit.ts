@@ -21,6 +21,8 @@ export class MinionUnit implements ISkillCaster {
   private facingDir: Vector2 = { x: 1, y: 0 };
   private ownerGetter: () => { x: number; y: number; stats: CombatStats; facing: Vector2 };
 
+  private scene: Phaser.Scene;
+
   constructor(
     scene: Phaser.Scene,
     def: MinionDef,
@@ -29,6 +31,7 @@ export class MinionUnit implements ISkillCaster {
     orbitIndex: number,
     ownerGetter: () => { x: number; y: number; stats: CombatStats; facing: Vector2 }
   ) {
+    this.scene = scene;
     this.def = def;
     this.x = x;
     this.y = y;
@@ -110,13 +113,22 @@ export class MinionUnit implements ISkillCaster {
   public triggerCorpseExplosion(burstDmg: number, grid: SpatialHashGrid<Enemy>): void {
     if (this.state !== 'ALIVE') return;
 
+    // 대폭발 시각 이펙트
+    if (typeof (this.scene as any).createNovaVFX === 'function') {
+      (this.scene as any).createNovaVFX(this.x, this.y, 160, 0xff5533);
+    }
+
     // 주변 적들에게 대폭발 피해
     const enemies = grid.queryRadius(this.x, this.y, 160);
     for (const enemy of enemies) {
+      if (!enemy.active) continue;
       const dx = enemy.x - this.x;
       const dy = enemy.y - this.y;
       const dist = Math.sqrt(dx * dx + dy * dy) || 1;
       enemy.takeDamage(burstDmg, (dx / dist) * 75, (dy / dist) * 75);
+      if (typeof (this.scene as any).showDamageText === 'function') {
+        (this.scene as any).showDamageText(enemy.x, enemy.y - 15, `💥 ${burstDmg}`, 0xff5533);
+      }
     }
 
     // 자폭 후 통상 쿨타임의 절반인 3초 만에 즉시 부활
@@ -175,6 +187,9 @@ export class MinionUnit implements ISkillCaster {
           const stats = this.getEffectiveStats();
           const dmg = Math.round(stats.damageMul * 35);
           nearestEnemy.takeDamage(dmg, (dx / dist) * 35, (dy / dist) * 35);
+          if (typeof (this.scene as any).showDamageText === 'function') {
+            (this.scene as any).showDamageText(nearestEnemy.x, nearestEnemy.y - 12, `${dmg}`, 0xffd000);
+          }
         }
 
         // 적을 몸으로 밀어내며 플레이어 보호 (바리케이드 물리)

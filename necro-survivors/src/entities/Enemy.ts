@@ -26,6 +26,8 @@ export class Enemy implements SpatialEntity {
   public bleedTimer: number = 0;
   public bleedDps: number = 0;
 
+  public onKilled?: (enemy: Enemy) => void;
+
   constructor(
     scene: Phaser.Scene,
     textureKey: string,
@@ -38,7 +40,8 @@ export class Enemy implements SpatialEntity {
     exp: number,
     gold: number,
     isNamed: boolean = false,
-    isBoss: boolean = false
+    isBoss: boolean = false,
+    onKilled?: (enemy: Enemy) => void
   ) {
     this.x = x;
     this.y = y;
@@ -51,6 +54,7 @@ export class Enemy implements SpatialEntity {
     this.goldValue = gold;
     this.isNamed = isNamed;
     this.isBoss = isBoss;
+    this.onKilled = onKilled;
 
     this.sprite = scene.add.sprite(x, y, textureKey);
     // 표시 크기 조정
@@ -80,8 +84,12 @@ export class Enemy implements SpatialEntity {
     this.flashTimer = 0.06;
 
     if (this.hp <= 0) {
+      this.hp = 0;
       this.active = false;
       this.sprite.setVisible(false);
+      if (this.onKilled) {
+        this.onKilled(this);
+      }
       return true; // 처치됨
     }
     return false;
@@ -138,8 +146,12 @@ export class Enemy implements SpatialEntity {
       this.bleedTimer -= dt;
       this.hp -= this.bleedDps * dt * 50;
       if (this.hp <= 0) {
+        this.hp = 0;
         this.active = false;
         this.sprite.setVisible(false);
+        if (this.onKilled) {
+          this.onKilled(this);
+        }
         return;
       }
     }

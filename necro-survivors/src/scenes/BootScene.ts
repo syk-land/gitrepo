@@ -3,6 +3,8 @@ import { REGIONS_DATA } from '../data/regionsData';
 import { MINIONS_DATA } from '../data/minionsData';
 import { ALL_SKILLS_MAP } from '../data/skillsData';
 
+import { MapTextureGenerator } from '../utils/MapTextureGenerator';
+
 export class BootScene extends Phaser.Scene {
   constructor() {
     super('BootScene');
@@ -91,6 +93,7 @@ export class BootScene extends Phaser.Scene {
   }
 
   create(): void {
+    MapTextureGenerator.generateAll(this);
     this.scene.start('HubScene');
   }
 }

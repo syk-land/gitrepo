@@ -29,6 +29,7 @@ export class BattleScene extends Phaser.Scene {
   public isPaused: boolean = false;
   public killCount: number = 0;
   public earnedGold: number = 0;
+  public recentCorpses: { x: number; y: number; time: number }[] = [];
 
   // 조이스틱 이동 입력 벡터 (UIScene에서 매 프레임 전달)
   public inputVector = { x: 0, y: 0 };
@@ -50,6 +51,7 @@ export class BattleScene extends Phaser.Scene {
     this.enemies = [];
     this.projectiles = [];
     this.expGems = [];
+    this.recentCorpses = [];
     this.evolutionChest = null;
   }
 
@@ -57,8 +59,11 @@ export class BattleScene extends Phaser.Scene {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
 
-    // 1. 360도 무한 타일 배경 (Section 3)
-    this.tileBg = this.add.tileSprite(0, 0, width, height, `battle_bg_${this.regionId}`);
+    // 1. 360도 무한 타일 배경 (뱀서 전용 맵별 심리스 타일 텍스처)
+    const textureKey = this.textures.exists(`battle_tile_${this.regionId}`)
+      ? `battle_tile_${this.regionId}`
+      : `battle_bg_${this.regionId}`;
+    this.tileBg = this.add.tileSprite(width / 2, height / 2, width, height, textureKey);
     this.tileBg.setOrigin(0.5, 0.5);
     this.tileBg.setScrollFactor(0);
     this.tileBg.setDepth(0);
@@ -66,6 +71,9 @@ export class BattleScene extends Phaser.Scene {
     // 2. 플레이어 생성 및 카메라 추적
     this.player = new Player(this, 0, 0);
     this.cameras.main.startFollow(this.player.sprite, true, 0.1, 0.1);
+
+    // 기본 사역마(해골 병사 2구) 즉시 소환 배치
+    this.syncMinionCount('skeleton_warrior', 2);
 
     // 3. 웨이브 스포너 초기화
     this.waveSpawner = new WaveSpawner(
@@ -93,6 +101,14 @@ export class BattleScene extends Phaser.Scene {
     this.player.move(this.inputVector.x, this.inputVector.y, dt);
     this.player.update(dt);
 
+    // 시체 수명 갱신 (시체 폭발 연쇄용)
+    for (let i = this.recentCorpses.length - 1; i >= 0; i--) {
+      this.recentCorpses[i].time -= dt;
+      if (this.recentCorpses[i].time <= 0) {
+        this.recentCorpses.splice(i, 1);
+      }
+    }
+
     // 3. 몬스터 공간 해싱 그리드 재구성 (매 프레임 고속 재할당)
     this.spatialGrid.clear();
     for (const enemy of this.enemies) {
@@ -108,6 +124,7 @@ export class BattleScene extends Phaser.Scene {
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const enemy = this.enemies[i];
       if (!enemy.active) {
+        enemy.destroy();
         this.enemies.splice(i, 1);
         continue;
       }
@@ -256,10 +273,23 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
-  // 적 처치 시 보석/마력석 드랍 및 상자 드랍
+  // 적 처치 시 보석/마력석 드랍 및 시체 저장, 상자 드랍
   public onEnemyKilled(enemy: Enemy): void {
     this.killCount++;
-    this.showDamageText(enemy.x, enemy.y - 20, `${this.killCount}`, 0x00ffaa);
+    this.showDamageText(enemy.x, enemy.y - 20, `💀 ${this.killCount}`, 0x00ffaa);
+
+    // 시체 좌표 등록 (시체 폭발 연쇄 탄약)
+    this.recentCorpses.push({ x: enemy.x, y: enemy.y, time: 20 });
+    if (this.recentCorpses.length > 35) this.recentCorpses.shift();
+
+    // 바닥 혈흔/뼈 잔해 연출 (depth: 2)
+    const splat = this.add.circle(enemy.x, enemy.y, 8, 0x4a1218, 0.6).setDepth(2);
+    this.tweens.add({
+      targets: splat,
+      alpha: 0,
+      duration: 3500,
+      onComplete: () => splat.destroy(),
+    });
 
     // 보석 생성 및 300개 초과 시 병합 (Section 5.3)
     if (this.expGems.length > 250) {
@@ -337,7 +367,7 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
-  // 레벨업 모달 트리거
+  // 레벨업 모달 트리러
   public triggerLevelUp(): void {
     SoundEngine.getInstance().levelUp();
     this.isPaused = true;
@@ -350,28 +380,161 @@ export class BattleScene extends Phaser.Scene {
     if (this.player.ultCooldown > 0) return;
 
     this.player.ultCooldown = this.player.ultMaxCooldown;
-    this.cameras.main.shake(180, 0.012);
+    const stats = this.player.getEffectiveStats();
 
     if (this.player.isJinBlizzard()) {
-      // 각성 궁극기: ❄️ 진(眞) 블리자드 (화면 전체 3초 완전 빙결 + 칠흑 얼음창 폭격)
-      SoundEngine.getInstance().playTone(880, 'sawtooth', 0.45, 0.25, 220);
+      // 각성 궁극기: ❄️ 진(眞) 블리자드 (화면 전체 4초 완전 빙결 + 혹한 얼음창 폭격 + 연쇄 폭발)
+      this.cameras.main.shake(350, 0.025);
+      this.cameras.main.flash(200, 80, 220, 255);
+      SoundEngine.getInstance().playTone(960, 'sawtooth', 0.6, 0.35, 180);
+
+      const blizzardDmg = Math.round(stats.damageMul * 480);
       for (const enemy of this.enemies) {
         if (!enemy.active) continue;
-        enemy.applyStatus('freeze', 3.0);
-        enemy.takeDamage(450, 0, 0);
+        enemy.applyStatus('freeze', 4.0);
+        enemy.takeDamage(blizzardDmg, 0, 0);
+        this.showDamageText(enemy.x, enemy.y - 15, `❄️ ${blizzardDmg}`, 0x00f0ff);
       }
-      // 시체 폭발도 동시 연쇄 발동
+
+      // 화면 곳곳에 거대 얼음창 8개 낙하 VFX
+      for (let i = 0; i < 8; i++) {
+        const angle = (i * Math.PI * 2) / 8;
+        const ix = this.player.x + Math.cos(angle) * 160;
+        const iy = this.player.y + Math.sin(angle) * 160;
+        this.spawnIceSpearVFX(ix, iy);
+      }
+
+      // 사역마 및 필드 시체 동시 연쇄 폭발
       this.explodeAllMinions();
+      this.explodeCorpsesChain();
     } else {
-      // 기본 필살기: 💥 시체 폭발
+      // 기본 필살기: 💥 사령 시체 폭발 (사령 충격파 + 필드 시체 연쇄 + 소환수 자폭)
+      this.cameras.main.shake(300, 0.02);
+      this.cameras.main.flash(180, 220, 30, 40);
       SoundEngine.getInstance().corpseBurst();
+
+      // 1. 사령군주 본체 중심 강력 암흑 충격파
+      this.createNovaVFX(this.player.x, this.player.y, 250, 0xff2244);
+      const novaEnemies = this.spatialGrid.queryRadius(this.player.x, this.player.y, 250);
+      const novaDmg = Math.round(stats.damageMul * 320);
+      for (const enemy of novaEnemies) {
+        if (!enemy.active) continue;
+        const dx = enemy.x - this.player.x;
+        const dy = enemy.y - this.player.y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        enemy.takeDamage(novaDmg, (dx / dist) * 120, (dy / dist) * 120);
+        this.showDamageText(enemy.x, enemy.y - 15, `💥 ${novaDmg}`, 0xff3344);
+      }
+
+      // 2. 필드 시체 연쇄 폭발
+      this.explodeCorpsesChain();
+
+      // 3. 소환수 자폭 돌격 폭발
       this.explodeAllMinions();
     }
   }
 
+  // 필드 시체 연쇄 폭발 (최대 10구 순차 폭발)
+  public explodeCorpsesChain(): void {
+    const stats = this.player.getEffectiveStats();
+    const burstDmg = Math.round(stats.damageMul * 260);
+
+    const corpsesToExplode = this.recentCorpses
+      .filter((c) => {
+        const dx = c.x - this.player.x;
+        const dy = c.y - this.player.y;
+        return dx * dx + dy * dy <= 480 * 480;
+      })
+      .slice(0, 10);
+
+    // 시체 소진
+    this.recentCorpses = this.recentCorpses.filter((c) => !corpsesToExplode.includes(c));
+
+    corpsesToExplode.forEach((corpse, idx) => {
+      this.time.delayedCall(idx * 25, () => {
+        SoundEngine.getInstance().playTone(180 + idx * 25, 'triangle', 0.2, 0.15);
+        this.createNovaVFX(corpse.x, corpse.y, 160, 0xd42828);
+
+        const hits = this.spatialGrid.queryRadius(corpse.x, corpse.y, 160);
+        for (const enemy of hits) {
+          if (!enemy.active) continue;
+          const dx = enemy.x - corpse.x;
+          const dy = enemy.y - corpse.y;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+          enemy.takeDamage(burstDmg, (dx / dist) * 80, (dy / dist) * 80);
+          this.showDamageText(enemy.x, enemy.y - 15, `💥 ${burstDmg}`, 0xff5533);
+        }
+      });
+    });
+  }
+
+  // 폭발 팽창 충격파 및 파편 비산 VFX
+  public createNovaVFX(x: number, y: number, maxRadius: number, color: number): void {
+    // 팽창 링 그래픽
+    const ring = this.add.graphics().setDepth(24);
+    ring.lineStyle(4, color, 0.9);
+    ring.strokeCircle(x, y, 16);
+
+    const core = this.add.circle(x, y, 24, color, 0.6).setDepth(24);
+
+    this.tweens.add({
+      targets: core,
+      scale: maxRadius / 24,
+      alpha: 0,
+      duration: 350,
+      ease: 'Quad.easeOut',
+      onComplete: () => core.destroy(),
+    });
+
+    this.tweens.addCounter({
+      from: 16,
+      to: maxRadius,
+      duration: 350,
+      ease: 'Quad.easeOut',
+      onUpdate: (tween) => {
+        const curR = tween.getValue() || 16;
+        ring.clear();
+        ring.lineStyle(Math.max(1, 4 * (1 - curR / maxRadius)), color, 0.9 * (1 - curR / maxRadius));
+        ring.strokeCircle(x, y, curR);
+      },
+      onComplete: () => ring.destroy(),
+    });
+
+    // 12개 비산 파편
+    for (let i = 0; i < 12; i++) {
+      const angle = (i * Math.PI * 2) / 12 + Math.random() * 0.4;
+      const dist = Phaser.Math.Between(maxRadius * 0.4, maxRadius);
+      const spark = this.add.circle(x, y, Phaser.Math.Between(2, 4), color, 0.9).setDepth(25);
+      this.tweens.add({
+        targets: spark,
+        x: x + Math.cos(angle) * dist,
+        y: y + Math.sin(angle) * dist,
+        alpha: 0,
+        duration: Phaser.Math.Between(250, 400),
+        ease: 'Cubic.easeOut',
+        onComplete: () => spark.destroy(),
+      });
+    }
+  }
+
+  // 혹한의 얼음창 투하 VFX
+  private spawnIceSpearVFX(targetX: number, targetY: number): void {
+    const spear = this.add.line(targetX, targetY - 140, 0, 0, 0, 48, 0x7acaff).setLineWidth(3).setDepth(26);
+    this.tweens.add({
+      targets: spear,
+      y: targetY,
+      duration: 180,
+      ease: 'Cubic.easeIn',
+      onComplete: () => {
+        spear.destroy();
+        this.createNovaVFX(targetX, targetY, 120, 0x00f0ff);
+      },
+    });
+  }
+
   private explodeAllMinions(): void {
     const stats = this.player.getEffectiveStats();
-    const burstDmg = Math.round(stats.damageMul * 180);
+    const burstDmg = Math.round(stats.damageMul * 220);
     for (const minion of this.minions) {
       minion.triggerCorpseExplosion(burstDmg, this.spatialGrid);
     }

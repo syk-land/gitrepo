@@ -52,7 +52,10 @@ export class WaveSpawner {
 
     if (this.spawnTimer <= 0 && activeCount < maxAlive) {
       this.spawnTimer = 1.0 / spawnRate;
-      this.spawnNormalMonster(camera);
+      const batchCount = this.getSpawnBatchCount(this.currentWave);
+      for (let i = 0; i < batchCount && activeCount + i < maxAlive; i++) {
+        this.spawnNormalMonster(camera);
+      }
     }
 
     // 800px 이상 벌어진 몬스터 전방 재배치 (Despawn 방지)
@@ -60,25 +63,44 @@ export class WaveSpawner {
   }
 
   private getSpawnRateForWave(wave: number): number {
+    if (wave === 1) {
+      // 0~25초 극초반: 0.7 (초반 배려), 25~60초: 1.2, 60~100초: 1.8
+      if (this.elapsedTime < 25) return 0.7;
+      if (this.elapsedTime < 60) return 1.2;
+      return 1.8;
+    }
     switch (wave) {
-      case 1: return 2.5;
-      case 2: return 4.0;
-      case 3: return 5.5;
-      case 4: return 7.5;
-      case 5: return 8.5;
-      case 6: default: return 9.0;
+      case 2: return 2.8;
+      case 3: return 4.2;
+      case 4: return 6.0;
+      case 5: return 8.0;
+      case 6: default: return 10.0;
     }
   }
 
   private getMaxAliveForWave(wave: number): number {
-    switch (wave) {
-      case 1: return 40;
-      case 2: return 75;
-      case 3: return 110;
-      case 4: return 160;
-      case 5: return 200;
-      case 6: default: return 230;
+    if (wave === 1) {
+      // 극초반 8마리 상한으로 플레이어가 안전하게 첫 레벨업 가능
+      if (this.elapsedTime < 25) return 8;
+      if (this.elapsedTime < 60) return 16;
+      return 26;
     }
+    switch (wave) {
+      case 2: return 50;
+      case 3: return 85;
+      case 4: return 130;
+      case 5: return 180;
+      case 6: default: return 240;
+    }
+  }
+
+  private getSpawnBatchCount(wave: number): number {
+    if (wave === 1) return 1;
+    if (wave === 2) return Math.random() < 0.4 ? 2 : 1;
+    if (wave === 3) return Phaser.Math.Between(1, 3);
+    if (wave === 4) return Phaser.Math.Between(2, 4);
+    if (wave === 5) return Phaser.Math.Between(3, 5);
+    return Phaser.Math.Between(4, 6);
   }
 
   private getSpawnPositionOutsideCamera(camera: Phaser.Cameras.Scene2D.Camera, margin: number = 60): { x: number; y: number } {
@@ -123,10 +145,10 @@ export class WaveSpawner {
 
     const textureKey = `m_${this.region.regionId}_${monsterIdx}`;
 
-    // 괴수 스탯 스케일링 공식 (Section 6.3)
-    const baseHp = (65 + this.region.regionId * 45 + this.currentWave * 30);
-    const baseAtk = 18 + this.region.regionId * 9 + this.currentWave * 5;
-    const speed = 75 + Math.random() * 20;
+    // 괴수 스탯 스케일링: 초반 1~2방에 경쾌하게 처치되도록 조정
+    const baseHp = Math.round(28 + this.region.regionId * 20 + this.currentWave * 20);
+    const baseAtk = 12 + this.region.regionId * 6 + this.currentWave * 4;
+    const speed = 65 + Math.random() * 20;
 
     const enemy = new Enemy(
       this.scene,
@@ -138,7 +160,10 @@ export class WaveSpawner {
       speed,
       20, // radius
       10 + this.currentWave * 2, // exp
-      2 + this.region.regionId // gold
+      2 + this.region.regionId, // gold
+      false,
+      false,
+      (killed) => (this.scene as any).onEnemyKilled(killed)
     );
 
     this.enemies.push(enemy);
@@ -148,8 +173,8 @@ export class WaveSpawner {
     const pos = this.getSpawnPositionOutsideCamera(camera, 90);
     const textureKey = `m_${this.region.regionId}_named`;
 
-    const baseHp = (65 + this.region.regionId * 45 + 5 * 30) * 18; // 일반몹의 18배
-    const baseAtk = Math.round((18 + this.region.regionId * 9 + 5 * 5) * 1.5);
+    const baseHp = (28 + this.region.regionId * 20 + 5 * 20) * 16;
+    const baseAtk = Math.round((12 + this.region.regionId * 6 + 5 * 4) * 1.5);
 
     const named = new Enemy(
       this.scene,
@@ -158,12 +183,13 @@ export class WaveSpawner {
       pos.y,
       baseHp,
       baseAtk,
-      95,
+      90,
       36,
       250,
       120,
       true, // isNamed
-      false
+      false,
+      (killed) => (this.scene as any).onEnemyKilled(killed)
     );
 
     this.enemies.push(named);
@@ -174,8 +200,8 @@ export class WaveSpawner {
     const pos = this.getSpawnPositionOutsideCamera(camera, 120);
     const textureKey = `m_${this.region.regionId}_boss`;
 
-    const baseHp = (65 + this.region.regionId * 45 + 6 * 30) * 45; // 일반몹의 45배
-    const baseAtk = Math.round((18 + this.region.regionId * 9 + 6 * 5) * 2.2);
+    const baseHp = (28 + this.region.regionId * 20 + 6 * 20) * 38;
+    const baseAtk = Math.round((12 + this.region.regionId * 6 + 6 * 4) * 2.0);
 
     const boss = new Enemy(
       this.scene,
@@ -184,12 +210,13 @@ export class WaveSpawner {
       pos.y,
       baseHp,
       baseAtk,
-      110,
+      100,
       50,
       1000,
       500,
       false,
-      true // isBoss
+      true, // isBoss
+      (killed) => (this.scene as any).onEnemyKilled(killed)
     );
 
     this.bossInstance = boss;
