@@ -70,6 +70,15 @@ export class LevelUpManager {
             break;
           }
         }
+      } else if (isActive && skill.requiredPassiveId) {
+        // 액티브 카드인 경우: 각성에 필요한 재료 패시브 안내
+        const hasPartner = (player.passiveSkills.get(skill.requiredPassiveId) ?? 0) > 0;
+        const partnerPassive = ALL_SKILLS_MAP.get(skill.requiredPassiveId);
+        if (hasPartner && partnerPassive) {
+          synergyHint = `🌟 [각성 재료 (${partnerPassive.name}) 보유!]`;
+        } else if (partnerPassive) {
+          synergyHint = `💡 [각성 필요 재료: ${partnerPassive.name}]`;
+        }
       }
 
       return {

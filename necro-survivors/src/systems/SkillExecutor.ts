@@ -66,6 +66,16 @@ export class SkillExecutor {
 
     // 3. 투사체 생성 (부채꼴 분기 또는 다중 공전)
     if (skill.behavior === 'orbit') {
+      // 기존 동일 스킬의 궤도 투사체 정리 (문제점 3: 회전도끼 무한증식 방지)
+      for (let i = projectiles.length - 1; i >= 0; i--) {
+        const existing = projectiles[i];
+        if (existing.skillId === skill.id) {
+          existing.destroyVisuals();
+          existing.destroy();
+          projectiles.splice(i, 1);
+        }
+      }
+
       // 궤도 회전형 (본 아머, 휠윈드)
       const angleStep = (Math.PI * 2) / totalProjectiles;
       for (let i = 0; i < totalProjectiles; i++) {
@@ -77,7 +87,7 @@ export class SkillExecutor {
           'orbit',
           finalDamage,
           lvData.pierceCount,
-          lvData.duration,
+          lvData.duration || 9999,
           finalRadius,
           finalKnockback,
           1,
@@ -85,7 +95,8 @@ export class SkillExecutor {
           finalSpeed,
           lvData.statusEffect,
           caster,
-          i * angleStep
+          i * angleStep,
+          skill.id
         );
         projectiles.push(p);
       }

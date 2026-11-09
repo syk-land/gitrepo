@@ -5,6 +5,7 @@ import { SoundEngine } from '../core/SoundEngine';
 import { SaveManager } from '../core/SaveManager';
 import { AdBillingAdapter } from '../systems/AdBillingAdapter';
 import { SkillData } from '../data/types';
+import { ACTIVE_SKILLS, ALL_SKILLS_MAP } from '../data/skillsData';
 
 export class UIScene extends Phaser.Scene {
   private battleScene!: BattleScene;
@@ -59,6 +60,11 @@ export class UIScene extends Phaser.Scene {
 
     // 4. 모달 전용 최상위 레이어
     this.modalContainer = this.add.container(0, 0).setDepth(200);
+
+    // 5. 최초 시작 주무기 1종 선택 체크
+    this.time.delayedCall(50, () => {
+      this.checkAndShowStartingSkill();
+    });
   }
 
   private createTopHUD(width: number): void {
@@ -284,6 +290,136 @@ export class UIScene extends Phaser.Scene {
     } else {
       this.bossHpContainer.setVisible(false);
     }
+  }
+
+  // 최초 시작 무기 스킬 선택 체크
+  private checkAndShowStartingSkill(): void {
+    if (!this.battleScene || !this.battleScene.player) {
+      this.time.delayedCall(50, () => this.checkAndShowStartingSkill());
+      return;
+    }
+    const player = this.battleScene.player;
+    const hasWeapon = Array.from(player.activeSkills.keys()).some((k) => k !== 'necro_legion');
+    if (!hasWeapon) {
+      this.showStartingSkillModal();
+    }
+  }
+
+  // 최초 시작 무기 선택 모달 (3종 무작위 제시 + 리롤 지원)
+  public showStartingSkillModal(onSelect?: (skill: SkillData) => void): void {
+    this.battleScene.isPaused = true;
+    this.modalContainer.removeAll(true);
+    const width = this.cameras.main.width;
+    const height = this.cameras.main.height;
+
+    // 반투명 딤
+    const dim = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.88).setInteractive();
+    this.modalContainer.add(dim);
+
+    // 상단 타이틀
+    const title = this.add.text(width / 2, 95, '⚔️ 시작 주무기 선택', {
+      fontFamily: 'NeoDunggeunmo, monospace',
+      fontSize: '22px',
+      color: '#ffd000',
+    }).setOrigin(0.5);
+    this.modalContainer.add(title);
+
+    const sub = this.add.text(width / 2, 125, '차원문 진입 전 주무기로 사용할 스킬을 선택하십시오.', {
+      fontFamily: 'NeoDunggeunmo, monospace',
+      fontSize: '13px',
+      color: '#00ffaa',
+    }).setOrigin(0.5);
+    this.modalContainer.add(sub);
+
+    // necro_legion(사령 고유 사역마 소환)을 제외한 액티브 무기 목록에서 3종 무작위 추출
+    const weaponPool = ACTIVE_SKILLS.filter((s) => s.id !== 'necro_legion');
+    const shuffled = Phaser.Utils.Array.Shuffle([...weaponPool]);
+    const choices = shuffled.slice(0, 3);
+
+    choices.forEach((skill, idx) => {
+      const cardY = 220 + idx * 165;
+      const cardBox = this.add.graphics();
+      cardBox.fillStyle(0x18120e, 0.96);
+      cardBox.lineStyle(2, 0x00ffaa, 1);
+      cardBox.fillRoundedRect(width / 2 - 210, cardY - 65, 420, 140, 10);
+      cardBox.strokeRoundedRect(width / 2 - 210, cardY - 65, 420, 140, 10);
+      this.modalContainer.add(cardBox);
+
+      // 스킬 아이콘
+      if (this.textures.exists(skill.id)) {
+        const icon = this.add.image(width / 2 - 160, cardY + 5, skill.id);
+        icon.setDisplaySize(54, 54);
+        this.modalContainer.add(icon);
+      }
+
+      // 스킬 이름 및 시작 배지
+      const badge = skill.isNecroSignature ? '[사령 전용 Lv.1]' : '[시작 주무기 Lv.1]';
+      const name = this.add.text(width / 2 - 115, cardY - 45, `${skill.name} ${badge}`, {
+        fontFamily: 'NeoDunggeunmo, monospace',
+        fontSize: '16px',
+        color: '#00ffaa',
+      });
+      this.modalContainer.add(name);
+
+      // 1레벨 상세 설명
+      const lvData = skill.levels[0];
+      const desc = this.add.text(width / 2 - 115, cardY - 15, lvData.description, {
+        fontFamily: 'NeoDunggeunmo, monospace',
+        fontSize: '13px',
+        color: '#f5ede2',
+        wordWrap: { width: 300 },
+      });
+      this.modalContainer.add(desc);
+
+      // 짝꿍 패시브 각성 힌트
+      if (skill.requiredPassiveId) {
+        const partner = ALL_SKILLS_MAP.get(skill.requiredPassiveId);
+        if (partner) {
+          const hint = this.add.text(width / 2 - 115, cardY + 45, `💡 [각성 파트너: ${partner.name}]`, {
+            fontFamily: 'NeoDunggeunmo, monospace',
+            fontSize: '12px',
+            color: '#ffd000',
+          });
+          this.modalContainer.add(hint);
+        }
+      }
+
+      // 카드 클릭 이벤트
+      const hitArea = this.add.zone(width / 2, cardY + 5, 420, 140).setInteractive({ useHandCursor: true });
+      hitArea.on('pointerdown', () => {
+        SoundEngine.getInstance().click();
+        this.battleScene.player.activeSkills.set(skill.id, 1);
+        this.battleScene.player.skillCooldowns.set(skill.id, 0);
+        this.battleScene.syncNecroArmy();
+        this.modalContainer.removeAll(true);
+        this.battleScene.isPaused = false;
+        SoundEngine.getInstance().playTone(520, 'sine', 0.2, 0.2);
+        if (onSelect) onSelect(skill);
+      });
+      this.modalContainer.add(hitArea);
+    });
+
+    // 다른 무기 재추천 (Reroll)
+    const rerollBtn = this.add.graphics();
+    rerollBtn.fillStyle(0x231b15, 0.95);
+    rerollBtn.lineStyle(1, 0x00f0ff, 1);
+    rerollBtn.fillRoundedRect(width / 2 - 110, height - 120, 220, 44, 6);
+    rerollBtn.strokeRoundedRect(width / 2 - 110, height - 120, 220, 44, 6);
+    this.modalContainer.add(rerollBtn);
+
+    const rerollText = this.add.text(width / 2, height - 98, '🎲 다른 무기 보기 (Reroll)', {
+      fontFamily: 'NeoDunggeunmo, monospace',
+      fontSize: '14px',
+      color: '#00f0ff',
+    }).setOrigin(0.5);
+    this.modalContainer.add(rerollText);
+
+    const rerollHit = this.add.zone(width / 2, height - 98, 220, 44).setInteractive({ useHandCursor: true });
+    rerollHit.on('pointerdown', () => {
+      SoundEngine.getInstance().click();
+      this.showStartingSkillModal(onSelect);
+    });
+    this.modalContainer.add(rerollHit);
   }
 
   // 레벨업 카드 선택 모달

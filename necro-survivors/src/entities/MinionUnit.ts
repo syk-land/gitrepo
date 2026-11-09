@@ -113,13 +113,13 @@ export class MinionUnit implements ISkillCaster {
   public triggerCorpseExplosion(burstDmg: number, grid: SpatialHashGrid<Enemy>): void {
     if (this.state !== 'ALIVE') return;
 
-    // 대폭발 시각 이펙트
+    // 소환수 보조 충격파 시각 이펙트 (문제점 10: 소환물 생존 유지)
     if (typeof (this.scene as any).createNovaVFX === 'function') {
-      (this.scene as any).createNovaVFX(this.x, this.y, 160, 0xff5533);
+      (this.scene as any).createNovaVFX(this.x, this.y, 140, 0x00ffaa);
     }
 
-    // 주변 적들에게 대폭발 피해
-    const enemies = grid.queryRadius(this.x, this.y, 160);
+    // 주변 적들에게 사령 충격파 피해
+    const enemies = grid.queryRadius(this.x, this.y, 140);
     for (const enemy of enemies) {
       if (!enemy.active) continue;
       const dx = enemy.x - this.x;
@@ -127,12 +127,11 @@ export class MinionUnit implements ISkillCaster {
       const dist = Math.sqrt(dx * dx + dy * dy) || 1;
       enemy.takeDamage(burstDmg, (dx / dist) * 75, (dy / dist) * 75);
       if (typeof (this.scene as any).showDamageText === 'function') {
-        (this.scene as any).showDamageText(enemy.x, enemy.y - 15, `💥 ${burstDmg}`, 0xff5533);
+        (this.scene as any).showDamageText(enemy.x, enemy.y - 15, `💥 ${burstDmg}`, 0x00ffaa);
       }
     }
 
-    // 자폭 후 통상 쿨타임의 절반인 3초 만에 즉시 부활
-    this.die(3.0);
+    // 소환수는 죽지 않고 전투를 지속함
   }
 
   public updateAI(

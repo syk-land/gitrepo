@@ -27,6 +27,7 @@ export class Enemy implements SpatialEntity {
   public bleedDps: number = 0;
 
   public onKilled?: (enemy: Enemy) => void;
+  private scene: Phaser.Scene;
 
   constructor(
     scene: Phaser.Scene,
@@ -43,6 +44,7 @@ export class Enemy implements SpatialEntity {
     isBoss: boolean = false,
     onKilled?: (enemy: Enemy) => void
   ) {
+    this.scene = scene;
     this.x = x;
     this.y = y;
     this.radius = radius;
@@ -70,13 +72,27 @@ export class Enemy implements SpatialEntity {
 
   public takeDamage(amount: number, knockbackDx: number = 0, knockbackDy: number = 0): boolean {
     if (!this.active || this.hp <= 0) return false;
+
+    // 화면 1.2배 범위 밖 몬스터는 피격 및 사망 방지 (Issue 6)
+    const cam = this.scene.cameras?.main;
+    if (cam) {
+      const midX = cam.midPoint.x;
+      const midY = cam.midPoint.y;
+      const maxDx = cam.width * 0.6;
+      const maxDy = cam.height * 0.6;
+      if (Math.abs(this.x - midX) > maxDx || Math.abs(this.y - midY) > maxDy) {
+        return false;
+      }
+    }
+
     this.hp -= amount;
 
-    // 넉백 적용
+    // 넉백 적용 및 스프라이트 좌표 즉시 동기화 (Issue 5)
     if (knockbackDx !== 0 || knockbackDy !== 0) {
       const bossKnockbackResist = this.isBoss ? 0.15 : this.isNamed ? 0.4 : 1.0;
       this.x += knockbackDx * bossKnockbackResist;
       this.y += knockbackDy * bossKnockbackResist;
+      this.sprite.setPosition(this.x, this.y);
     }
 
     // 피격 화이트 플래시 (0.06초)

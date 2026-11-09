@@ -5,6 +5,7 @@ import { Enemy } from './Enemy';
 import { ISkillCaster } from './ISkillCaster';
 
 export class Projectile {
+  public skillId: string = '';
   public x: number;
   public y: number;
   public active: boolean = true;
@@ -12,6 +13,7 @@ export class Projectile {
   public pierceLeft: number;
   public duration: number;
   public areaRadius: number;
+  public hitboxRadius: number = 20;
   public knockback: number;
   public behavior: ProjectileBehavior;
   public statusEffect?: { type: 'slow' | 'freeze' | 'stun' | 'bleed' | 'pull'; chance: number; duration: number; value?: number };
@@ -43,9 +45,11 @@ export class Projectile {
     speed: number = 340,
     statusEffect?: { type: 'slow' | 'freeze' | 'stun' | 'bleed' | 'pull'; chance: number; duration: number; value?: number },
     orbitCaster?: ISkillCaster,
-    orbitOffset: number = 0
+    orbitOffset: number = 0,
+    skillId: string = ''
   ) {
     this.scene = scene;
+    this.skillId = skillId || textureKey;
     this.x = x;
     this.y = y;
     this.behavior = behavior;
@@ -66,18 +70,26 @@ export class Projectile {
     this.sprite = scene.add.sprite(x, y, textureKey);
     this.sprite.setDepth(20);
 
-    // 행동양식별 초기 스케일 및 세팅
+    // 행동양식별 시각적 크기와 실제 타격 판정(hitboxRadius) 일치화 (문제점 4)
     if (behavior === 'ground_zone') {
+      this.hitboxRadius = radius;
       this.sprite.setDisplaySize(radius * 2, radius * 2);
       this.sprite.setAlpha(0.65);
       this.sprite.setDepth(10);
     } else if (behavior === 'cone_slash') {
+      this.hitboxRadius = radius;
       this.sprite.setDisplaySize(radius * 2, radius * 2);
       this.sprite.setRotation(Math.atan2(dirY, dirX));
     } else if (behavior === 'orbit') {
-      this.sprite.setDisplaySize(36, 36);
+      // 궤도 공전체는 회전도끼/뼈방패 스프라이트(48x48)에 맞춰 피격 반경 24px 부여
+      this.hitboxRadius = 24;
+      this.sprite.setDisplaySize(48, 48);
+    } else if (behavior === 'instant_strike') {
+      this.hitboxRadius = radius;
+      this.sprite.setDisplaySize(radius * 2, radius * 2);
     } else {
-      this.sprite.setDisplaySize(32, 32);
+      this.hitboxRadius = 18;
+      this.sprite.setDisplaySize(36, 36);
       this.sprite.setRotation(Math.atan2(dirY, dirX));
     }
   }
@@ -118,6 +130,13 @@ export class Projectile {
       this.y = center.y + Math.sin(this.orbitAngle) * this.areaRadius;
       this.sprite.setPosition(this.x, this.y);
       this.sprite.setRotation(this.orbitAngle + Math.PI / 2);
+
+      // 공전체 0.3초 주기 다단히트 리셋
+      this.tickTimer -= dt;
+      if (this.tickTimer <= 0) {
+        this.tickTimer = 0.3;
+        this.hitEnemies.clear();
+      }
       this.checkCollisions(grid);
     } else if (this.behavior === 'ground_zone') {
       this.sprite.setRotation(this.sprite.rotation + dt * 0.5);
@@ -137,15 +156,23 @@ export class Projectile {
   }
 
   private checkCollisions(grid: SpatialHashGrid<Enemy>): void {
-    const hits = grid.queryRadius(this.x, this.y, this.areaRadius);
+    // 실제 스프라이트 피격 원형 판정: hitboxRadius + enemy.radius (문제점 4 해결)
+    const queryR = this.hitboxRadius + 45;
+    const hits = grid.queryRadius(this.x, this.y, queryR);
+
     for (const enemy of hits) {
       if (!enemy.active || this.hitEnemies.has(enemy)) continue;
 
-      this.hitEnemies.add(enemy);
-
       const dx = enemy.x - this.x;
       const dy = enemy.y - this.y;
-      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+      const distSq = dx * dx + dy * dy;
+      const maxHitDist = this.hitboxRadius + enemy.radius;
+
+      // 시각적 피격 범위와 실제 피격 범위를 완전 일치시킴
+      if (distSq > maxHitDist * maxHitDist) continue;
+
+      this.hitEnemies.add(enemy);
+      const dist = Math.sqrt(distSq) || 1;
 
       enemy.takeDamage(this.damage, (dx / dist) * this.knockback, (dy / dist) * this.knockback);
       if (typeof (this.scene as any).showDamageText === 'function') {

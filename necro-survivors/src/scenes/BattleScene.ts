@@ -72,8 +72,8 @@ export class BattleScene extends Phaser.Scene {
     this.player = new Player(this, 0, 0);
     this.cameras.main.startFollow(this.player.sprite, true, 0.1, 0.1);
 
-    // 기본 사역마(해골 병사 2구) 즉시 소환 배치
-    this.syncMinionCount('skeleton_warrior', 2);
+    // 기본 사역마 군단 즉시 소환 배치
+    this.syncNecroArmy();
 
     // 3. 웨이브 스포너 초기화
     this.waveSpawner = new WaveSpawner(
@@ -134,7 +134,7 @@ export class BattleScene extends Phaser.Scene {
 
       // 플레이어와의 접촉 피격 판정 (Section 6.1)
       const dx = this.player.x - enemy.x;
-      const dy = this.player.y - enemy.y;
+      const dy = enemy.y - this.player.y;
       const distSq = dx * dx + dy * dy;
       const touchRadius = 24 + enemy.radius;
 
@@ -146,26 +146,46 @@ export class BattleScene extends Phaser.Scene {
       }
     }
 
-    // 6. 소환수 군단 AI 업데이트
+    // 6. 소환수 군단 AI 업데이트 (해골 궁수, 마법사, 드론 원거리 사격 지원: 문제점 8)
     for (const minion of this.minions) {
       minion.updateAI(dt, this.spatialGrid, (caster, target) => {
-        // 원거리 해골 궁수/마법사/드론 발사
         SoundEngine.getInstance().shoot();
         const stats = caster.getEffectiveStats();
+
+        let texKey = 'vfx_minion_arrow';
+        let projSpeed = 440;
+        let projDmg = Math.round(stats.damageMul * 32);
+        let pierce = 1;
+        let knockback = 20;
+
+        if (caster.def.id === 'skeleton_mage') {
+          texKey = 'vfx_minion_mage';
+          projSpeed = 320;
+          projDmg = Math.round(stats.damageMul * 46);
+          pierce = 2;
+          knockback = 30;
+        } else if (caster.def.id === 'drone') {
+          texKey = 'vfx_minion_drone';
+          projSpeed = 520;
+          projDmg = Math.round(stats.damageMul * 36);
+          pierce = 1;
+          knockback = 15;
+        }
+
         const p = new Projectile(
           this,
-          'necro_spear',
+          texKey,
           caster.x,
           caster.y,
           'straight',
-          Math.round(stats.damageMul * 30),
-          1,
+          projDmg,
+          pierce,
           1.8,
           16,
-          25,
+          knockback,
           target.x - caster.x,
           target.y - caster.y,
-          360
+          projSpeed
         );
         this.projectiles.push(p);
       });
@@ -239,7 +259,7 @@ export class BattleScene extends Phaser.Scene {
           this,
           this.spatialGrid,
           this.projectiles,
-          (minionId, count) => this.syncMinionCount(minionId, count)
+          () => this.syncNecroArmy()
         );
       }
 
@@ -247,8 +267,58 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
-  // 군단 개체수 동기화
-  public syncMinionCount(minionId: string, targetCount: number): void {
+  // 사령군주 소환수 군단 편성 실시간 동기화 (문제점 1 & 8)
+  public syncNecroArmy(): void {
+    const legionLv = this.player.activeSkills.get('necro_legion') ?? 1;
+    const hasArthur = this.player.activeSkills.has('awakened_legion');
+    const droneLv = (this.player.activeSkills.get('psi_drone') ?? 0) || (this.player.activeSkills.has('awakened_drone') ? 1 : 0);
+
+    let warriors = 2;
+    let archers = 0;
+    let mages = 0;
+    const arthurs = hasArthur ? 1 : 0;
+    const drones = droneLv > 0 ? (droneLv >= 4 || this.player.activeSkills.has('awakened_drone') ? 2 : 1) : 0;
+
+    if (hasArthur) {
+      warriors = 3;
+      archers = 2;
+      mages = 1;
+    } else {
+      if (legionLv >= 5) {
+        warriors = 4;
+        archers = 1;
+        mages = 1;
+      } else if (legionLv >= 4) {
+        warriors = 3;
+        archers = 1;
+        mages = 1;
+      } else if (legionLv >= 3) {
+        warriors = 3;
+        archers = 1;
+        mages = 0;
+      } else if (legionLv >= 2) {
+        warriors = 2;
+        archers = 1;
+        mages = 0;
+      } else {
+        warriors = 2;
+        archers = 0;
+        mages = 0;
+      }
+    }
+
+    // 영구 재능(망자의 군세) 보너스 소환수
+    const bonus = this.player.getEffectiveStats().bonusMinionCount;
+    warriors += bonus;
+
+    this.ensureMinionCount('skeleton_warrior', warriors);
+    this.ensureMinionCount('skeleton_archer', archers);
+    this.ensureMinionCount('skeleton_mage', mages);
+    if (arthurs > 0) this.ensureMinionCount('arthur', arthurs);
+    if (drones > 0) this.ensureMinionCount('drone', drones);
+  }
+
+  public ensureMinionCount(minionId: string, targetCount: number): void {
     const def = MINIONS_DATA[minionId] || MINIONS_DATA['skeleton_warrior'];
     const currentMatches = this.minions.filter((m) => m.def.id === minionId);
 
@@ -273,17 +343,20 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
-  // 적 처치 시 보석/마력석 드랍 및 시체 저장, 상자 드랍
+  // 적 처치 시 보석/마력석 드랍 및 시체 저장, 상자 드랍 (문제점 5, 6, 11)
   public onEnemyKilled(enemy: Enemy): void {
     this.killCount++;
-    this.showDamageText(enemy.x, enemy.y - 20, `💀 ${this.killCount}`, 0x00ffaa);
+    const dropX = enemy.sprite.x;
+    const dropY = enemy.sprite.y;
+
+    this.showDamageText(dropX, dropY - 20, `💀 ${this.killCount}`, 0x00ffaa);
 
     // 시체 좌표 등록 (시체 폭발 연쇄 탄약)
-    this.recentCorpses.push({ x: enemy.x, y: enemy.y, time: 20 });
+    this.recentCorpses.push({ x: dropX, y: dropY, time: 20 });
     if (this.recentCorpses.length > 35) this.recentCorpses.shift();
 
     // 바닥 혈흔/뼈 잔해 연출 (depth: 2)
-    const splat = this.add.circle(enemy.x, enemy.y, 8, 0x4a1218, 0.6).setDepth(2);
+    const splat = this.add.circle(dropX, dropY, 8, 0x4a1218, 0.6).setDepth(2);
     this.tweens.add({
       targets: splat,
       alpha: 0,
@@ -291,20 +364,24 @@ export class BattleScene extends Phaser.Scene {
       onComplete: () => splat.destroy(),
     });
 
-    // 보석 생성 및 300개 초과 시 병합 (Section 5.3)
-    if (this.expGems.length > 250) {
-      const nearestGem = this.expGems[0];
-      if (nearestGem && nearestGem.active) {
-        nearestGem.merge(enemy.expValue, enemy.goldValue);
+    // 몬스터 실제 사망 위치에 보석 즉시 생성 (문제점 5 & 11)
+    const gem = new ExpGem(this, dropX, dropY, enemy.expValue, enemy.goldValue);
+    this.expGems.push(gem);
+
+    // 필드 보석 수가 300개를 초과하면 오래된 비흡인 보석 정리하여 계속 스폰 보장
+    if (this.expGems.length > 300) {
+      for (let i = 0; i < 40; i++) {
+        const oldGem = this.expGems[i];
+        if (oldGem && oldGem.active && oldGem.lifeTimer < 20.0) {
+          oldGem.destroy();
+          oldGem.active = false;
+        }
       }
-    } else {
-      const gem = new ExpGem(this, enemy.x, enemy.y, enemy.expValue, enemy.goldValue);
-      this.expGems.push(gem);
     }
 
     // 5웨이브 수문장 처치 시 각성 확정 보물상자 스폰
     if (enemy.isNamed) {
-      this.spawnEvolutionChest(enemy.x, enemy.y);
+      this.spawnEvolutionChest(dropX, dropY);
       // 전체 자석 발동 (필드 모든 보석 흡수)
       for (const gem of this.expGems) {
         gem.forceAttractAll();

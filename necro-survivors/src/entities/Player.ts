@@ -32,11 +32,9 @@ export class Player implements ISkillCaster {
     this.x = x;
     this.y = y;
 
-    // 시작 스킬 세팅: 본 스피어 Lv.1 + 해골 병사 소환 Lv.1 기본 장착
-    this.activeSkills.set('necro_spear', 1);
-    this.skillCooldowns.set('necro_spear', 0);
-    this.activeSkills.set('summon_skeleton', 1);
-    this.skillCooldowns.set('summon_skeleton', 0);
+    // 시작 스킬 세팅: 해골 군단 소환은 사령군주 고유 기본 소환수로 장착 (주무기는 시작 모달에서 1개 선택)
+    this.activeSkills.set('necro_legion', 1);
+    this.skillCooldowns.set('necro_legion', 0);
 
     const initialStats = this.getEffectiveStats();
     this.maxHp = initialStats.maxHp;
@@ -94,7 +92,15 @@ export class Player implements ISkillCaster {
       const isMaster = save.masterSlotId === id;
       const val = getAltarEffectiveValue(def, lv, isMaster);
       if (def.statKey in stats) {
-        (stats[def.statKey as keyof CombatStats] as number) += val;
+        if (def.statKey === 'pickupRadius') {
+          stats.pickupRadius += Math.round(95 * val); // 자석 반경 % 증폭 실반영
+        } else if (def.statKey === 'maxHp') {
+          stats.maxHp += Math.round(200 * val);
+        } else if (def.statKey === 'moveSpeed') {
+          stats.moveSpeed += Math.round(165 * val);
+        } else {
+          (stats[def.statKey as keyof CombatStats] as number) += val;
+        }
       }
     }
     for (const [id, lv] of Object.entries(save.talents)) {
@@ -105,6 +111,8 @@ export class Player implements ISkillCaster {
       if (def.statKey in stats) {
         if (def.statKey === 'cooldownMul') {
           stats.cooldownMul = Math.max(0.35, stats.cooldownMul - val);
+        } else if (def.statKey === 'bonusMinionCount') {
+          stats.bonusMinionCount += Math.floor(val);
         } else {
           (stats[def.statKey as keyof CombatStats] as number) += val;
         }
@@ -169,9 +177,16 @@ export class Player implements ISkillCaster {
   }
 
   public getRequiredExp(level: number): number {
-    if (level <= 10) return 10 + (level - 1) * 12;
-    if (level <= 20) return 130 + (level - 10) * 25;
-    return 380 + (level - 20) * 45;
+    if (level === 1) return 5;
+    if (level === 2) return 12;
+    if (level === 3) return 22;
+    if (level === 4) return 35;
+    if (level === 5) return 52;
+    if (level === 6) return 75;
+    if (level === 7) return 105;
+    if (level === 8) return 145;
+    if (level === 9) return 195;
+    return 195 + (level - 9) * 60 + Math.floor(Math.pow(level - 9, 1.6)) * 15;
   }
 
   public move(dx: number, dy: number, dt: number): void {

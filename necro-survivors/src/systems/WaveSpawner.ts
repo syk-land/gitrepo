@@ -159,7 +159,7 @@ export class WaveSpawner {
       baseAtk,
       speed,
       20, // radius
-      10 + this.currentWave * 2, // exp
+      Math.max(1, Math.min(4, this.currentWave)), // exp (1~4 exp per normal mob)
       2 + this.region.regionId, // gold
       false,
       false,
@@ -185,7 +185,7 @@ export class WaveSpawner {
       baseAtk,
       90,
       36,
-      250,
+      30, // exp (수문장 30 exp)
       120,
       true, // isNamed
       false,
@@ -212,7 +212,7 @@ export class WaveSpawner {
       baseAtk,
       100,
       50,
-      1000,
+      100, // exp (최종 보스 100 exp)
       500,
       false,
       true, // isBoss

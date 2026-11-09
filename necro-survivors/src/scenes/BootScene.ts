@@ -80,6 +80,9 @@ export class BootScene extends Phaser.Scene {
     for (const skill of ALL_SKILLS_MAP.values()) {
       this.load.image(skill.id, skill.icon);
     }
+    this.load.image('vfx_minion_arrow', 'assets/pixel_vfx/skills/vfx_snip_2.png');
+    this.load.image('vfx_minion_mage', 'assets/pixel_vfx/skills/vfx_necro_3.png');
+    this.load.image('vfx_minion_drone', 'assets/pixel_vfx/skills/vfx_psi_2.png');
 
     // 5. 게이트 및 UI 프레임
     const gateTypes = ['iron', 'bronze', 'silver', 'gold', 'platinum', 'diamond'];
