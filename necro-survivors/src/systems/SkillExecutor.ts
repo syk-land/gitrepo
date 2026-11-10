@@ -91,6 +91,9 @@ export class SkillExecutor {
       baseDirY = Math.sin(ang);
     }
 
+    // 인게임 전용 투사체 VFX 텍스처 우선 적용 (UI 아이콘과 분리)
+    const vfxKey = scene.textures.exists(`vfx_${skill.id}`) ? `vfx_${skill.id}` : skill.id;
+
     // 3. 투사체 생성 (부채꼴 분기 또는 다중 공전)
     if (skill.behavior === 'orbit') {
       // 궤도 회전형 (본 아머, 휠윈드) - 쿨타임마다 1개씩 생성, 최대 보관 수까지 유지
@@ -101,7 +104,7 @@ export class SkillExecutor {
         const angleOffset = (Math.PI * 2 / maxAllowed) * currentOrbiters.length + (Math.random() * 0.2);
         const p = new Projectile(
           scene,
-          skill.id,
+          vfxKey,
           casterPos.x,
           casterPos.y,
           'orbit',
@@ -144,7 +147,7 @@ export class SkillExecutor {
 
         const p = new Projectile(
           scene,
-          skill.id,
+          vfxKey,
           spawnX,
           spawnY,
           skill.behavior,
@@ -178,7 +181,7 @@ export class SkillExecutor {
 
         const p = new Projectile(
           scene,
-          skill.id,
+          vfxKey,
           casterPos.x,
           casterPos.y,
           skill.behavior,

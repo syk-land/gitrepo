@@ -76,13 +76,26 @@ export class BootScene extends Phaser.Scene {
       this.load.image(`m_${r}_boss`, `assets/monsters/m_${r}_boss.png`);
     }
 
-    // 4. 스킬 아이콘 & 투사체 VFX
+    // 4. 스킬 UI 아이콘 & 인게임 투사체 VFX
     for (const skill of ALL_SKILLS_MAP.values()) {
       this.load.image(skill.id, skill.icon);
     }
-    this.load.image('vfx_minion_arrow', 'assets/pixel_vfx/skills/vfx_snip_2.png');
-    this.load.image('vfx_minion_mage', 'assets/pixel_vfx/skills/vfx_necro_3.png');
-    this.load.image('vfx_minion_drone', 'assets/pixel_vfx/skills/vfx_psi_2.png');
+
+    // 인게임 전용 전투 투사체/공격 VFX (전방 방향성 및 전장 스케일 최적화)
+    const inGameVfxList = [
+      'necro_spear', 'necro_armor', 'dk_grip', 'storm_chain',
+      'sniper_shot', 'psi_blackhole', 'cryo_nova', 'ber_whirlwind',
+      'sm_dragon', 'psi_drone', 'priest_sanctuary',
+      'awakened_spear', 'awakened_armor', 'awakened_grip', 'awakened_chain',
+      'awakened_sniper', 'awakened_blackhole', 'awakened_cryo', 'awakened_whirlwind',
+      'awakened_dragon', 'awakened_sanctuary'
+    ];
+    for (const id of inGameVfxList) {
+      this.load.image(`vfx_${id}`, `assets/skills/vfx/vfx_${id}.png`);
+    }
+    this.load.image('vfx_minion_arrow', 'assets/skills/vfx/vfx_minion_arrow.png');
+    this.load.image('vfx_minion_mage', 'assets/skills/vfx/vfx_minion_mage.png');
+    this.load.image('vfx_minion_drone', 'assets/skills/vfx/vfx_minion_drone.png');
 
     // 5. 게이트 및 UI 프레임
     const gateTypes = ['iron', 'bronze', 'silver', 'gold', 'platinum', 'diamond'];

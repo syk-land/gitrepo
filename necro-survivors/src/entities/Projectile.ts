@@ -82,7 +82,7 @@ export class Projectile {
     if (behavior === 'ground_zone') {
       this.hitboxRadius = radius;
       this.sprite.setDisplaySize(radius * 2, radius * 2);
-      this.sprite.setAlpha(0.65);
+      this.sprite.setAlpha(0.7);
       this.sprite.setDepth(10);
     } else if (behavior === 'cone_slash') {
       this.hitboxRadius = radius;
@@ -91,13 +91,24 @@ export class Projectile {
     } else if (behavior === 'orbit') {
       // 궤도 공전체는 회전도끼/뼈방패 스프라이트(48x48)에 맞춰 피격 반경 24px 부여
       this.hitboxRadius = 24;
-      this.sprite.setDisplaySize(48, 48);
+      this.sprite.setDisplaySize(50, 50);
     } else if (behavior === 'instant_strike') {
       this.hitboxRadius = radius;
       this.sprite.setDisplaySize(radius * 2, radius * 2);
     } else {
+      // 직선 / 유도 / 투사체 형태별 황금 비율 유지
       this.hitboxRadius = 18;
-      this.sprite.setDisplaySize(36, 36);
+      if (textureKey.includes('spear')) {
+        this.sprite.setDisplaySize(54, 27);
+      } else if (textureKey.includes('sniper')) {
+        this.sprite.setDisplaySize(68, 22);
+      } else if (textureKey.includes('arrow')) {
+        this.sprite.setDisplaySize(48, 18);
+      } else if (textureKey.includes('drone')) {
+        this.sprite.setDisplaySize(38, 14);
+      } else {
+        this.sprite.setDisplaySize(36, 36);
+      }
       this.sprite.setRotation(Math.atan2(dirY, dirX));
     }
   }
