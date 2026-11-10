@@ -5,7 +5,7 @@ import { SoundEngine } from '../core/SoundEngine';
 import { SaveManager } from '../core/SaveManager';
 import { AdBillingAdapter } from '../systems/AdBillingAdapter';
 import { SkillData } from '../data/types';
-import { ACTIVE_SKILLS, ALL_SKILLS_MAP } from '../data/skillsData';
+import { ACTIVE_SKILLS, PASSIVE_SKILLS, ALL_SKILLS_MAP } from '../data/skillsData';
 
 export class UIScene extends Phaser.Scene {
   private battleScene!: BattleScene;
@@ -637,6 +637,209 @@ export class UIScene extends Phaser.Scene {
       this.battleScene.isPaused = false;
     });
     this.modalContainer.add(hit);
+  }
+
+  // 📜 각성재료 선택권 모달 (정예 괴수/보스 처치 시 드랍되는 패시브 선택권)
+  public showAwakeningSelectorModal(pageOffset: number = 0): void {
+    this.battleScene.isPaused = true;
+    this.modalContainer.removeAll(true);
+    const width = this.cameras.main.width;
+    const height = this.cameras.main.height;
+    const player = this.battleScene.player;
+
+    // 반투명 딤
+    const dim = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.88).setInteractive();
+    this.modalContainer.add(dim);
+
+    // 상단 타이틀
+    const title = this.add.text(width / 2, 95, '📜 각성재료 선택권', {
+      fontFamily: 'NeoDunggeunmo, monospace',
+      fontSize: '22px',
+      color: '#ffd000',
+    }).setOrigin(0.5);
+    this.modalContainer.add(title);
+
+    const sub = this.add.text(width / 2, 125, '정예 괴수 처치 보상! 원하는 패시브 각성재료 1종을 선택하십시오.', {
+      fontFamily: 'NeoDunggeunmo, monospace',
+      fontSize: '13px',
+      color: '#00ffaa',
+    }).setOrigin(0.5);
+    this.modalContainer.add(sub);
+
+    // 보유 중인 액티브/패시브 현황
+    const ownedActives = Array.from(player.activeSkills.keys());
+    const ownedPassives = Array.from(player.passiveSkills.keys());
+    const maxPassiveSlots = 6;
+
+    // 선택 가능한 패시브 목록 추출
+    const available = PASSIVE_SKILLS.filter((p) => {
+      const curLv = player.passiveSkills.get(p.id) ?? 0;
+      if (curLv >= p.maxLevel) return false;
+      if (curLv === 0 && ownedPassives.length >= maxPassiveSlots) return false;
+      return true;
+    });
+
+    if (available.length === 0) {
+      // 모든 패시브 각성재료가 이미 만렙이거나 꽉 찬 경우의 대체 보상
+      const emptyText = this.add.text(width / 2, height / 2 - 40, '✨ 모든 각성재료가 최대치에 도달했습니다!\n\n💰 보상: +3,000 마력석 & 체력 완전 회복', {
+        fontFamily: 'NeoDunggeunmo, monospace',
+        fontSize: '16px',
+        color: '#ffd000',
+        align: 'center',
+      }).setOrigin(0.5);
+      this.modalContainer.add(emptyText);
+
+      const confirmBtn = this.add.graphics();
+      confirmBtn.fillStyle(0xd4a338, 1);
+      confirmBtn.fillRoundedRect(width / 2 - 80, height / 2 + 50, 160, 44, 6);
+      this.modalContainer.add(confirmBtn);
+
+      const confirmText = this.add.text(width / 2, height / 2 + 72, '수령 완료', {
+        fontFamily: 'NeoDunggeunmo, monospace',
+        fontSize: '15px',
+        color: '#0c0908',
+      }).setOrigin(0.5);
+      this.modalContainer.add(confirmText);
+
+      const hit = this.add.zone(width / 2, height / 2 + 72, 160, 44).setInteractive({ useHandCursor: true });
+      hit.on('pointerdown', () => {
+        SoundEngine.getInstance().click();
+        this.battleScene.earnedGold += 3000;
+        player.hp = player.maxHp;
+        this.modalContainer.removeAll(true);
+        this.battleScene.isPaused = false;
+      });
+      this.modalContainer.add(hit);
+      return;
+    }
+
+    // 정렬: 플레이어가 현재 보유 중인 액티브 무기의 짝꿍 패시브를 1순위로 배치!
+    const prioritized: SkillData[] = [];
+    const others: SkillData[] = [];
+
+    for (const p of available) {
+      const isPartner = ownedActives.some((aId) => {
+        const activeSkill = ALL_SKILLS_MAP.get(aId);
+        return activeSkill && activeSkill.requiredPassiveId === p.id;
+      });
+      if (isPartner) {
+        prioritized.push(p);
+      } else {
+        others.push(p);
+      }
+    }
+
+    const sortedPassives = [...prioritized, ...others];
+
+    // 한 화면당 3장씩 제시, 순환 지원
+    const pageSize = 3;
+    const totalCount = sortedPassives.length;
+    const startIdx = (pageOffset * pageSize) % totalCount;
+    const pageChoices: SkillData[] = [];
+    for (let i = 0; i < Math.min(pageSize, totalCount); i++) {
+      pageChoices.push(sortedPassives[(startIdx + i) % totalCount]);
+    }
+
+    pageChoices.forEach((skill, idx) => {
+      const curLv = player.passiveSkills.get(skill.id) ?? 0;
+      const nextLv = curLv + 1;
+      const cardY = 220 + idx * 165;
+
+      // 보유 액티브와의 시너지 여부
+      const matchingActive = ownedActives
+        .map((aId) => ALL_SKILLS_MAP.get(aId))
+        .find((a) => a && a.requiredPassiveId === skill.id);
+
+      const cardBox = this.add.graphics();
+      cardBox.fillStyle(0x18120e, 0.96);
+      cardBox.lineStyle(2, matchingActive ? 0xffd000 : 0x00f0ff, 1);
+      cardBox.fillRoundedRect(width / 2 - 210, cardY - 65, 420, 140, 10);
+      cardBox.strokeRoundedRect(width / 2 - 210, cardY - 65, 420, 140, 10);
+      this.modalContainer.add(cardBox);
+
+      // 귀여운 패시브 픽셀 아이콘
+      if (this.textures.exists(skill.id)) {
+        const icon = this.add.image(width / 2 - 160, cardY + 5, skill.id);
+        icon.setDisplaySize(54, 54);
+        this.modalContainer.add(icon);
+      }
+
+      // 이름 및 레벨 진행 배지
+      const lvBadge = curLv === 0 ? '[신규 획득]' : `[Lv.${curLv} ➔ Lv.${nextLv}]`;
+      const name = this.add.text(width / 2 - 115, cardY - 45, `${skill.name} ${lvBadge}`, {
+        fontFamily: 'NeoDunggeunmo, monospace',
+        fontSize: '16px',
+        color: matchingActive ? '#ffd000' : '#00f0ff',
+      });
+      this.modalContainer.add(name);
+
+      // 레벨 효과 설명
+      const lvData = skill.levels[nextLv - 1] || skill.levels[0];
+      const desc = this.add.text(width / 2 - 115, cardY - 15, lvData.description, {
+        fontFamily: 'NeoDunggeunmo, monospace',
+        fontSize: '13px',
+        color: '#f5ede2',
+        wordWrap: { width: 300 },
+      });
+      this.modalContainer.add(desc);
+
+      // 각성 시너지 정보 배지
+      let synergyText = '';
+      if (matchingActive) {
+        synergyText = `🌟 [보유 중인 ${matchingActive.name} 각성 파트너!]`;
+      } else {
+        const anyPartner = ACTIVE_SKILLS.find((a) => a.requiredPassiveId === skill.id);
+        if (anyPartner) {
+          synergyText = `💡 [${anyPartner.name} 각성 재료]`;
+        }
+      }
+
+      if (synergyText) {
+        const hint = this.add.text(width / 2 - 115, cardY + 45, synergyText, {
+          fontFamily: 'NeoDunggeunmo, monospace',
+          fontSize: '12px',
+          color: matchingActive ? '#ffd000' : '#b8a692',
+        });
+        this.modalContainer.add(hint);
+      }
+
+      // 카드 클릭 이벤트
+      const hitArea = this.add.zone(width / 2, cardY + 5, 420, 140).setInteractive({ useHandCursor: true });
+      hitArea.on('pointerdown', () => {
+        SoundEngine.getInstance().playTone(660, 'sine', 0.2, 0.25);
+        player.passiveSkills.set(skill.id, nextLv);
+        this.modalContainer.removeAll(true);
+        this.battleScene.isPaused = false;
+        if (typeof (this.battleScene as any).showDamageText === 'function') {
+          (this.battleScene as any).showDamageText(player.x, player.y - 30, `📜 [${skill.name} Lv.${nextLv} 획득!]`, 0x00ffaa, true);
+        }
+      });
+      this.modalContainer.add(hitArea);
+    });
+
+    // 다른 재료 보기 (Reroll / Cycle) 버튼
+    if (totalCount > pageSize) {
+      const rerollBtn = this.add.graphics();
+      rerollBtn.fillStyle(0x231b15, 0.95);
+      rerollBtn.lineStyle(1, 0x00f0ff, 1);
+      rerollBtn.fillRoundedRect(width / 2 - 120, height - 120, 240, 44, 6);
+      rerollBtn.strokeRoundedRect(width / 2 - 120, height - 120, 240, 44, 6);
+      this.modalContainer.add(rerollBtn);
+
+      const rerollText = this.add.text(width / 2, height - 98, '🔄 다른 각성재료 보기', {
+        fontFamily: 'NeoDunggeunmo, monospace',
+        fontSize: '14px',
+        color: '#00f0ff',
+      }).setOrigin(0.5);
+      this.modalContainer.add(rerollText);
+
+      const rerollHit = this.add.zone(width / 2, height - 98, 240, 44).setInteractive({ useHandCursor: true });
+      rerollHit.on('pointerdown', () => {
+        SoundEngine.getInstance().click();
+        this.showAwakeningSelectorModal(pageOffset + 1);
+      });
+      this.modalContainer.add(rerollHit);
+    }
   }
 
   // 보스 경고 배너 (Section 9)

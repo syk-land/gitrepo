@@ -13,9 +13,11 @@ export class Enemy implements SpatialEntity {
   public goldValue: number;
   public isNamed: boolean;
   public isBoss: boolean;
+  public isElite: boolean;
   public active: boolean = true;
 
   public sprite: Phaser.GameObjects.Sprite;
+  private hpBarGraphics?: Phaser.GameObjects.Graphics;
   private flashTimer: number = 0;
 
   // 상태이상 타이머
@@ -42,6 +44,7 @@ export class Enemy implements SpatialEntity {
     gold: number,
     isNamed: boolean = false,
     isBoss: boolean = false,
+    isElite: boolean = false,
     onKilled?: (enemy: Enemy) => void
   ) {
     this.scene = scene;
@@ -56,6 +59,7 @@ export class Enemy implements SpatialEntity {
     this.goldValue = gold;
     this.isNamed = isNamed;
     this.isBoss = isBoss;
+    this.isElite = isElite;
     this.onKilled = onKilled;
 
     this.sprite = scene.add.sprite(x, y, textureKey);
@@ -64,10 +68,18 @@ export class Enemy implements SpatialEntity {
       this.sprite.setDisplaySize(110, 110);
     } else if (isNamed) {
       this.sprite.setDisplaySize(72, 72);
+    } else if (isElite) {
+      this.sprite.setDisplaySize(62, 62);
+      this.sprite.setTint(0xffd700);
     } else {
       this.sprite.setDisplaySize(48, 48);
     }
     this.sprite.setDepth(15);
+
+    if (isElite || isNamed || isBoss) {
+      this.hpBarGraphics = scene.add.graphics();
+      this.hpBarGraphics.setDepth(16);
+    }
   }
 
   public takeDamage(amount: number, knockbackDx: number = 0, knockbackDy: number = 0): boolean {
@@ -89,7 +101,7 @@ export class Enemy implements SpatialEntity {
 
     // 넉백 적용 및 스프라이트 좌표 즉시 동기화 (Issue 5)
     if (knockbackDx !== 0 || knockbackDy !== 0) {
-      const bossKnockbackResist = this.isBoss ? 0.15 : this.isNamed ? 0.4 : 1.0;
+      const bossKnockbackResist = this.isBoss ? 0.15 : this.isNamed ? 0.4 : this.isElite ? 0.5 : 1.0;
       this.x += knockbackDx * bossKnockbackResist;
       this.y += knockbackDy * bossKnockbackResist;
       this.sprite.setPosition(this.x, this.y);
@@ -103,6 +115,11 @@ export class Enemy implements SpatialEntity {
       this.hp = 0;
       this.active = false;
       this.sprite.setVisible(false);
+      if (this.hpBarGraphics) {
+        this.hpBarGraphics.clear();
+        this.hpBarGraphics.destroy();
+        this.hpBarGraphics = undefined;
+      }
       if (this.onKilled) {
         this.onKilled(this);
       }
@@ -144,6 +161,7 @@ export class Enemy implements SpatialEntity {
         this.sprite.clearTint();
         if (this.freezeTimer > 0) this.sprite.setTint(0x00f0ff);
         else if (this.slowTimer > 0) this.sprite.setTint(0x3388ff);
+        else if (this.isElite) this.sprite.setTint(0xffd700);
       }
     }
 
@@ -152,6 +170,7 @@ export class Enemy implements SpatialEntity {
       this.freezeTimer -= dt;
       if (this.freezeTimer <= 0) {
         this.sprite.clearTint();
+        if (this.isElite) this.sprite.setTint(0xffd700);
       }
       return;
     }
@@ -159,6 +178,7 @@ export class Enemy implements SpatialEntity {
       this.stunTimer -= dt;
       if (this.stunTimer <= 0) {
         this.sprite.clearTint();
+        if (this.isElite) this.sprite.setTint(0xffd700);
       }
       return;
     }
@@ -171,6 +191,11 @@ export class Enemy implements SpatialEntity {
         this.hp = 0;
         this.active = false;
         this.sprite.setVisible(false);
+        if (this.hpBarGraphics) {
+          this.hpBarGraphics.clear();
+          this.hpBarGraphics.destroy();
+          this.hpBarGraphics = undefined;
+        }
         if (this.onKilled) {
           this.onKilled(this);
         }
@@ -184,6 +209,7 @@ export class Enemy implements SpatialEntity {
       this.slowTimer -= dt;
       if (this.slowTimer <= 0) {
         this.sprite.clearTint();
+        if (this.isElite) this.sprite.setTint(0xffd700);
       } else {
         currentSpeed *= 1 - this.slowRatio;
       }
@@ -218,9 +244,28 @@ export class Enemy implements SpatialEntity {
     }
 
     this.sprite.setPosition(this.x, this.y);
+
+    // 정예 / 수문장 / 보스 머리 위 체력바 실시간 렌더링
+    if (this.hpBarGraphics && this.active) {
+      const ratio = Math.max(0, this.hp / this.maxHp);
+      const barW = this.isBoss ? 70 : this.isNamed ? 52 : 42;
+      const barH = 5;
+      const barX = this.x - barW / 2;
+      const barY = this.y - (this.isBoss ? 55 : this.isNamed ? 40 : 34);
+
+      this.hpBarGraphics.clear();
+      this.hpBarGraphics.fillStyle(0x0a0a0a, 0.75);
+      this.hpBarGraphics.fillRect(barX - 1, barY - 1, barW + 2, barH + 2);
+      this.hpBarGraphics.fillStyle(this.isElite ? 0xffd700 : 0xff2a6d, 1);
+      this.hpBarGraphics.fillRect(barX, barY, barW * ratio, barH);
+    }
   }
 
   public destroy(): void {
+    if (this.hpBarGraphics) {
+      this.hpBarGraphics.destroy();
+      this.hpBarGraphics = undefined;
+    }
     this.sprite.destroy();
   }
 }

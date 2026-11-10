@@ -36,6 +36,7 @@ export class BattleScene extends Phaser.Scene {
 
   // 진화 보물상자 객체
   private evolutionChest: Phaser.GameObjects.Sprite | null = null;
+  public awakeningDrops: { sprite: Phaser.GameObjects.Sprite; label: Phaser.GameObjects.Text; x: number; y: number; active: boolean }[] = [];
 
   constructor() {
     super('BattleScene');
@@ -53,6 +54,7 @@ export class BattleScene extends Phaser.Scene {
     this.expGems = [];
     this.recentCorpses = [];
     this.evolutionChest = null;
+    this.awakeningDrops = [];
   }
 
   create(): void {
@@ -275,6 +277,27 @@ export class BattleScene extends Phaser.Scene {
         this.triggerChestReward();
       }
     }
+
+    // 11. 각성재료 선택권 접촉 판정
+    for (let i = this.awakeningDrops.length - 1; i >= 0; i--) {
+      const drop = this.awakeningDrops[i];
+      if (!drop.active) {
+        drop.sprite.destroy();
+        drop.label.destroy();
+        this.awakeningDrops.splice(i, 1);
+        continue;
+      }
+      const adx = drop.x - this.player.x;
+      const ady = drop.y - this.player.y;
+      if (adx * adx + ady * ady <= 38 * 38) {
+        drop.active = false;
+        drop.sprite.destroy();
+        drop.label.destroy();
+        this.awakeningDrops.splice(i, 1);
+        this.triggerAwakeningSelectorReward();
+        break;
+      }
+    }
   }
 
   // 액티브 스킬 자동 발사 루프
@@ -437,6 +460,11 @@ export class BattleScene extends Phaser.Scene {
       }
     }
 
+    // 정예 괴수, 수문장, 보스 처치 시 각성재료 선택권 드랍 (유저 요구사항 5)
+    if (enemy.isElite || enemy.isNamed || enemy.isBoss) {
+      this.spawnAwakeningSelectorDrop(dropX, dropY);
+    }
+
     // 5웨이브 수문장 처치 시 각성 확정 보물상자 스폰
     if (enemy.isNamed) {
       this.spawnEvolutionChest(dropX, dropY);
@@ -450,6 +478,39 @@ export class BattleScene extends Phaser.Scene {
     if (enemy.isBoss) {
       this.handleStageClear();
     }
+  }
+
+  public spawnAwakeningSelectorDrop(x: number, y: number): void {
+    const sprite = this.add.sprite(x, y, 'gate_diamond');
+    sprite.setDisplaySize(38, 38);
+    sprite.setDepth(21);
+    sprite.setTint(0x00f0ff);
+
+    const label = this.add.text(x, y - 24, '📜 각성재료 선택권', {
+      fontFamily: 'NeoDunggeunmo, monospace',
+      fontSize: '11px',
+      color: '#ffd000',
+      stroke: '#000000',
+      strokeThickness: 3,
+    }).setOrigin(0.5).setDepth(22);
+
+    this.tweens.add({
+      targets: [sprite, label],
+      y: '-=6',
+      yoyo: true,
+      repeat: -1,
+      duration: 650,
+      ease: 'Sine.easeInOut',
+    });
+
+    this.awakeningDrops.push({ sprite, label, x, y, active: true });
+  }
+
+  public triggerAwakeningSelectorReward(): void {
+    SoundEngine.getInstance().playTone(660, 'sine', 0.25, 0.3, 100);
+    this.isPaused = true;
+    const uiScene = this.scene.get('UIScene') as UIScene;
+    uiScene.showAwakeningSelectorModal();
   }
 
   private spawnEvolutionChest(x: number, y: number): void {

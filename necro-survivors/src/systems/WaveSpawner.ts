@@ -7,6 +7,7 @@ export class WaveSpawner {
   public elapsedTime: number = 0; // 초 단위 경과 시간
   public currentWave: number = 1; // 1 ~ 6
   private spawnTimer: number = 0;
+  private eliteTimer: number = 30; // 30초 주기 정예 몬스터 타이머
   private namedSpawned: boolean = false;
   private bossSpawned: boolean = false;
   public bossInstance: Enemy | null = null;
@@ -41,6 +42,15 @@ export class WaveSpawner {
     if (this.elapsedTime >= 500 && !this.bossSpawned) {
       this.bossSpawned = true;
       this.spawnBossMonster(camera);
+    }
+
+    // 정예 몬스터: 시작 1분(60초) 제외, 30초마다 1기씩 스폰
+    if (this.elapsedTime >= 60) {
+      this.eliteTimer -= dt;
+      if (this.eliteTimer <= 0) {
+        this.eliteTimer = 30;
+        this.spawnEliteMonster(camera);
+      }
     }
 
     // 일반 몬스터 주기적 스폰
@@ -161,12 +171,46 @@ export class WaveSpawner {
       20, // radius
       Math.max(1, Math.min(4, this.currentWave)), // exp (1~4 exp per normal mob)
       2 + this.region.regionId, // gold
-      false,
-      false,
+      false, // isNamed
+      false, // isBoss
+      false, // isElite
       (killed) => (this.scene as any).onEnemyKilled(killed)
     );
 
     this.enemies.push(enemy);
+  }
+
+  private spawnEliteMonster(camera: Phaser.Cameras.Scene2D.Camera): void {
+    const pos = this.getSpawnPositionOutsideCamera(camera, 80);
+    const monsterIdx = Phaser.Math.Between(1, 4);
+    const textureKey = `m_${this.region.regionId}_${monsterIdx}`;
+
+    // 일반 몬스터의 약 5.5배 체력, 1.5배 공격력
+    const baseHp = Math.round((28 + this.region.regionId * 20 + this.currentWave * 20) * 5.5);
+    const baseAtk = Math.round((12 + this.region.regionId * 6 + this.currentWave * 4) * 1.5);
+    const speed = 72;
+
+    const elite = new Enemy(
+      this.scene,
+      textureKey,
+      pos.x,
+      pos.y,
+      baseHp,
+      baseAtk,
+      speed,
+      28, // radius
+      15, // exp
+      50 + this.region.regionId * 5, // gold
+      false, // isNamed
+      false, // isBoss
+      true,  // isElite
+      (killed) => (this.scene as any).onEnemyKilled(killed)
+    );
+
+    this.enemies.push(elite);
+    if (typeof (this.scene as any).showDamageText === 'function') {
+      (this.scene as any).showDamageText(pos.x, pos.y - 20, '⚠️ [정예 괴수 출현]', 0xffd000, true);
+    }
   }
 
   private spawnNamedMonster(camera: Phaser.Cameras.Scene2D.Camera): void {
@@ -188,7 +232,8 @@ export class WaveSpawner {
       30, // exp (수문장 30 exp)
       120,
       true, // isNamed
-      false,
+      false, // isBoss
+      false, // isElite
       (killed) => (this.scene as any).onEnemyKilled(killed)
     );
 
@@ -214,8 +259,9 @@ export class WaveSpawner {
       50,
       100, // exp (최종 보스 100 exp)
       500,
-      false,
+      false, // isNamed
       true, // isBoss
+      false, // isElite
       (killed) => (this.scene as any).onEnemyKilled(killed)
     );
 

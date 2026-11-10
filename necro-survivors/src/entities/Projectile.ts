@@ -221,9 +221,20 @@ export class Projectile {
       }
 
       this.pierceLeft--;
-      if (this.pierceLeft <= 0 && this.behavior !== 'orbit' && this.behavior !== 'ground_zone') {
+      if (this.pierceLeft <= 0 && this.behavior !== 'ground_zone') {
         this.destroyVisuals();
         this.active = false;
+        if (this.behavior === 'orbit' && this.scene) {
+          // 일회용 방패/도끼 파괴 시 파열 시각효과
+          const burst = this.scene.add.circle(this.x, this.y, 14, 0xffd000, 0.85).setDepth(25);
+          this.scene.tweens.add({
+            targets: burst,
+            scale: 2.2,
+            alpha: 0,
+            duration: 180,
+            onComplete: () => burst.destroy(),
+          });
+        }
         break;
       }
     }

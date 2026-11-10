@@ -8,7 +8,7 @@ export const ACTIVE_SKILLS: SkillData[] = [
   {
     id: 'necro_spear',
     name: '본 스피어',
-    icon: 'assets/pixel_vfx/skills/vfx_necro_3.png',
+    icon: 'assets/skills/skill_necro_spear.png',
     category: 'weapon',
     isNecroSignature: true,
     targeting: 'nearest',
@@ -27,7 +27,7 @@ export const ACTIVE_SKILLS: SkillData[] = [
   {
     id: 'necro_legion',
     name: '해골 군단 소환',
-    icon: 'assets/pixel_vfx/skills/vfx_necro_1.png',
+    icon: 'assets/skills/skill_necro_legion.png',
     category: 'summon',
     isNecroSignature: true,
     targeting: 'self_aoe',
@@ -47,7 +47,7 @@ export const ACTIVE_SKILLS: SkillData[] = [
   {
     id: 'necro_armor',
     name: '본 아머 & 망자 걸음',
-    icon: 'assets/pixel_vfx/skills/vfx_necro_4.png',
+    icon: 'assets/skills/skill_necro_armor.png',
     category: 'weapon',
     isNecroSignature: true,
     targeting: 'circular_orbit',
@@ -56,17 +56,17 @@ export const ACTIVE_SKILLS: SkillData[] = [
     requiredPassiveId: 'pas_iron_body',
     maxLevel: 5,
     levels: [
-      { level: 1, description: '회전하는 뼈방패 2개 생성 및 충돌 피해', damageCoeff: 0.9, cooldown: 4.0, projectileCount: 2, areaRadius: 65, pierceCount: 999, duration: 6.0, knockbackForce: 35 },
-      { level: 2, description: '뼈방패 +1개, 회전 속도 +25%', damageCoeff: 1.1, cooldown: 4.0, projectileCount: 3, areaRadius: 75, pierceCount: 999, duration: 6.5, knockbackForce: 40 },
-      { level: 3, description: '뼈방패 +1개, 피격 시 데미지 10 감소', damageCoeff: 1.35, cooldown: 3.8, projectileCount: 4, areaRadius: 85, pierceCount: 999, duration: 7.0, knockbackForce: 45 },
-      { level: 4, description: '뼈방패 회전 반경 증가 & 피해량 +30%', damageCoeff: 1.7, cooldown: 3.5, projectileCount: 4, areaRadius: 95, pierceCount: 999, duration: 7.5, knockbackForce: 50 },
-      { level: 5, description: '뼈방패 6개 완성, 상시 유지 & 주변 적 둔화 30%', damageCoeff: 2.2, cooldown: 3.0, projectileCount: 6, areaRadius: 105, pierceCount: 999, duration: 9999, knockbackForce: 60, statusEffect: { type: 'slow', chance: 1.0, duration: 1.5, value: 0.3 } },
+      { level: 1, description: '회전하는 뼈방패 1개 생성 (1회 충돌 시 파괴되는 일회용 방패)', damageCoeff: 1.4, cooldown: 3.5, projectileCount: 1, areaRadius: 65, pierceCount: 1, duration: 9999, knockbackForce: 45 },
+      { level: 2, description: '뼈방패 최대 보관 수 +1 (최대 2개), 쿨마다 1개 보충', damageCoeff: 1.6, cooldown: 3.3, projectileCount: 2, areaRadius: 75, pierceCount: 1, duration: 9999, knockbackForce: 50 },
+      { level: 3, description: '뼈방패 타격 횟수 +1회 (2회 타격 가능), 회전 반경 증가', damageCoeff: 1.9, cooldown: 3.0, projectileCount: 2, areaRadius: 85, pierceCount: 2, duration: 9999, knockbackForce: 55 },
+      { level: 4, description: '뼈방패 최대 보관 수 +1 (최대 3개), 피해량 +25%', damageCoeff: 2.3, cooldown: 2.8, projectileCount: 3, areaRadius: 95, pierceCount: 2, duration: 9999, knockbackForce: 60 },
+      { level: 5, description: '뼈방패 타격 횟수 +1회 (3회 타격 가능, 최대 3개) & 충돌 시 둔화 30%', damageCoeff: 2.8, cooldown: 2.5, projectileCount: 3, areaRadius: 105, pierceCount: 3, duration: 9999, knockbackForce: 70, statusEffect: { type: 'slow', chance: 1.0, duration: 1.5, value: 0.3 } },
     ],
   },
   {
     id: 'dk_grip',
     name: '죽음의 손아귀',
-    icon: 'assets/pixel_vfx/skills/vfx_dk_3.png',
+    icon: 'assets/skills/skill_dk_grip.png',
     category: 'weapon',
     isNecroSignature: true,
     targeting: 'nearest',
@@ -87,7 +87,7 @@ export const ACTIVE_SKILLS: SkillData[] = [
   {
     id: 'storm_chain',
     name: '체인 라이트닝',
-    icon: 'assets/pixel_vfx/skills/vfx_storm_2.png',
+    icon: 'assets/skills/skill_storm_chain.png',
     category: 'weapon',
     isNecroSignature: false,
     targeting: 'nearest',
@@ -106,7 +106,7 @@ export const ACTIVE_SKILLS: SkillData[] = [
   {
     id: 'sniper_shot',
     name: '대구경 관통 저격',
-    icon: 'assets/pixel_vfx/skills/vfx_snip_2.png',
+    icon: 'assets/skills/skill_sniper_shot.png',
     category: 'weapon',
     isNecroSignature: false,
     targeting: 'highest_hp',
@@ -125,7 +125,7 @@ export const ACTIVE_SKILLS: SkillData[] = [
   {
     id: 'psi_blackhole',
     name: '중력장 압축 (블랙홀)',
-    icon: 'assets/pixel_vfx/skills/vfx_psi_2.png',
+    icon: 'assets/skills/skill_psi_blackhole.png',
     category: 'weapon',
     isNecroSignature: false,
     targeting: 'random',
@@ -144,7 +144,7 @@ export const ACTIVE_SKILLS: SkillData[] = [
   {
     id: 'cryo_nova',
     name: '프로스트 노바',
-    icon: 'assets/pixel_vfx/skills/vfx_cryo_3.png',
+    icon: 'assets/skills/skill_cryo_nova.png',
     category: 'weapon',
     isNecroSignature: false,
     targeting: 'self_aoe',
@@ -163,7 +163,7 @@ export const ACTIVE_SKILLS: SkillData[] = [
   {
     id: 'ber_whirlwind',
     name: '중력 도끼 휠윈드',
-    icon: 'assets/pixel_vfx/skills/vfx_ber_2.png',
+    icon: 'assets/skills/skill_ber_whirlwind.png',
     category: 'weapon',
     isNecroSignature: false,
     targeting: 'circular_orbit',
@@ -172,17 +172,17 @@ export const ACTIVE_SKILLS: SkillData[] = [
     requiredPassiveId: 'pas_iron_body',
     maxLevel: 5,
     levels: [
-      { level: 1, description: '플레이어 주위를 회전하는 묵직한 전투 도끼 1개', damageCoeff: 1.4, cooldown: 3.5, projectileCount: 1, areaRadius: 75, pierceCount: 999, duration: 5.0, knockbackForce: 45 },
-      { level: 2, description: '도끼 +1개 (총 2개), 회전 속도 +20%', damageCoeff: 1.7, cooldown: 3.3, projectileCount: 2, areaRadius: 85, pierceCount: 999, duration: 5.5, knockbackForce: 50 },
-      { level: 3, description: '도끼 +1개 (총 3개), 강력한 넉백 부여', damageCoeff: 2.0, cooldown: 3.0, projectileCount: 3, areaRadius: 95, pierceCount: 999, duration: 6.0, knockbackForce: 65 },
-      { level: 4, description: '도끼 크기 +30%, 피해량 +30%', damageCoeff: 2.5, cooldown: 2.8, projectileCount: 3, areaRadius: 110, pierceCount: 999, duration: 6.5, knockbackForce: 75 },
-      { level: 5, description: '전투 도끼 4개 상시 회전, 붉은 중력 충격파 방출', damageCoeff: 3.1, cooldown: 2.5, projectileCount: 4, areaRadius: 125, pierceCount: 999, duration: 9999, knockbackForce: 90 },
+      { level: 1, description: '회전하는 전투 도끼 1개 생성 (1회 충돌 시 소멸하는 일회용 도끼)', damageCoeff: 1.6, cooldown: 3.2, projectileCount: 1, areaRadius: 75, pierceCount: 1, duration: 9999, knockbackForce: 50 },
+      { level: 2, description: '전투 도끼 최대 보관 수 +1 (최대 2개), 쿨마다 1개 보충', damageCoeff: 1.9, cooldown: 3.0, projectileCount: 2, areaRadius: 85, pierceCount: 1, duration: 9999, knockbackForce: 55 },
+      { level: 3, description: '도끼 타격 횟수 +1회 (2회 타격 가능), 강력한 넉백', damageCoeff: 2.2, cooldown: 2.8, projectileCount: 2, areaRadius: 95, pierceCount: 2, duration: 9999, knockbackForce: 65 },
+      { level: 4, description: '도끼 최대 보관 수 +1 (최대 3개), 회전 반경 및 피해량 +30%', damageCoeff: 2.7, cooldown: 2.5, projectileCount: 3, areaRadius: 110, pierceCount: 2, duration: 9999, knockbackForce: 75 },
+      { level: 5, description: '도끼 타격 횟수 +1회 (3회 타격 가능, 최대 4개), 붉은 충격파 방출', damageCoeff: 3.3, cooldown: 2.2, projectileCount: 4, areaRadius: 125, pierceCount: 3, duration: 9999, knockbackForce: 90 },
     ],
   },
   {
     id: 'sm_dragon',
     name: '청룡참 검기',
-    icon: 'assets/pixel_vfx/skills/vfx_sm_5.png',
+    icon: 'assets/skills/skill_sm_dragon.png',
     category: 'weapon',
     isNecroSignature: false,
     targeting: 'facing',
@@ -201,7 +201,7 @@ export const ACTIVE_SKILLS: SkillData[] = [
   {
     id: 'psi_drone',
     name: '외계 강습 드론',
-    icon: 'assets/pixel_vfx/skills/vfx_psi_5.png',
+    icon: 'assets/skills/skill_psi_drone.png',
     category: 'summon',
     isNecroSignature: false,
     targeting: 'self_aoe',
@@ -221,7 +221,7 @@ export const ACTIVE_SKILLS: SkillData[] = [
   {
     id: 'priest_sanctuary',
     name: '정화의 성염 장판',
-    icon: 'assets/pixel_vfx/skills/vfx_priest_3.png',
+    icon: 'assets/skills/skill_priest_sanctuary.png',
     category: 'weapon',
     isNecroSignature: false,
     targeting: 'self_aoe',
@@ -246,7 +246,7 @@ export const PASSIVE_SKILLS: SkillData[] = [
   {
     id: 'pas_frost_heart',
     name: '극한의 심장',
-    icon: 'assets/pixel_vfx/skills/vfx_cryo_1.png',
+    icon: 'assets/skills/skill_pas_frost_heart.png',
     category: 'passive',
     isNecroSignature: true,
     targeting: 'self_aoe',
@@ -263,7 +263,7 @@ export const PASSIVE_SKILLS: SkillData[] = [
   {
     id: 'pas_undead_cmd',
     name: '사령의 권능',
-    icon: 'assets/pixel_vfx/skills/vfx_necro_1.png',
+    icon: 'assets/skills/skill_pas_undead_cmd.png',
     category: 'passive',
     isNecroSignature: true,
     targeting: 'self_aoe',
@@ -280,7 +280,7 @@ export const PASSIVE_SKILLS: SkillData[] = [
   {
     id: 'pas_cooldown',
     name: '초월적 연산',
-    icon: 'assets/pixel_vfx/skills/vfx_storm_1.png',
+    icon: 'assets/skills/skill_pas_cooldown.png',
     category: 'passive',
     isNecroSignature: false,
     targeting: 'self_aoe',
@@ -297,7 +297,7 @@ export const PASSIVE_SKILLS: SkillData[] = [
   {
     id: 'pas_area',
     name: '마력 동조망',
-    icon: 'assets/pixel_vfx/skills/vfx_psi_1.png',
+    icon: 'assets/skills/skill_pas_area.png',
     category: 'passive',
     isNecroSignature: false,
     targeting: 'self_aoe',
@@ -314,7 +314,7 @@ export const PASSIVE_SKILLS: SkillData[] = [
   {
     id: 'pas_amount',
     name: '카게미츠의 수리검',
-    icon: 'assets/pixel_vfx/skills/vfx_ninja_2.png',
+    icon: 'assets/skills/skill_pas_amount.png',
     category: 'passive',
     isNecroSignature: false,
     targeting: 'self_aoe',
@@ -331,7 +331,7 @@ export const PASSIVE_SKILLS: SkillData[] = [
   {
     id: 'pas_hawk_eye',
     name: '매의 눈',
-    icon: 'assets/pixel_vfx/skills/vfx_snip_1.png',
+    icon: 'assets/skills/skill_pas_hawk_eye.png',
     category: 'passive',
     isNecroSignature: false,
     targeting: 'self_aoe',
@@ -348,7 +348,7 @@ export const PASSIVE_SKILLS: SkillData[] = [
   {
     id: 'pas_iron_body',
     name: '육체의 기억',
-    icon: 'assets/pixel_vfx/skills/vfx_guard_1.png',
+    icon: 'assets/skills/skill_pas_iron_body.png',
     category: 'passive',
     isNecroSignature: false,
     targeting: 'self_aoe',
@@ -365,7 +365,7 @@ export const PASSIVE_SKILLS: SkillData[] = [
   {
     id: 'pas_speed',
     name: '포식자의 본능 & 잔상 보법',
-    icon: 'assets/pixel_vfx/skills/vfx_ass_1.png',
+    icon: 'assets/skills/skill_pas_speed.png',
     category: 'passive',
     isNecroSignature: false,
     targeting: 'self_aoe',
@@ -382,7 +382,7 @@ export const PASSIVE_SKILLS: SkillData[] = [
   {
     id: 'pas_blood_vamp',
     name: '선혈의 서약 (흡혈 & 생명력 착취)',
-    icon: 'assets/pixel_vfx/skills/vfx_dk_3.png',
+    icon: 'assets/skills/skill_pas_blood_vamp.png',
     category: 'passive',
     isNecroSignature: true,
     targeting: 'self_aoe',

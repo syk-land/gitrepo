@@ -19,8 +19,8 @@ export class LevelUpManager {
     const ownedActives = Array.from(player.activeSkills.keys());
     const ownedPassives = Array.from(player.passiveSkills.keys());
 
-    // 1단계: 획득 가능한 후보군 필터링
-    const allAvailableSkills = [...ACTIVE_SKILLS, ...PASSIVE_SKILLS];
+    // 1단계: 획득 가능한 후보군 필터링 (일반 레벨업은 액티브 무기만 제시, 각성재료 패시브는 정예/보스 선택권에서 획득)
+    const allAvailableSkills = [...ACTIVE_SKILLS];
 
     const candidates = allAvailableSkills.filter((skill) => {
       // 이미 이 스킬에서 진화한 각성 스킬을 보유하고 있다면 원본 스킬은 재등장하지 않음

@@ -31,7 +31,9 @@ export class SkillExecutor {
 
     // 2. 발사 투사체 수 계산 (기본 + 패시브 추가 투사체)
     const totalProjectiles = Math.max(1, lvData.projectileCount + stats.bonusProjectiles);
-    const finalDamage = Math.round(stats.damageMul * lvData.damageCoeff * 45);
+    const isOrbiter = skill.behavior === 'orbit';
+    const baseDamageScale = isOrbiter ? 48 : 25; // 회전도끼/뼈방패는 강력한 데미지 유지, 일반 스킬은 생존 난이도를 위해 적절히 조정
+    const finalDamage = Math.round(stats.damageMul * lvData.damageCoeff * baseDamageScale);
     const finalRadius = Math.round(lvData.areaRadius * stats.areaMul);
     const finalKnockback = lvData.knockbackForce;
     const finalSpeed = 340 * stats.projectileSpeedMul;
@@ -91,19 +93,12 @@ export class SkillExecutor {
 
     // 3. 투사체 생성 (부채꼴 분기 또는 다중 공전)
     if (skill.behavior === 'orbit') {
-      // 기존 동일 스킬의 궤도 투사체 정리 (문제점 3: 회전도끼 무한증식 방지)
-      for (let i = projectiles.length - 1; i >= 0; i--) {
-        const existing = projectiles[i];
-        if (existing.skillId === skill.id) {
-          existing.destroyVisuals();
-          existing.destroy();
-          projectiles.splice(i, 1);
-        }
-      }
+      // 궤도 회전형 (본 아머, 휠윈드) - 쿨타임마다 1개씩 생성, 최대 보관 수까지 유지
+      const currentOrbiters = projectiles.filter((p) => p.active && p.skillId === skill.id);
+      const maxAllowed = totalProjectiles;
 
-      // 궤도 회전형 (본 아머, 휠윈드)
-      const angleStep = (Math.PI * 2) / totalProjectiles;
-      for (let i = 0; i < totalProjectiles; i++) {
+      if (currentOrbiters.length < maxAllowed) {
+        const angleOffset = (Math.PI * 2 / maxAllowed) * currentOrbiters.length + (Math.random() * 0.2);
         const p = new Projectile(
           scene,
           skill.id,
@@ -111,7 +106,7 @@ export class SkillExecutor {
           casterPos.y,
           'orbit',
           finalDamage,
-          lvData.pierceCount,
+          lvData.pierceCount, // 레벨별 타격 횟수 (1~3회)
           lvData.duration || 9999,
           finalRadius,
           finalKnockback,
@@ -120,7 +115,7 @@ export class SkillExecutor {
           finalSpeed,
           lvData.statusEffect,
           caster,
-          i * angleStep,
+          angleOffset,
           skill.id,
           stats.critRate,
           stats.critDamage
