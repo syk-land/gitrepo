@@ -222,8 +222,9 @@ export class Player implements ISkillCaster {
       }
     }
 
-    // 초당 체력 회복
+    // 초당 체력 회복 및 최대 체력 동기화
     const stats = this.getEffectiveStats();
+    this.maxHp = stats.maxHp;
     if (this.hp < stats.maxHp) {
       this.hp = Math.min(stats.maxHp, this.hp + stats.hpRegenPerSec * dt);
     }

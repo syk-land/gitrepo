@@ -3,6 +3,7 @@ import { ProjectileBehavior, StatusEffect } from '../data/types';
 import { SpatialHashGrid } from '../core/SpatialHashGrid';
 import { Enemy } from './Enemy';
 import { ISkillCaster } from './ISkillCaster';
+import { SoundEngine } from '../core/SoundEngine';
 
 export class Projectile {
   public skillId: string = '';
@@ -17,6 +18,9 @@ export class Projectile {
   public knockback: number;
   public behavior: ProjectileBehavior;
   public statusEffect?: { type: 'slow' | 'freeze' | 'stun' | 'bleed' | 'pull'; chance: number; duration: number; value?: number };
+  public critRate: number = 0;
+  public critDamage: number = 1.5;
+  private hasStruck: boolean = false;
 
   public sprite: Phaser.GameObjects.Sprite;
   private vx: number = 0;
@@ -46,7 +50,9 @@ export class Projectile {
     statusEffect?: { type: 'slow' | 'freeze' | 'stun' | 'bleed' | 'pull'; chance: number; duration: number; value?: number },
     orbitCaster?: ISkillCaster,
     orbitOffset: number = 0,
-    skillId: string = ''
+    skillId: string = '',
+    critRate: number = 0,
+    critDamage: number = 1.5
   ) {
     this.scene = scene;
     this.skillId = skillId || textureKey;
@@ -62,6 +68,8 @@ export class Projectile {
     this.statusEffect = statusEffect;
     this.orbitCaster = orbitCaster;
     this.orbitAngle = orbitOffset;
+    this.critRate = critRate;
+    this.critDamage = critDamage;
 
     const len = Math.sqrt(dirX * dirX + dirY * dirY) || 1;
     this.vx = (dirX / len) * speed;
@@ -149,9 +157,22 @@ export class Projectile {
     } else if (this.behavior === 'chain') {
       this.checkChainCollisions(grid);
     } else if (this.behavior === 'instant_strike') {
-      this.checkCollisions(grid);
-      this.destroyVisuals();
-      this.active = false;
+      if (!this.hasStruck) {
+        this.hasStruck = true;
+        this.checkCollisions(grid);
+        // 즉시 시각 효과 트윈 실행 (확산 & 페이드아웃)
+        this.scene.tweens.add({
+          targets: this.sprite,
+          scale: this.sprite.scaleX * 1.5,
+          alpha: 0,
+          duration: 320,
+          ease: 'Quad.easeOut',
+          onComplete: () => {
+            this.destroyVisuals();
+            this.active = false;
+          },
+        });
+      }
     }
   }
 
@@ -174,9 +195,25 @@ export class Projectile {
       this.hitEnemies.add(enemy);
       const dist = Math.sqrt(distSq) || 1;
 
-      enemy.takeDamage(this.damage, (dx / dist) * this.knockback, (dy / dist) * this.knockback);
+      // 치명타 판정
+      let isCrit = false;
+      let hitDmg = this.damage;
+      if (this.critRate > 0 && Math.random() < this.critRate) {
+        isCrit = true;
+        hitDmg = Math.round(this.damage * this.critDamage);
+      }
+
+      const tookDmg = enemy.takeDamage(hitDmg, (dx / dist) * this.knockback, (dy / dist) * this.knockback);
+      if (!tookDmg) continue; // 화면 밖 1.2배 무적 적은 관통 및 데미지 미소모!
+
+      if (isCrit) {
+        SoundEngine.getInstance().crit();
+      }
+
       if (typeof (this.scene as any).showDamageText === 'function') {
-        (this.scene as any).showDamageText(enemy.x, enemy.y - 12, `${this.damage}`, 0xf5ede2);
+        const textColor = isCrit ? 0xffd000 : 0xf5ede2;
+        const textPrefix = isCrit ? '⚡ ' : '';
+        (this.scene as any).showDamageText(enemy.x, enemy.y - 12, `${textPrefix}${hitDmg}`, textColor, isCrit);
       }
 
       if (this.statusEffect && Math.random() <= this.statusEffect.chance) {
@@ -214,9 +251,39 @@ export class Projectile {
       if (!nextTarget) break;
 
       hitList.add(nextTarget);
-      nextTarget.takeDamage(this.damage, 0, 0);
+
+      // 치명타 판정
+      let isCrit = false;
+      let hitDmg = this.damage;
+      if (this.critRate > 0 && Math.random() < this.critRate) {
+        isCrit = true;
+        hitDmg = Math.round(this.damage * this.critDamage);
+      }
+
+      const tookDmg = nextTarget.takeDamage(hitDmg, 0, 0);
+      if (!tookDmg) continue;
+
+      if (isCrit) {
+        SoundEngine.getInstance().crit();
+      }
+
+      // 번개 아크 시각 효과 라인 렌더링
+      const line = this.scene.add.line(0, 0, currentX, currentY, nextTarget.x, nextTarget.y, 0x00f0ff)
+        .setLineWidth(2.5)
+        .setDepth(22)
+        .setOrigin(0);
+
+      this.scene.tweens.add({
+        targets: line,
+        alpha: 0,
+        duration: 220,
+        onComplete: () => line.destroy(),
+      });
+
       if (typeof (this.scene as any).showDamageText === 'function') {
-        (this.scene as any).showDamageText(nextTarget.x, nextTarget.y - 12, `${this.damage}`, 0xbf55ec);
+        const textColor = isCrit ? 0xffd000 : 0x00f0ff;
+        const textPrefix = isCrit ? '⚡ ' : '';
+        (this.scene as any).showDamageText(nextTarget.x, nextTarget.y - 12, `${textPrefix}${hitDmg}`, textColor, isCrit);
       }
       if (this.statusEffect && Math.random() <= this.statusEffect.chance) {
         nextTarget.applyStatus(this.statusEffect.type, this.statusEffect.duration, this.statusEffect.value);

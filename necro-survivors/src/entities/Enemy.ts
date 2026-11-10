@@ -150,10 +150,16 @@ export class Enemy implements SpatialEntity {
     // 빙결 및 기절 체크
     if (this.freezeTimer > 0) {
       this.freezeTimer -= dt;
+      if (this.freezeTimer <= 0) {
+        this.sprite.clearTint();
+      }
       return;
     }
     if (this.stunTimer > 0) {
       this.stunTimer -= dt;
+      if (this.stunTimer <= 0) {
+        this.sprite.clearTint();
+      }
       return;
     }
 
@@ -176,7 +182,11 @@ export class Enemy implements SpatialEntity {
     let currentSpeed = this.speed;
     if (this.slowTimer > 0) {
       this.slowTimer -= dt;
-      currentSpeed *= 1 - this.slowRatio;
+      if (this.slowTimer <= 0) {
+        this.sprite.clearTint();
+      } else {
+        currentSpeed *= 1 - this.slowRatio;
+      }
     }
 
     // 타겟(플레이어 또는 가까운 소환수)을 향해 이동

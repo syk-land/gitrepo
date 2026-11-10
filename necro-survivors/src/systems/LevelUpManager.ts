@@ -1,6 +1,6 @@
 import { SkillData } from '../data/types';
 import { Player } from '../entities/Player';
-import { ACTIVE_SKILLS, PASSIVE_SKILLS, ALL_SKILLS_MAP } from '../data/skillsData';
+import { ACTIVE_SKILLS, PASSIVE_SKILLS, AWAKENED_SKILLS, ALL_SKILLS_MAP } from '../data/skillsData';
 
 export interface LevelUpChoice {
   skill: SkillData;
@@ -23,6 +23,13 @@ export class LevelUpManager {
     const allAvailableSkills = [...ACTIVE_SKILLS, ...PASSIVE_SKILLS];
 
     const candidates = allAvailableSkills.filter((skill) => {
+      // 이미 이 스킬에서 진화한 각성 스킬을 보유하고 있다면 원본 스킬은 재등장하지 않음
+      for (const awakened of AWAKENED_SKILLS) {
+        if (awakened.evolvesFrom === skill.id && player.activeSkills.has(awakened.id)) {
+          return false;
+        }
+      }
+
       const isActive = skill.category === 'weapon' || skill.category === 'summon';
       const curLv = isActive
         ? player.activeSkills.get(skill.id) ?? 0

@@ -36,12 +36,29 @@ export class SkillExecutor {
     const finalKnockback = lvData.knockbackForce;
     const finalSpeed = 340 * stats.projectileSpeedMul;
 
-    // 타겟팅 방향 결정
+    // 타겟팅 방향 결정 (화면 내 유효한 적 우선 조준)
+    const cam = scene.cameras?.main;
+    const isValidTarget = (e: Enemy) => {
+      if (!e.active) return false;
+      if (!cam) return true;
+      return Math.abs(e.x - cam.midPoint.x) <= cam.width * 0.58 &&
+             Math.abs(e.y - cam.midPoint.y) <= cam.height * 0.58;
+    };
+
     let baseDirX = caster.getFacingDirection().x || 1;
     let baseDirY = caster.getFacingDirection().y || 0;
 
     if (skill.targeting === 'nearest') {
-      const nearest = grid.findNearest(casterPos.x, casterPos.y, 450);
+      const candidates = grid.queryRadius(casterPos.x, casterPos.y, 450).filter(isValidTarget);
+      let nearest: Enemy | null = null;
+      let minD = Infinity;
+      for (const e of candidates) {
+        const d = (e.x - casterPos.x) ** 2 + (e.y - casterPos.y) ** 2;
+        if (d < minD) {
+          minD = d;
+          nearest = e;
+        }
+      }
       if (nearest) {
         const dx = nearest.x - casterPos.x;
         const dy = nearest.y - casterPos.y;
@@ -50,7 +67,15 @@ export class SkillExecutor {
         baseDirY = dy / dist;
       }
     } else if (skill.targeting === 'highest_hp') {
-      const highest = grid.findHighestHp(casterPos.x, casterPos.y, 500);
+      const candidates = grid.queryRadius(casterPos.x, casterPos.y, 500).filter(isValidTarget);
+      let highest: Enemy | null = null;
+      let maxHp = -1;
+      for (const e of candidates) {
+        if (e.hp > maxHp) {
+          maxHp = e.hp;
+          highest = e;
+        }
+      }
       if (highest) {
         const dx = highest.x - casterPos.x;
         const dy = highest.y - casterPos.y;
@@ -96,7 +121,9 @@ export class SkillExecutor {
           lvData.statusEffect,
           caster,
           i * angleStep,
-          skill.id
+          skill.id,
+          stats.critRate,
+          stats.critDamage
         );
         projectiles.push(p);
       }
@@ -109,7 +136,7 @@ export class SkillExecutor {
 
         if (skill.targeting === 'nearest') {
           const nearest = grid.findNearest(casterPos.x, casterPos.y, 350);
-          if (nearest) {
+          if (nearest && isValidTarget(nearest)) {
             spawnX = nearest.x + (Math.random() * 40 - 20);
             spawnY = nearest.y + (Math.random() * 40 - 20);
           }
@@ -134,7 +161,12 @@ export class SkillExecutor {
           0,
           0,
           0,
-          lvData.statusEffect
+          lvData.statusEffect,
+          undefined,
+          0,
+          skill.id,
+          stats.critRate,
+          stats.critDamage
         );
         projectiles.push(p);
       }
@@ -163,7 +195,12 @@ export class SkillExecutor {
           dirX,
           dirY,
           finalSpeed,
-          lvData.statusEffect
+          lvData.statusEffect,
+          undefined,
+          0,
+          skill.id,
+          stats.critRate,
+          stats.critDamage
         );
         projectiles.push(p);
       }

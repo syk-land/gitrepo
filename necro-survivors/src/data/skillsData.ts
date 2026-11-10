@@ -379,6 +379,23 @@ export const PASSIVE_SKILLS: SkillData[] = [
       { level: 5, description: '이동속도 +40%, 자석 반경 +150%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'moveSpeed', op: 'mul', value: 1.40 }, { stat: 'pickupRadius', op: 'mul', value: 2.50 }] },
     ],
   },
+  {
+    id: 'pas_blood_vamp',
+    name: '선혈의 서약 (흡혈 & 생명력 착취)',
+    icon: 'assets/pixel_vfx/skills/vfx_dk_3.png',
+    category: 'passive',
+    isNecroSignature: true,
+    targeting: 'self_aoe',
+    behavior: 'straight',
+    maxLevel: 5,
+    levels: [
+      { level: 1, description: '적 처치 시 체력 1 회복, 공격력 +10%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'damageMul', op: 'add', value: 0.10 }, { stat: 'hpRegenPerSec', op: 'add', value: 1 }] },
+      { level: 2, description: '적 처치 시 체력 2 회복, 공격력 +20%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'damageMul', op: 'add', value: 0.20 }, { stat: 'hpRegenPerSec', op: 'add', value: 2 }] },
+      { level: 3, description: '적 처치 시 체력 3 회복, 공격력 +30%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'damageMul', op: 'add', value: 0.30 }, { stat: 'hpRegenPerSec', op: 'add', value: 3 }] },
+      { level: 4, description: '적 처치 시 체력 4 회복, 공격력 +40%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'damageMul', op: 'add', value: 0.40 }, { stat: 'hpRegenPerSec', op: 'add', value: 4 }] },
+      { level: 5, description: '선혈 각성: 적 처치 시 체력 6 회복, 공격력 +60%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'damageMul', op: 'add', value: 0.60 }, { stat: 'hpRegenPerSec', op: 'add', value: 6 }] },
+    ],
+  },
 ];
 
 // =========================================================================

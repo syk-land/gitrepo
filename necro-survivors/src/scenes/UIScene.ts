@@ -739,14 +739,21 @@ export class UIScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.modalContainer.add(doubleText);
 
+    let isClaiming = false;
     const doubleHit = this.add.zone(width / 2, height / 2 + 83, 280, 46).setInteractive({ useHandCursor: true });
     doubleHit.on('pointerdown', async () => {
+      if (isClaiming) return;
+      isClaiming = true;
       SoundEngine.getInstance().click();
+      doubleText.setText('⏳ 광고 재생 중...');
       const success = await AdBillingAdapter.getInstance().showDoubleRewardAd();
       if (success) {
         SaveManager.getInstance().addGold(goldReward * 2);
         if (isVictory) SaveManager.getInstance().markRegionCleared(this.battleScene.regionId);
         this.returnToHub();
+      } else {
+        isClaiming = false;
+        doubleText.setText('🎬 광고 보고 전리품 2배 수령');
       }
     });
     this.modalContainer.add(doubleHit);
@@ -768,6 +775,8 @@ export class UIScene extends Phaser.Scene {
 
     const exitHit = this.add.zone(width / 2, height / 2 + 142, 280, 44).setInteractive({ useHandCursor: true });
     exitHit.on('pointerdown', () => {
+      if (isClaiming) return;
+      isClaiming = true;
       SoundEngine.getInstance().click();
       SaveManager.getInstance().addGold(goldReward);
       if (isVictory) SaveManager.getInstance().markRegionCleared(this.battleScene.regionId);

@@ -129,8 +129,47 @@ export class BattleScene extends Phaser.Scene {
         continue;
       }
 
-      // 플레이어 또는 가장 가까운 소환수를 향해 이동
-      enemy.update(dt, this.player.x, this.player.y, this.spatialGrid);
+      // 몬스터 타겟 결정: 100px 내에 살아있는 근접 소환수가 있으면 소환수 타겟, 없으면 플레이어 타겟
+      let targetX = this.player.x;
+      let targetY = this.player.y;
+      let nearestMinion: MinionUnit | null = null;
+      let minionDistSq = 110 * 110;
+
+      for (const minion of this.minions) {
+        if (!minion.isAlive()) continue;
+        const mdx = minion.x - enemy.x;
+        const mdy = minion.y - enemy.y;
+        const dSq = mdx * mdx + mdy * mdy;
+        if (dSq < minionDistSq) {
+          minionDistSq = dSq;
+          nearestMinion = minion;
+        }
+      }
+
+      if (nearestMinion) {
+        targetX = nearestMinion.x;
+        targetY = nearestMinion.y;
+      }
+
+      // 플레이어 또는 타겟 소환수를 향해 이동
+      enemy.update(dt, targetX, targetY, this.spatialGrid);
+
+      // 소환수와의 접촉 피격 판정 (소환수 피격 시스템 및 바리케이드 충돌)
+      if (nearestMinion) {
+        const mdx = nearestMinion.x - enemy.x;
+        const mdy = nearestMinion.y - enemy.y;
+        const mDistSq = mdx * mdx + mdy * mdy;
+        const mTouchRadius = nearestMinion.def.bodyRadius + enemy.radius;
+        if (mDistSq <= mTouchRadius * mTouchRadius) {
+          nearestMinion.takeDamage(enemy.atk * dt * 2.0);
+          if (nearestMinion.def.combatRole === 'melee_blocker') {
+            const mDist = Math.sqrt(mDistSq) || 1;
+            enemy.x -= (mdx / mDist) * 160 * dt;
+            enemy.y -= (mdy / mDist) * 160 * dt;
+            enemy.sprite.setPosition(enemy.x, enemy.y);
+          }
+        }
+      }
 
       // 플레이어와의 접촉 피격 판정 (Section 6.1)
       const dx = this.player.x - enemy.x;
@@ -167,9 +206,11 @@ export class BattleScene extends Phaser.Scene {
         } else if (caster.def.id === 'drone') {
           texKey = 'vfx_minion_drone';
           projSpeed = 520;
-          projDmg = Math.round(stats.damageMul * 36);
-          pierce = 1;
-          knockback = 15;
+          const droneSkillLv = this.player.activeSkills.get('psi_drone') ?? 1;
+          const droneCoeff = droneSkillLv >= 5 ? 2.6 : droneSkillLv >= 4 ? 2.0 : droneSkillLv >= 3 ? 1.6 : droneSkillLv >= 2 ? 1.3 : 1.0;
+          projDmg = Math.round(stats.damageMul * 36 * droneCoeff);
+          pierce = droneSkillLv >= 5 ? 5 : droneSkillLv >= 4 ? 3 : 1;
+          knockback = 20;
         }
 
         const p = new Projectile(
@@ -277,7 +318,14 @@ export class BattleScene extends Phaser.Scene {
     let archers = 0;
     let mages = 0;
     const arthurs = hasArthur ? 1 : 0;
-    const drones = droneLv > 0 ? (droneLv >= 4 || this.player.activeSkills.has('awakened_drone') ? 2 : 1) : 0;
+    let drones = 0;
+    if (this.player.activeSkills.has('awakened_drone') || droneLv >= 5) {
+      drones = 3;
+    } else if (droneLv >= 3) {
+      drones = 2;
+    } else if (droneLv >= 1) {
+      drones = 1;
+    }
 
     if (hasArthur) {
       warriors = 3;
@@ -349,7 +397,17 @@ export class BattleScene extends Phaser.Scene {
     const dropX = enemy.sprite.x;
     const dropY = enemy.sprite.y;
 
-    this.showDamageText(dropX, dropY - 20, `💀 ${this.killCount}`, 0x00ffaa);
+    // 흡혈 패시브(선혈의 서약) 적 처치 시 체력 회복
+    const vampLv = this.player.passiveSkills.get('pas_blood_vamp') ?? 0;
+    if (vampLv > 0) {
+      const heal = vampLv >= 5 ? 6 : vampLv;
+      const effectiveMaxHp = this.player.getEffectiveStats().maxHp;
+      this.player.hp = Math.min(effectiveMaxHp, this.player.hp + heal);
+    }
+
+    if (enemy.isBoss || enemy.isNamed || this.killCount % 10 === 0) {
+      this.showDamageText(dropX, dropY - 20, `💀 ${this.killCount}`, 0x00ffaa, true);
+    }
 
     // 시체 좌표 등록 (시체 폭발 연쇄 탄약)
     this.recentCorpses.push({ x: dropX, y: dropY, time: 20 });
@@ -643,19 +701,30 @@ export class BattleScene extends Phaser.Scene {
     uiScene.showResultModal(false);
   }
 
-  public showDamageText(x: number, y: number, text: string, color: number): void {
+  private activeDamageTextCount: number = 0;
+
+  public showDamageText(x: number, y: number, text: string, color: number, isCrit: boolean = false): void {
+    if (this.activeDamageTextCount >= 32 && !isCrit) {
+      return;
+    }
+    this.activeDamageTextCount++;
+
     const t = this.add.text(x, y, text, {
       fontFamily: 'NeoDunggeunmo, monospace',
-      fontSize: '15px',
+      fontSize: isCrit ? '17px' : '14px',
       color: '#' + color.toString(16).padStart(6, '0'),
+      fontStyle: isCrit ? 'bold' : 'normal',
     }).setOrigin(0.5).setDepth(30);
 
     this.tweens.add({
       targets: t,
-      y: y - 28,
+      y: y - (isCrit ? 36 : 24),
       alpha: 0,
-      duration: 600,
-      onComplete: () => t.destroy(),
+      duration: isCrit ? 650 : 450,
+      onComplete: () => {
+        t.destroy();
+        this.activeDamageTextCount--;
+      },
     });
   }
 }
