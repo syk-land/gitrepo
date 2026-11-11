@@ -33,10 +33,7 @@ export class Player implements ISkillCaster {
     this.x = x;
     this.y = y;
 
-    // 시작 스킬 세팅: 해골 군단 소환은 사령군주 고유 기본 소환수로 장착 (주무기는 시작 모달에서 1개 선택)
-    this.activeSkills.set('necro_legion', 1);
-    this.skillCooldowns.set('necro_legion', 0);
-
+    // 시작 스킬은 게임 시작 시 시작 주무기 선택 모달에서 자유롭게 1종을 선택하여 장착
     const initialStats = this.getEffectiveStats();
     this.maxHp = initialStats.maxHp;
     this.hp = this.maxHp;

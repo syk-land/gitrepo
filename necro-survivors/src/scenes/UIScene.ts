@@ -299,7 +299,7 @@ export class UIScene extends Phaser.Scene {
       return;
     }
     const player = this.battleScene.player;
-    const hasWeapon = Array.from(player.activeSkills.keys()).some((k) => k !== 'necro_legion');
+    const hasWeapon = player.activeSkills.size > 0;
     if (!hasWeapon) {
       this.showStartingSkillModal();
     }
@@ -331,8 +331,8 @@ export class UIScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.modalContainer.add(sub);
 
-    // necro_legion(사령 고유 사역마 소환)을 제외한 1차 하위(기초) 액티브 무기 목록에서 3종 무작위 추출
-    const weaponPool = ACTIVE_SKILLS.filter((s) => s.id !== 'necro_legion' && (s.tier ?? 1) === 1);
+    // 1차 하위(기초 Tier 1) 액티브 스킬 목록에서 3종 무작위 추출 (강령술 포함 전 스킬 자유 선택)
+    const weaponPool = ACTIVE_SKILLS.filter((s) => (s.tier ?? 1) === 1);
     const shuffled = Phaser.Utils.Array.Shuffle([...weaponPool]);
     const choices = shuffled.slice(0, 3);
 

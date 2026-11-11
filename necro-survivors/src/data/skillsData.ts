@@ -200,37 +200,14 @@ export const ACTIVE_SKILLS: SkillData[] = [
   // =========================================================================
   // [계열 5: 근접 회전 / 참격 계열]
   // =========================================================================
-  // 5-1. 하위 스킬 (기초)
-  {
-    id: 'ber_whirlwind',
-    name: '중력 도끼 휠윈드',
-    icon: 'assets/skills/skill_ber_whirlwind.png',
-    category: 'weapon',
-    isNecroSignature: false,
-    tier: 1,
-    targeting: 'circular_orbit',
-    behavior: 'orbit',
-    evolvesFrom: undefined,
-    requiredPassiveId: 'pas_iron_body',
-    maxLevel: 5,
-    levels: [
-      { level: 1, description: '주변을 영구 회전하는 전투 도끼 1기 소환 (상시 유지, 피격 적 20% 둔화)', damageCoeff: 0.85, cooldown: 3.0, projectileCount: 1, areaRadius: 80, pierceCount: 999, duration: 9999, knockbackForce: 6, statusEffect: { type: 'slow', chance: 1.0, duration: 0.8, value: 0.20 } },
-      { level: 2, description: '회전 도끼 +1기 (총 2기 상시 회전), 적 25% 둔화', damageCoeff: 1.05, cooldown: 3.0, projectileCount: 2, areaRadius: 85, pierceCount: 999, duration: 9999, knockbackForce: 8, statusEffect: { type: 'slow', chance: 1.0, duration: 0.9, value: 0.25 } },
-      { level: 3, description: '회전 도끼 +1기 (총 3기 상시 회전) (상위 스킬 [청룡참] 해금!)', damageCoeff: 1.3, cooldown: 3.0, projectileCount: 3, areaRadius: 95, pierceCount: 999, duration: 9999, knockbackForce: 10, statusEffect: { type: 'slow', chance: 1.0, duration: 1.0, value: 0.25 } },
-      { level: 4, description: '회전 도끼 +1기 (총 4기 상시 회전), 적 30% 둔화', damageCoeff: 1.6, cooldown: 3.0, projectileCount: 4, areaRadius: 105, pierceCount: 999, duration: 9999, knockbackForce: 12, statusEffect: { type: 'slow', chance: 1.0, duration: 1.1, value: 0.30 } },
-      { level: 5, description: '회전 도끼 총 5기 완성! 영구 믹서기 방벽 형성 (피격된 적 35% 둔화)', damageCoeff: 1.95, cooldown: 3.0, projectileCount: 5, areaRadius: 120, pierceCount: 999, duration: 9999, knockbackForce: 15, statusEffect: { type: 'slow', chance: 1.0, duration: 1.2, value: 0.35 } },
-    ],
-  },
-  // 5-2. 상위 스킬 (심화: 휠윈드 도끼 Lv.3 이상 필요)
+  // 5-1. 하위 스킬 (기초: 참격)
   {
     id: 'sm_dragon',
     name: '청룡참 검기',
     icon: 'assets/skills/skill_sm_dragon.png',
     category: 'weapon',
     isNecroSignature: false,
-    tier: 2,
-    prerequisiteSkillId: 'ber_whirlwind',
-    prerequisiteLevel: 3,
+    tier: 1,
     targeting: 'facing',
     behavior: 'cone_slash',
     evolvesFrom: undefined,
@@ -239,9 +216,32 @@ export const ACTIVE_SKILLS: SkillData[] = [
     levels: [
       { level: 1, description: '바라보는 방향으로 거대한 푸른 용 검기 발사', damageCoeff: 1.6, cooldown: 2.0, projectileCount: 1, areaRadius: 40, pierceCount: 4, duration: 1.5, knockbackForce: 16 },
       { level: 2, description: '검기 폭 +30%, 피해량 +25%', damageCoeff: 2.0, cooldown: 1.9, projectileCount: 1, areaRadius: 52, pierceCount: 6, duration: 1.5, knockbackForce: 18 },
-      { level: 3, description: '부채꼴 3갈래 검기 동시 방출', damageCoeff: 2.4, cooldown: 1.7, projectileCount: 3, areaRadius: 60, pierceCount: 8, duration: 1.6, knockbackForce: 22 },
+      { level: 3, description: '부채꼴 3갈래 검기 동시 방출 (상위 스킬 [중력 도끼 휠윈드] 해금!)', damageCoeff: 2.4, cooldown: 1.7, projectileCount: 3, areaRadius: 60, pierceCount: 8, duration: 1.6, knockbackForce: 22 },
       { level: 4, description: '검기 사거리 +40%, 관통 횟수 증가', damageCoeff: 3.0, cooldown: 1.5, projectileCount: 3, areaRadius: 70, pierceCount: 12, duration: 1.8, knockbackForce: 26 },
       { level: 5, description: '5갈래 대검기 방출, 화면 끝까지 전원 관통 분쇄', damageCoeff: 3.8, cooldown: 1.3, projectileCount: 5, areaRadius: 85, pierceCount: 999, duration: 2.2, knockbackForce: 32 },
+    ],
+  },
+  // 5-2. 상위 스킬 (심화: 청룡참 Lv.3 이상 필요)
+  {
+    id: 'ber_whirlwind',
+    name: '중력 도끼 휠윈드',
+    icon: 'assets/skills/skill_ber_whirlwind.png',
+    category: 'weapon',
+    isNecroSignature: false,
+    tier: 2,
+    prerequisiteSkillId: 'sm_dragon',
+    prerequisiteLevel: 3,
+    targeting: 'circular_orbit',
+    behavior: 'orbit',
+    evolvesFrom: undefined,
+    requiredPassiveId: 'pas_iron_body',
+    maxLevel: 5,
+    levels: [
+      { level: 1, description: '주변을 영구 회전하는 전투 도끼 1기 소환 (상시 유지, 피격 적 20% 둔화)', damageCoeff: 0.85, cooldown: 3.0, projectileCount: 1, areaRadius: 80, pierceCount: 999, duration: 9999, knockbackForce: 6, statusEffect: { type: 'slow', chance: 1.0, duration: 0.8, value: 0.20 } },
+      { level: 2, description: '회전 도끼 +1기 (총 2기 상시 회전), 적 25% 둔화', damageCoeff: 1.05, cooldown: 3.0, projectileCount: 2, areaRadius: 85, pierceCount: 999, duration: 9999, knockbackForce: 8, statusEffect: { type: 'slow', chance: 1.0, duration: 0.9, value: 0.25 } },
+      { level: 3, description: '회전 도끼 +1기 (총 3기 상시 회전), 회전 속도 증가', damageCoeff: 1.3, cooldown: 3.0, projectileCount: 3, areaRadius: 95, pierceCount: 999, duration: 9999, knockbackForce: 10, statusEffect: { type: 'slow', chance: 1.0, duration: 1.0, value: 0.25 } },
+      { level: 4, description: '회전 도끼 +1기 (총 4기 상시 회전), 적 30% 둔화', damageCoeff: 1.6, cooldown: 3.0, projectileCount: 4, areaRadius: 105, pierceCount: 999, duration: 9999, knockbackForce: 12, statusEffect: { type: 'slow', chance: 1.0, duration: 1.1, value: 0.30 } },
+      { level: 5, description: '회전 도끼 총 5기 완성! 영구 믹서기 방벽 형성 (피격된 적 35% 둔화)', damageCoeff: 1.95, cooldown: 3.0, projectileCount: 5, areaRadius: 120, pierceCount: 999, duration: 9999, knockbackForce: 15, statusEffect: { type: 'slow', chance: 1.0, duration: 1.2, value: 0.35 } },
     ],
   },
 
@@ -297,37 +297,14 @@ export const ACTIVE_SKILLS: SkillData[] = [
   // =========================================================================
   // [계열 7: 자연 원소 계열]
   // =========================================================================
-  // 7-1. 하위 스킬 (기초)
-  {
-    id: 'cryo_nova',
-    name: '프로스트 노바',
-    icon: 'assets/skills/skill_cryo_nova.png',
-    category: 'weapon',
-    isNecroSignature: false,
-    tier: 1,
-    targeting: 'self_aoe',
-    behavior: 'instant_strike',
-    evolvesFrom: undefined,
-    requiredPassiveId: 'pas_speed',
-    maxLevel: 5,
-    levels: [
-      { level: 1, description: '주변 원형 범위에 혹한의 냉기 폭발 (적 60% 확률 1.5초 완전 빙결, 40% 둔화)', damageCoeff: 1.3, cooldown: 3.0, projectileCount: 1, areaRadius: 110, pierceCount: 999, duration: 0.4, knockbackForce: 0, statusEffect: { type: 'freeze', chance: 0.6, duration: 1.5 } },
-      { level: 2, description: '폭발 반경 +20%, 적 75% 확률 1.8초 완전 빙결', damageCoeff: 1.6, cooldown: 2.8, projectileCount: 1, areaRadius: 132, pierceCount: 999, duration: 0.4, knockbackForce: 0, statusEffect: { type: 'freeze', chance: 0.75, duration: 1.8 } },
-      { level: 3, description: '적 90% 확률 2.0초 완전 빙결 (상위 스킬 [체인 라이트닝] 해금!)', damageCoeff: 1.95, cooldown: 2.6, projectileCount: 1, areaRadius: 155, pierceCount: 999, duration: 0.5, knockbackForce: 0, statusEffect: { type: 'freeze', chance: 0.9, duration: 2.0 } },
-      { level: 4, description: '연속 2회 파동 폭발 방출, 적 100% 확정 2.5초 완전 빙결', damageCoeff: 2.4, cooldown: 2.3, projectileCount: 2, areaRadius: 175, pierceCount: 999, duration: 0.6, knockbackForce: 0, statusEffect: { type: 'freeze', chance: 1.0, duration: 2.5 } },
-      { level: 5, description: '초광역 절대영도 노바, 화면 내 모든 적 100% 3.5초 절대 빙결', damageCoeff: 3.0, cooldown: 2.0, projectileCount: 2, areaRadius: 210, pierceCount: 999, duration: 0.8, knockbackForce: 0, statusEffect: { type: 'freeze', chance: 1.0, duration: 3.5 } },
-    ],
-  },
-  // 7-2. 상위 스킬 (심화: 프로스트 노바 Lv.3 이상 필요)
+  // 7-1. 하위 스킬 (기초: 뇌전 감전)
   {
     id: 'storm_chain',
     name: '체인 라이트닝',
     icon: 'assets/skills/skill_storm_chain.png',
     category: 'weapon',
     isNecroSignature: false,
-    tier: 2,
-    prerequisiteSkillId: 'cryo_nova',
-    prerequisiteLevel: 3,
+    tier: 1,
     targeting: 'nearest',
     behavior: 'chain',
     evolvesFrom: undefined,
@@ -336,9 +313,32 @@ export const ACTIVE_SKILLS: SkillData[] = [
     levels: [
       { level: 1, description: '적 4기에게 연쇄 낙뢰를 튕기며 감전 피해 (20% 확률 0.7초 기절)', damageCoeff: 1.1, cooldown: 2.2, projectileCount: 1, areaRadius: 200, pierceCount: 4, duration: 0.4, knockbackForce: 0, statusEffect: { type: 'stun', chance: 0.2, duration: 0.7 } },
       { level: 2, description: '연쇄 횟수 +2기 (총 6기), 25% 확률 0.8초 기절', damageCoeff: 1.35, cooldown: 2.0, projectileCount: 1, areaRadius: 220, pierceCount: 6, duration: 0.4, knockbackForce: 0, statusEffect: { type: 'stun', chance: 0.25, duration: 0.8 } },
-      { level: 3, description: '연쇄 횟수 +2기 (총 8기), 쿨타임 -10%, 30% 확률 0.9초 기절', damageCoeff: 1.6, cooldown: 1.8, projectileCount: 1, areaRadius: 240, pierceCount: 8, duration: 0.5, knockbackForce: 0, statusEffect: { type: 'stun', chance: 0.3, duration: 0.9 } },
+      { level: 3, description: '연쇄 횟수 +2기 (총 8기), 쿨타임 -10%, 30% 확률 0.9초 기절 (상위 스킬 [프로스트 노바] 해금!)', damageCoeff: 1.6, cooldown: 1.8, projectileCount: 1, areaRadius: 240, pierceCount: 8, duration: 0.5, knockbackForce: 0, statusEffect: { type: 'stun', chance: 0.3, duration: 0.9 } },
       { level: 4, description: '동시 2갈래 연쇄 벼락 방출, 35% 확률 1.0초 기절', damageCoeff: 1.9, cooldown: 1.6, projectileCount: 2, areaRadius: 260, pierceCount: 10, duration: 0.5, knockbackForce: 0, statusEffect: { type: 'stun', chance: 0.35, duration: 1.0 } },
       { level: 5, description: '3갈래 연쇄 벼락, 12기 연쇄 및 50% 확률 1.2초 강력 감전 기절', damageCoeff: 2.4, cooldown: 1.4, projectileCount: 3, areaRadius: 300, pierceCount: 12, duration: 0.6, knockbackForce: 0, statusEffect: { type: 'stun', chance: 0.5, duration: 1.2 } },
+    ],
+  },
+  // 7-2. 상위 스킬 (심화: 체인 라이트닝 Lv.3 이상 필요)
+  {
+    id: 'cryo_nova',
+    name: '프로스트 노바',
+    icon: 'assets/skills/skill_cryo_nova.png',
+    category: 'weapon',
+    isNecroSignature: false,
+    tier: 2,
+    prerequisiteSkillId: 'storm_chain',
+    prerequisiteLevel: 3,
+    targeting: 'self_aoe',
+    behavior: 'instant_strike',
+    evolvesFrom: undefined,
+    requiredPassiveId: 'pas_speed',
+    maxLevel: 5,
+    levels: [
+      { level: 1, description: '주변 원형 범위에 혹한의 냉기 폭발 (적 60% 확률 1.5초 완전 빙결, 40% 둔화)', damageCoeff: 1.3, cooldown: 3.0, projectileCount: 1, areaRadius: 110, pierceCount: 999, duration: 0.4, knockbackForce: 0, statusEffect: { type: 'freeze', chance: 0.6, duration: 1.5 } },
+      { level: 2, description: '폭발 반경 +20%, 적 75% 확률 1.8초 완전 빙결', damageCoeff: 1.6, cooldown: 2.8, projectileCount: 1, areaRadius: 132, pierceCount: 999, duration: 0.4, knockbackForce: 0, statusEffect: { type: 'freeze', chance: 0.75, duration: 1.8 } },
+      { level: 3, description: '폭발 반경 +20%, 적 90% 확률 2.0초 완전 빙결, 쿨타임 -10%', damageCoeff: 1.95, cooldown: 2.6, projectileCount: 1, areaRadius: 155, pierceCount: 999, duration: 0.5, knockbackForce: 0, statusEffect: { type: 'freeze', chance: 0.9, duration: 2.0 } },
+      { level: 4, description: '연속 2회 파동 폭발 방출, 적 100% 확정 2.5초 완전 빙결', damageCoeff: 2.4, cooldown: 2.3, projectileCount: 2, areaRadius: 175, pierceCount: 999, duration: 0.6, knockbackForce: 0, statusEffect: { type: 'freeze', chance: 1.0, duration: 2.5 } },
+      { level: 5, description: '초광역 절대영도 노바, 화면 내 모든 적 100% 3.5초 절대 빙결', damageCoeff: 3.0, cooldown: 2.0, projectileCount: 2, areaRadius: 210, pierceCount: 999, duration: 0.8, knockbackForce: 0, statusEffect: { type: 'freeze', chance: 1.0, duration: 3.5 } },
     ],
   },
 ];

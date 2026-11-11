@@ -56,14 +56,7 @@ export class LevelUpManager {
       return true;
     });
 
-    // 2레벨 초반 가이드: 해골 군단 소환이 아직 없으면 무조건 1자리 확정 배정
     const guaranteedChoices: SkillData[] = [];
-    if (player.level === 2 && !player.activeSkills.has('necro_legion')) {
-      const legionSkill = ALL_SKILLS_MAP.get('necro_legion');
-      if (legionSkill) {
-        guaranteedChoices.push(legionSkill);
-      }
-    }
 
     // ⭐ 상위 스킬(Tier 2) 해금 즉시 확정 노출:
     // 하위 스킬을 3레벨 달성했으나 아직 미보유한 상위 스킬이 있다면 다음 레벨업에 즉시 1자리 확정 배정!

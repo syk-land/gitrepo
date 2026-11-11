@@ -338,11 +338,11 @@ export class BattleScene extends Phaser.Scene {
 
   // 사령군주 소환수 군단 편성 실시간 동기화 (문제점 1 & 8)
   public syncNecroArmy(): void {
-    const legionLv = this.player.activeSkills.get('necro_legion') ?? 1;
+    const legionLv = this.player.activeSkills.get('necro_legion') ?? 0;
     const hasArthur = this.player.activeSkills.has('awakened_legion');
     const droneLv = (this.player.activeSkills.get('psi_drone') ?? 0) || (this.player.activeSkills.has('awakened_drone') ? 1 : 0);
 
-    let warriors = 2;
+    let warriors = 0;
     let archers = 0;
     let mages = 0;
     const arthurs = hasArthur ? 1 : 0;
@@ -359,7 +359,7 @@ export class BattleScene extends Phaser.Scene {
       warriors = 3;
       archers = 2;
       mages = 1;
-    } else {
+    } else if (legionLv > 0) {
       if (legionLv >= 5) {
         warriors = 4;
         archers = 1;
@@ -383,9 +383,11 @@ export class BattleScene extends Phaser.Scene {
       }
     }
 
-    // 영구 재능(망자의 군세) 보너스 소환수
-    const bonus = this.player.getEffectiveStats().bonusMinionCount;
-    warriors += bonus;
+    // 영구 재능(망자의 군세) 보너스 소환수 (해골 군단 보유 시에만 활성화)
+    if (legionLv > 0 || hasArthur) {
+      const bonus = this.player.getEffectiveStats().bonusMinionCount;
+      warriors += bonus;
+    }
 
     this.ensureMinionCount('skeleton_warrior', warriors);
     this.ensureMinionCount('skeleton_archer', archers);
