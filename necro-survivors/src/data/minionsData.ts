@@ -43,7 +43,7 @@ export const MINIONS_DATA: Record<string, MinionDef> = {
   arthur: {
     id: 'arthur',
     name: '제1군단장 듀라한 아서',
-    sprite: 'assets/monsters/m_2_boss.png',
+    sprite: 'assets/summons/minion_arthur.png',
     combatRole: 'melee_blocker',
     baseHpRatio: 1.35,
     baseAtkRatio: 1.10,

@@ -17,6 +17,7 @@ export class MinionUnit implements ISkillCaster {
   public def: MinionDef;
   public sprite: Phaser.GameObjects.Sprite;
   public hpBar: Phaser.GameObjects.Graphics;
+  private floatTimer: number = Math.random() * Math.PI * 2;
   private orbitAngle: number = 0;
   private facingDir: Vector2 = { x: 1, y: 0 };
   private ownerGetter: () => { x: number; y: number; stats: CombatStats; facing: Vector2 };
@@ -44,9 +45,9 @@ export class MinionUnit implements ISkillCaster {
 
     this.sprite = scene.add.sprite(x, y, def.id);
     if (def.id === 'arthur') {
-      this.sprite.setDisplaySize(68, 68);
+      this.sprite.setDisplaySize(60, 60);
     } else {
-      this.sprite.setDisplaySize(48, 48);
+      this.sprite.setDisplaySize(44, 44);
     }
     this.sprite.setDepth(18);
 
@@ -242,18 +243,21 @@ export class MinionUnit implements ISkillCaster {
       }
     }
 
-    this.sprite.setPosition(this.x, this.y);
-    this.renderHpBar();
+    this.floatTimer += dt * 3.5;
+    const hoverY = Math.sin(this.floatTimer) * 3.5;
+
+    this.sprite.setPosition(this.x, this.y + hoverY);
+    this.renderHpBar(hoverY);
   }
 
-  private renderHpBar(): void {
+  private renderHpBar(hoverY: number = 0): void {
     this.hpBar.clear();
     if (this.state !== 'ALIVE' || this.hp >= this.maxHp) return;
 
     const barW = 32;
     const barH = 4;
     const barX = this.x - barW / 2;
-    const barY = this.y - 28;
+    const barY = this.y + hoverY - 26;
 
     this.hpBar.fillStyle(0x000000, 0.7);
     this.hpBar.fillRect(barX - 1, barY - 1, barW + 2, barH + 2);
