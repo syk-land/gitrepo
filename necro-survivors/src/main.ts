@@ -32,6 +32,9 @@ const config: Phaser.Types.Core.GameConfig = {
   antialias: false, // 픽셀 아트 스프라이트의 NEAREST 텍스처링 유지
   antialiasGL: false,
   roundPixels: true,
+  input: {
+    activePointers: 4, // 멀티터치 지원 (조이스틱 조작 중 필살기 및 배속 버튼 동시 터치)
+  },
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,

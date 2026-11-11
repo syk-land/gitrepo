@@ -141,7 +141,7 @@ export class UIScene extends Phaser.Scene {
 
   private createSpeedButton(x: number, y: number): void {
     this.currentSpeedIndex = 0;
-    this.speedButtonContainer = this.add.container(x, y);
+    this.speedButtonContainer = this.add.container(x, y).setDepth(150);
 
     this.speedBg = this.add.graphics();
     this.speedButtonContainer.add(this.speedBg);
@@ -155,8 +155,9 @@ export class UIScene extends Phaser.Scene {
 
     this.updateSpeedButtonVisual(1.0);
 
-    const hitArea = this.add.zone(0, 0, 68, 30).setInteractive({ useHandCursor: true });
-    hitArea.on('pointerdown', () => {
+    const hitArea = this.add.rectangle(0, 0, 72, 34, 0x000000, 0.001).setInteractive({ useHandCursor: true });
+    hitArea.on('pointerdown', (_pointer: Phaser.Input.Pointer, _lx: number, _ly: number, event: Phaser.Types.Input.EventData) => {
+      if (event && event.stopPropagation) event.stopPropagation();
       this.toggleGameSpeed();
     });
     hitArea.on('pointerover', () => {
@@ -219,7 +220,7 @@ export class UIScene extends Phaser.Scene {
 
   private createUltButton(width: number, height: number): void {
     const btnY = height - 85;
-    this.ultButtonContainer = this.add.container(width / 2, btnY);
+    this.ultButtonContainer = this.add.container(width / 2, btnY).setDepth(150);
 
     const circle = this.add.graphics();
     circle.fillStyle(0x231b15, 0.95);
@@ -244,21 +245,25 @@ export class UIScene extends Phaser.Scene {
     }).setOrigin(0.5).setVisible(false);
     this.ultButtonContainer.add(this.ultCooldownText);
 
-    const hitArea = this.add.zone(0, 0, 90, 90).setInteractive({ useHandCursor: true });
-    hitArea.on('pointerdown', () => {
+    const hitArea = this.add.circle(0, 0, 48, 0x000000, 0.001).setInteractive({ useHandCursor: true });
+    hitArea.on('pointerdown', (_pointer: Phaser.Input.Pointer, _lx: number, _ly: number, event: Phaser.Types.Input.EventData) => {
+      if (event && event.stopPropagation) event.stopPropagation();
       this.battleScene.triggerManualUlt();
     });
     this.ultButtonContainer.add(hitArea);
   }
 
   private createJoystick(width: number, height: number): void {
-    this.joystickBase = this.add.circle(0, 0, 50, 0xffffff, 0.15).setVisible(false);
-    this.joystickThumb = this.add.circle(0, 0, 24, 0x00ffaa, 0.5).setVisible(false);
+    this.joystickBase = this.add.circle(0, 0, 50, 0xffffff, 0.15).setVisible(false).setDepth(50);
+    this.joystickThumb = this.add.circle(0, 0, 24, 0x00ffaa, 0.5).setVisible(false).setDepth(51);
 
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       if (this.battleScene.isPaused) return;
+      // 이미 한 손가락으로 조이스틱을 조작 중이면 다른 손가락 터치는 조이스틱을 뺏지 않음
+      if (this.isJoystickActive) return;
+
       // 상단 HUD나 하단 필살기 버튼 영역 터치는 조이스틱 무시
-      if (pointer.y < 90 || (pointer.y > height - 140 && Math.abs(pointer.x - width / 2) < 60)) {
+      if (pointer.y < 90 || (pointer.y > height - 140 && Math.abs(pointer.x - width / 2) < 70)) {
         return;
       }
       this.isJoystickActive = true;
@@ -270,6 +275,7 @@ export class UIScene extends Phaser.Scene {
     });
 
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+      // 조이스틱을 쥔 손가락만 조이스틱 위치를 갱신
       if (!this.isJoystickActive || pointer !== this.joystickPointer) return;
 
       const dx = pointer.x - this.joystickOrigin.x;
@@ -293,13 +299,18 @@ export class UIScene extends Phaser.Scene {
       }
     });
 
-    this.input.on('pointerup', () => {
+    const onPointerRelease = (pointer: Phaser.Input.Pointer) => {
+      // 조이스틱을 쥐고 있던 손가락이 떼어졌을 때만 조이스틱을 해제 (다른 손가락 터치업에 의해 취소되지 않음!)
+      if (pointer !== this.joystickPointer) return;
       this.isJoystickActive = false;
       this.joystickPointer = null;
       this.joystickBase.setVisible(false);
       this.joystickThumb.setVisible(false);
       this.battleScene.inputVector = { x: 0, y: 0 };
-    });
+    };
+
+    this.input.on('pointerup', onPointerRelease);
+    this.input.on('pointercancel', onPointerRelease);
   }
 
   private createKeyboardInput(): void {
