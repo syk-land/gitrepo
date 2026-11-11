@@ -83,7 +83,7 @@ export class BootScene extends Phaser.Scene {
 
     // 인게임 전용 전투 투사체/공격 VFX (전방 방향성 및 전장 스케일 최적화)
     const inGameVfxList = [
-      'necro_spear', 'necro_armor', 'dk_grip', 'storm_chain',
+      'necro_spear', 'necro_bone_storm', 'necro_lich_curse', 'necro_armor', 'dk_grip', 'storm_chain',
       'sniper_shot', 'psi_blackhole', 'cryo_nova', 'ber_whirlwind',
       'sm_dragon', 'psi_drone', 'priest_sanctuary',
       'awakened_spear', 'awakened_armor', 'awakened_grip', 'awakened_chain',
@@ -97,7 +97,9 @@ export class BootScene extends Phaser.Scene {
     this.load.image('vfx_minion_mage', 'assets/skills/vfx/vfx_minion_mage.png');
     this.load.image('vfx_minion_drone', 'assets/skills/vfx/vfx_minion_drone.png');
 
-    // 5. 게이트 및 UI 프레임
+    // 5. 게이트 및 UI 프레임, 드랍 아이템
+    this.load.image('item_parchment', 'assets/ui/item_parchment.png');
+
     const gateTypes = ['iron', 'bronze', 'silver', 'gold', 'platinum', 'diamond'];
     for (const g of gateTypes) {
       this.load.image(`gate_${g}`, `assets/ui/gates/gate_${g}.png`);

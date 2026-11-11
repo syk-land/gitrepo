@@ -481,12 +481,11 @@ export class BattleScene extends Phaser.Scene {
   }
 
   public spawnAwakeningSelectorDrop(x: number, y: number): void {
-    const sprite = this.add.sprite(x, y, 'gate_diamond');
+    const sprite = this.add.sprite(x, y, 'item_parchment');
     sprite.setDisplaySize(38, 38);
     sprite.setDepth(21);
-    sprite.setTint(0x00f0ff);
 
-    const label = this.add.text(x, y - 24, '📜 각성재료 선택권', {
+    const label = this.add.text(x, y - 24, '📜 각성 비급 양피지', {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '11px',
       color: '#ffd000',

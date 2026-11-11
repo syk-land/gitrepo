@@ -4,13 +4,17 @@ import { SkillData } from './types';
 // 1. 액티브 스킬 12종 (Lv.1 ~ 5)
 // =========================================================================
 export const ACTIVE_SKILLS: SkillData[] = [
-  // --- 사령 고유 4종 ---
+  // =========================================================================
+  // [계열 1: 사령 뼈/창 계열]
+  // =========================================================================
+  // 1-1. 하위 스킬 (기초)
   {
     id: 'necro_spear',
     name: '본 스피어',
     icon: 'assets/skills/skill_necro_spear.png',
     category: 'weapon',
     isNecroSignature: true,
+    tier: 1,
     targeting: 'nearest',
     behavior: 'straight',
     evolvesFrom: undefined,
@@ -19,17 +23,46 @@ export const ACTIVE_SKILLS: SkillData[] = [
     levels: [
       { level: 1, description: '가장 가까운 적에게 날카로운 관통 뼈창 1발 투척', damageCoeff: 1.2, cooldown: 1.1, projectileCount: 1, areaRadius: 18, pierceCount: 2, duration: 2.0, knockbackForce: 25 },
       { level: 2, description: '투사체 수 +1, 피해량 +20%', damageCoeff: 1.44, cooldown: 1.05, projectileCount: 2, areaRadius: 20, pierceCount: 3, duration: 2.0, knockbackForce: 30 },
-      { level: 3, description: '관통 횟수 +2, 쿨타임 -10%', damageCoeff: 1.6, cooldown: 0.95, projectileCount: 2, areaRadius: 22, pierceCount: 5, duration: 2.0, knockbackForce: 35 },
+      { level: 3, description: '관통 횟수 +2, 쿨타임 -10% (상위 스킬 [본 스톰] 해금!)', damageCoeff: 1.6, cooldown: 0.95, projectileCount: 2, areaRadius: 22, pierceCount: 5, duration: 2.0, knockbackForce: 35 },
       { level: 4, description: '투사체 수 +1, 피해량 +25%', damageCoeff: 2.0, cooldown: 0.9, projectileCount: 3, areaRadius: 24, pierceCount: 6, duration: 2.2, knockbackForce: 40 },
       { level: 5, description: '투사체 수 +1, 무한 관통, 적 방어력 무시', damageCoeff: 2.5, cooldown: 0.8, projectileCount: 4, areaRadius: 28, pierceCount: 999, duration: 2.5, knockbackForce: 50 },
     ],
   },
+  // 1-2. 상위 스킬 (심화: 본 스피어 Lv.3 이상 필요)
+  {
+    id: 'necro_bone_storm',
+    name: '본 스톰 (뼈폭풍)',
+    icon: 'assets/skills/skill_necro_bone_storm.png',
+    category: 'weapon',
+    isNecroSignature: true,
+    tier: 2,
+    prerequisiteSkillId: 'necro_spear',
+    prerequisiteLevel: 3,
+    targeting: 'random',
+    behavior: 'straight',
+    evolvesFrom: undefined,
+    requiredPassiveId: 'pas_frost_heart',
+    maxLevel: 5,
+    levels: [
+      { level: 1, description: '사방으로 회전하는 날카로운 뼈가시 6발을 나선형 난사', damageCoeff: 1.3, cooldown: 2.2, projectileCount: 6, areaRadius: 22, pierceCount: 3, duration: 2.2, knockbackForce: 30 },
+      { level: 2, description: '뼈가시 +2발 (총 8발), 투사체 비행속도 +20%', damageCoeff: 1.55, cooldown: 2.0, projectileCount: 8, areaRadius: 24, pierceCount: 4, duration: 2.4, knockbackForce: 35 },
+      { level: 3, description: '뼈가시 관통 횟수 +2회, 쿨타임 -10%', damageCoeff: 1.8, cooldown: 1.8, projectileCount: 8, areaRadius: 26, pierceCount: 6, duration: 2.4, knockbackForce: 40 },
+      { level: 4, description: '뼈가시 +4발 (총 12발 전방위 난사)', damageCoeff: 2.2, cooldown: 1.6, projectileCount: 12, areaRadius: 28, pierceCount: 8, duration: 2.6, knockbackForce: 45 },
+      { level: 5, description: '초거대 뼈폭풍: 16발 방출, 적 출혈 40% 도트 피해 부여', damageCoeff: 2.7, cooldown: 1.4, projectileCount: 16, areaRadius: 32, pierceCount: 999, duration: 3.0, knockbackForce: 55, statusEffect: { type: 'bleed', chance: 1.0, duration: 2.5, value: 0.4 } },
+    ],
+  },
+
+  // =========================================================================
+  // [계열 2: 사령 군단/영혼 계열]
+  // =========================================================================
+  // 2-1. 하위 스킬 (기초)
   {
     id: 'necro_legion',
     name: '해골 군단 소환',
     icon: 'assets/skills/skill_necro_legion.png',
     category: 'summon',
     isNecroSignature: true,
+    tier: 1,
     targeting: 'self_aoe',
     behavior: 'straight',
     summonMinionId: 'skeleton_warrior',
@@ -37,154 +70,167 @@ export const ACTIVE_SKILLS: SkillData[] = [
     requiredPassiveId: 'pas_undead_cmd',
     maxLevel: 5,
     levels: [
-      { level: 1, description: '해골 전사 2기 소환 (전방 배치 & 길막)', damageCoeff: 1.0, cooldown: 3.0, projectileCount: 2, areaRadius: 30, pierceCount: 0, duration: 9999, knockbackForce: 40 },
+      { level: 1, description: '해골 전사 2기 소환 (전방 배치 & 길막 바리케이드)', damageCoeff: 1.0, cooldown: 3.0, projectileCount: 2, areaRadius: 30, pierceCount: 0, duration: 9999, knockbackForce: 40 },
       { level: 2, description: '해골 궁수 1기 추가 합류 & 소환수 체력 +25%', damageCoeff: 1.2, cooldown: 3.0, projectileCount: 3, areaRadius: 30, pierceCount: 0, duration: 9999, knockbackForce: 45 },
-      { level: 3, description: '해골 전사 +1기 (총 4기) & 공격속도 +20%', damageCoeff: 1.4, cooldown: 3.0, projectileCount: 4, areaRadius: 30, pierceCount: 0, duration: 9999, knockbackForce: 50 },
+      { level: 3, description: '해골 전사 +1기 (총 4기) (상위 스킬 [리치 저주구체] 해금!)', damageCoeff: 1.4, cooldown: 3.0, projectileCount: 4, areaRadius: 30, pierceCount: 0, duration: 9999, knockbackForce: 50 },
       { level: 4, description: '해골 마법사 1기 추가 합류 & 소환수 공격력 +30%', damageCoeff: 1.7, cooldown: 3.0, projectileCount: 5, areaRadius: 35, pierceCount: 0, duration: 9999, knockbackForce: 55 },
       { level: 5, description: '해골 정예 근위대 완성 (총 6기) & 부활 대기시간 절반', damageCoeff: 2.1, cooldown: 3.0, projectileCount: 6, areaRadius: 40, pierceCount: 0, duration: 9999, knockbackForce: 65 },
     ],
   },
+  // 2-2. 상위 스킬 (심화: 해골 군단 Lv.3 이상 필요)
+  {
+    id: 'necro_lich_curse',
+    name: '리치 군주의 저주구체',
+    icon: 'assets/skills/skill_necro_lich_curse.png',
+    category: 'weapon',
+    isNecroSignature: true,
+    tier: 2,
+    prerequisiteSkillId: 'necro_legion',
+    prerequisiteLevel: 3,
+    targeting: 'highest_hp',
+    behavior: 'homing',
+    evolvesFrom: undefined,
+    requiredPassiveId: 'pas_undead_cmd',
+    maxLevel: 5,
+    levels: [
+      { level: 1, description: '강력한 적을 추적하는 사령 저주구체 1발 발사 (명중 시 혼령 폭발)', damageCoeff: 1.8, cooldown: 2.6, projectileCount: 1, areaRadius: 60, pierceCount: 2, duration: 3.0, knockbackForce: 35 },
+      { level: 2, description: '저주구체 +1발 (총 2발 발사), 폭발 반경 +25%', damageCoeff: 2.2, cooldown: 2.4, projectileCount: 2, areaRadius: 75, pierceCount: 3, duration: 3.2, knockbackForce: 40 },
+      { level: 3, description: '명중한 적 이동속도 40% 둔화, 쿨타임 -10%', damageCoeff: 2.6, cooldown: 2.1, projectileCount: 2, areaRadius: 85, pierceCount: 4, duration: 3.2, knockbackForce: 45, statusEffect: { type: 'slow', chance: 1.0, duration: 2.0, value: 0.4 } },
+      { level: 4, description: '저주구체 +1발 (총 3발 발사), 피해량 +30%', damageCoeff: 3.2, cooldown: 1.9, projectileCount: 3, areaRadius: 95, pierceCount: 5, duration: 3.5, knockbackForce: 50 },
+      { level: 5, description: '파멸의 리치 오브: 폭발 시 적 50% 확률 기절 및 주변 적 연쇄 감염', damageCoeff: 4.0, cooldown: 1.7, projectileCount: 3, areaRadius: 115, pierceCount: 8, duration: 3.8, knockbackForce: 60, statusEffect: { type: 'stun', chance: 0.5, duration: 1.2 } },
+    ],
+  },
+
+  // =========================================================================
+  // [계열 3: 방어 / 성역 계열]
+  // =========================================================================
+  // 3-1. 하위 스킬 (기초)
   {
     id: 'necro_armor',
-    name: '본 아머 & 망자 걸음',
+    name: '본 아머 (뼈방패)',
     icon: 'assets/skills/skill_necro_armor.png',
     category: 'weapon',
     isNecroSignature: true,
+    tier: 1,
     targeting: 'circular_orbit',
     behavior: 'orbit',
     evolvesFrom: undefined,
     requiredPassiveId: 'pas_iron_body',
     maxLevel: 5,
     levels: [
-      { level: 1, description: '회전하는 뼈방패 1개 생성 (1회 충돌 시 파괴되는 일회용 방패)', damageCoeff: 1.4, cooldown: 3.5, projectileCount: 1, areaRadius: 65, pierceCount: 1, duration: 9999, knockbackForce: 45 },
-      { level: 2, description: '뼈방패 최대 보관 수 +1 (최대 2개), 쿨마다 1개 보충', damageCoeff: 1.6, cooldown: 3.3, projectileCount: 2, areaRadius: 75, pierceCount: 1, duration: 9999, knockbackForce: 50 },
-      { level: 3, description: '뼈방패 타격 횟수 +1회 (2회 타격 가능), 회전 반경 증가', damageCoeff: 1.9, cooldown: 3.0, projectileCount: 2, areaRadius: 85, pierceCount: 2, duration: 9999, knockbackForce: 55 },
-      { level: 4, description: '뼈방패 최대 보관 수 +1 (최대 3개), 피해량 +25%', damageCoeff: 2.3, cooldown: 2.8, projectileCount: 3, areaRadius: 95, pierceCount: 2, duration: 9999, knockbackForce: 60 },
-      { level: 5, description: '뼈방패 타격 횟수 +1회 (3회 타격 가능, 최대 3개) & 충돌 시 둔화 30%', damageCoeff: 2.8, cooldown: 2.5, projectileCount: 3, areaRadius: 105, pierceCount: 3, duration: 9999, knockbackForce: 70, statusEffect: { type: 'slow', chance: 1.0, duration: 1.5, value: 0.3 } },
+      { level: 1, description: '회전하는 뼈방패 1개 생성 (적 충돌 시 파괴되는 일회용 방패, 강력한 데미지 & 넉백)', damageCoeff: 1.5, cooldown: 3.5, projectileCount: 1, areaRadius: 65, pierceCount: 1, duration: 9999, knockbackForce: 55 },
+      { level: 2, description: '뼈방패 최대 보관 수 +1 (최대 2개), 쿨마다 1개 보충', damageCoeff: 1.8, cooldown: 3.3, projectileCount: 2, areaRadius: 75, pierceCount: 1, duration: 9999, knockbackForce: 60 },
+      { level: 3, description: '뼈방패 타격 횟수 +1회 (2회 타격 가능) (상위 스킬 [정화의 성역] 해금!)', damageCoeff: 2.2, cooldown: 3.0, projectileCount: 2, areaRadius: 85, pierceCount: 2, duration: 9999, knockbackForce: 65 },
+      { level: 4, description: '뼈방패 최대 보관 수 +1 (최대 3개), 피해량 +25%', damageCoeff: 2.7, cooldown: 2.8, projectileCount: 3, areaRadius: 95, pierceCount: 2, duration: 9999, knockbackForce: 75 },
+      { level: 5, description: '뼈방패 타격 횟수 +1회 (3회 타격 가능, 최대 3개) & 충돌 시 둔화 40%', damageCoeff: 3.4, cooldown: 2.5, projectileCount: 3, areaRadius: 105, pierceCount: 3, duration: 9999, knockbackForce: 90, statusEffect: { type: 'slow', chance: 1.0, duration: 1.8, value: 0.4 } },
     ],
   },
+  // 3-2. 상위 스킬 (심화: 본 아머 Lv.3 이상 필요)
+  {
+    id: 'priest_sanctuary',
+    name: '정화의 성염 장판',
+    icon: 'assets/skills/skill_priest_sanctuary.png',
+    category: 'weapon',
+    isNecroSignature: false,
+    tier: 2,
+    prerequisiteSkillId: 'necro_armor',
+    prerequisiteLevel: 3,
+    targeting: 'self_aoe',
+    behavior: 'ground_zone',
+    evolvesFrom: undefined,
+    requiredPassiveId: 'pas_frost_heart',
+    maxLevel: 5,
+    levels: [
+      { level: 1, description: '발밑에 황금빛 성역 생성 (적 지속 화상 & 초당 체력 회복)', damageCoeff: 0.9, cooldown: 4.5, projectileCount: 1, areaRadius: 95, pierceCount: 999, duration: 3.0, knockbackForce: 15 },
+      { level: 2, description: '성역 반경 +20%, 화상 피해 +30%', damageCoeff: 1.2, cooldown: 4.2, projectileCount: 1, areaRadius: 115, pierceCount: 999, duration: 3.5, knockbackForce: 20 },
+      { level: 3, description: '성역 내 아군/소환수 방어력 +30% 증폭', damageCoeff: 1.5, cooldown: 4.0, projectileCount: 1, areaRadius: 135, pierceCount: 999, duration: 4.0, knockbackForce: 25 },
+      { level: 4, description: '성역 지속시간 증가 (상시 유지율 상승)', damageCoeff: 1.9, cooldown: 3.6, projectileCount: 1, areaRadius: 155, pierceCount: 999, duration: 4.8, knockbackForce: 30 },
+      { level: 5, description: '대성역 완성: 적 둔화 40% & 진입 즉시 성화 폭발', damageCoeff: 2.5, cooldown: 3.2, projectileCount: 1, areaRadius: 185, pierceCount: 999, duration: 5.5, knockbackForce: 40, statusEffect: { type: 'slow', chance: 1.0, duration: 2.0, value: 0.4 } },
+    ],
+  },
+
+  // =========================================================================
+  // [계열 4: 군중 제어 / 심연 계열]
+  // =========================================================================
+  // 4-1. 하위 스킬 (기초)
   {
     id: 'dk_grip',
     name: '죽음의 손아귀',
     icon: 'assets/skills/skill_dk_grip.png',
     category: 'weapon',
     isNecroSignature: true,
-    targeting: 'nearest',
+    tier: 1,
+    targeting: 'self_aoe',
     behavior: 'ground_zone',
     evolvesFrom: undefined,
     requiredPassiveId: 'pas_blood_vamp',
     maxLevel: 5,
     levels: [
-      { level: 1, description: '가까운 적 무리 지면에 암흑 손아귀 소환하여 적을 끌어당김', damageCoeff: 1.3, cooldown: 3.2, projectileCount: 1, areaRadius: 70, pierceCount: 999, duration: 2.0, knockbackForce: -50, statusEffect: { type: 'pull', chance: 1.0, duration: 1.5 } },
-      { level: 2, description: '장판 크기 +25%, 피해량 +20%', damageCoeff: 1.6, cooldown: 3.0, projectileCount: 1, areaRadius: 88, pierceCount: 999, duration: 2.2, knockbackForce: -60 },
-      { level: 3, description: '손아귀 장판 동시 2개 생성', damageCoeff: 1.9, cooldown: 2.8, projectileCount: 2, areaRadius: 95, pierceCount: 999, duration: 2.5, knockbackForce: -70 },
-      { level: 4, description: '장판 내 적 출혈 부여 (초당 40% 도트 피해)', damageCoeff: 2.3, cooldown: 2.6, projectileCount: 2, areaRadius: 105, pierceCount: 999, duration: 2.8, knockbackForce: -80, statusEffect: { type: 'bleed', chance: 1.0, duration: 3.0, value: 0.4 } },
-      { level: 5, description: '손아귀 3개 생성, 적을 한곳에 강하게 압축 구속', damageCoeff: 2.8, cooldown: 2.3, projectileCount: 3, areaRadius: 125, pierceCount: 999, duration: 3.2, knockbackForce: -100 },
+      { level: 1, description: '자신을 중심으로 지면에서 암흑 손아귀를 소환하여 주변 적들을 캐릭터 쪽으로 끌어당김', damageCoeff: 1.1, cooldown: 3.5, projectileCount: 1, areaRadius: 90, pierceCount: 999, duration: 2.2, knockbackForce: -55, statusEffect: { type: 'pull', chance: 1.0, duration: 2.0 } },
+      { level: 2, description: '손아귀 영역 반경 +20%, 적 이동속도 30% 둔화', damageCoeff: 1.35, cooldown: 3.2, projectileCount: 1, areaRadius: 110, pierceCount: 999, duration: 2.4, knockbackForce: -65, statusEffect: { type: 'slow', chance: 1.0, duration: 2.0, value: 0.3 } },
+      { level: 3, description: '흡인력 증가, 쿨타임 -10% (상위 스킬 [블랙홀] 해금!)', damageCoeff: 1.65, cooldown: 2.9, projectileCount: 1, areaRadius: 130, pierceCount: 999, duration: 2.6, knockbackForce: -80 },
+      { level: 4, description: '손아귀 내 적들에게 출혈 부여 (초당 40% 도트 피해)', damageCoeff: 2.0, cooldown: 2.6, projectileCount: 1, areaRadius: 150, pierceCount: 999, duration: 2.8, knockbackForce: -95, statusEffect: { type: 'bleed', chance: 1.0, duration: 3.0, value: 0.4 } },
+      { level: 5, description: '초거대 죽음의 영역: 주변 적 전원 강제 흡인 및 1초 기절', damageCoeff: 2.5, cooldown: 2.3, projectileCount: 1, areaRadius: 180, pierceCount: 999, duration: 3.2, knockbackForce: -120, statusEffect: { type: 'stun', chance: 1.0, duration: 1.0 } },
     ],
   },
-
-  // --- 공용 지원 8종 ---
-  {
-    id: 'storm_chain',
-    name: '체인 라이트닝',
-    icon: 'assets/skills/skill_storm_chain.png',
-    category: 'weapon',
-    isNecroSignature: false,
-    targeting: 'nearest',
-    behavior: 'chain',
-    evolvesFrom: undefined,
-    requiredPassiveId: 'pas_cooldown',
-    maxLevel: 5,
-    levels: [
-      { level: 1, description: '적 4기에게 연쇄 낙뢰를 튕기며 감전 피해', damageCoeff: 1.1, cooldown: 2.2, projectileCount: 1, areaRadius: 200, pierceCount: 4, duration: 0.4, knockbackForce: 15 },
-      { level: 2, description: '연쇄 횟수 +2기 (총 6기), 피해량 +20%', damageCoeff: 1.35, cooldown: 2.0, projectileCount: 1, areaRadius: 220, pierceCount: 6, duration: 0.4, knockbackForce: 20 },
-      { level: 3, description: '연쇄 횟수 +2기 (총 8기), 쿨타임 -10%', damageCoeff: 1.6, cooldown: 1.8, projectileCount: 1, areaRadius: 240, pierceCount: 8, duration: 0.5, knockbackForce: 25 },
-      { level: 4, description: '동시 2갈래 연쇄 벼락 방출', damageCoeff: 1.9, cooldown: 1.6, projectileCount: 2, areaRadius: 260, pierceCount: 10, duration: 0.5, knockbackForce: 30 },
-      { level: 5, description: '3갈래 연쇄 벼락, 12기 연쇄 및 30% 확률 기절', damageCoeff: 2.4, cooldown: 1.4, projectileCount: 3, areaRadius: 300, pierceCount: 12, duration: 0.6, knockbackForce: 35, statusEffect: { type: 'stun', chance: 0.3, duration: 1.0 } },
-    ],
-  },
-  {
-    id: 'sniper_shot',
-    name: '대구경 관통 저격',
-    icon: 'assets/skills/skill_sniper_shot.png',
-    category: 'weapon',
-    isNecroSignature: false,
-    targeting: 'highest_hp',
-    behavior: 'straight',
-    evolvesFrom: undefined,
-    requiredPassiveId: 'pas_hawk_eye',
-    maxLevel: 5,
-    levels: [
-      { level: 1, description: '체력이 가장 높은 적에게 초고속 관통탄 발사', damageCoeff: 2.2, cooldown: 2.8, projectileCount: 1, areaRadius: 20, pierceCount: 3, duration: 2.0, knockbackForce: 50 },
-      { level: 2, description: '피해량 +30%, 관통 횟수 +2', damageCoeff: 2.8, cooldown: 2.6, projectileCount: 1, areaRadius: 22, pierceCount: 5, duration: 2.0, knockbackForce: 60 },
-      { level: 3, description: '탄환 수 +1발, 치명타 피해 +50%', damageCoeff: 3.4, cooldown: 2.4, projectileCount: 2, areaRadius: 25, pierceCount: 7, duration: 2.0, knockbackForce: 70 },
-      { level: 4, description: '관통한 모든 적의 방어력 50% 무시', damageCoeff: 4.2, cooldown: 2.2, projectileCount: 2, areaRadius: 28, pierceCount: 10, duration: 2.2, knockbackForce: 80 },
-      { level: 5, description: '탄환 수 3발 연사, 보스/엘리트 대상 확정 치명타', damageCoeff: 5.2, cooldown: 1.9, projectileCount: 3, areaRadius: 32, pierceCount: 999, duration: 2.5, knockbackForce: 100 },
-    ],
-  },
+  // 4-2. 상위 스킬 (심화: 죽음의 손아귀 Lv.3 이상 필요)
   {
     id: 'psi_blackhole',
     name: '중력장 압축 (블랙홀)',
     icon: 'assets/skills/skill_psi_blackhole.png',
     category: 'weapon',
     isNecroSignature: false,
+    tier: 2,
+    prerequisiteSkillId: 'dk_grip',
+    prerequisiteLevel: 3,
     targeting: 'random',
     behavior: 'ground_zone',
     evolvesFrom: undefined,
     requiredPassiveId: 'pas_area',
     maxLevel: 5,
     levels: [
-      { level: 1, description: '무작위 위치에 적들을 빨아들이는 소형 블랙홀 생성', damageCoeff: 0.8, cooldown: 4.5, projectileCount: 1, areaRadius: 90, pierceCount: 999, duration: 2.5, knockbackForce: -40, statusEffect: { type: 'pull', chance: 1.0, duration: 2.5 } },
+      { level: 1, description: '원거리 지점에 적들을 빨아들이는 특이점 블랙홀 생성', damageCoeff: 0.8, cooldown: 4.5, projectileCount: 1, areaRadius: 90, pierceCount: 999, duration: 2.5, knockbackForce: -40, statusEffect: { type: 'pull', chance: 1.0, duration: 2.5 } },
       { level: 2, description: '블랙홀 반경 +25%, 흡입력 증가', damageCoeff: 1.0, cooldown: 4.2, projectileCount: 1, areaRadius: 112, pierceCount: 999, duration: 2.8, knockbackForce: -50 },
       { level: 3, description: '블랙홀 동시 2개 생성', damageCoeff: 1.25, cooldown: 4.0, projectileCount: 2, areaRadius: 125, pierceCount: 999, duration: 3.0, knockbackForce: -60 },
       { level: 4, description: '블랙홀 지속시간 +1초, 내부 틱 데미지 가속', damageCoeff: 1.55, cooldown: 3.7, projectileCount: 2, areaRadius: 140, pierceCount: 999, duration: 4.0, knockbackForce: -75 },
       { level: 5, description: '초거대 블랙홀, 소멸 시 내부 축적 피해 폭발', damageCoeff: 2.0, cooldown: 3.4, projectileCount: 2, areaRadius: 170, pierceCount: 999, duration: 4.5, knockbackForce: 80 },
     ],
   },
-  {
-    id: 'cryo_nova',
-    name: '프로스트 노바',
-    icon: 'assets/skills/skill_cryo_nova.png',
-    category: 'weapon',
-    isNecroSignature: false,
-    targeting: 'self_aoe',
-    behavior: 'instant_strike',
-    evolvesFrom: undefined,
-    requiredPassiveId: 'pas_speed',
-    maxLevel: 5,
-    levels: [
-      { level: 1, description: '주변 원형 범위에 냉기 폭발을 일으켜 30% 둔화', damageCoeff: 1.3, cooldown: 3.0, projectileCount: 1, areaRadius: 110, pierceCount: 999, duration: 0.4, knockbackForce: 30, statusEffect: { type: 'slow', chance: 1.0, duration: 2.0, value: 0.3 } },
-      { level: 2, description: '폭발 반경 +20%, 피해량 +25%', damageCoeff: 1.6, cooldown: 2.8, projectileCount: 1, areaRadius: 132, pierceCount: 999, duration: 0.4, knockbackForce: 35 },
-      { level: 3, description: '피격된 적 40% 확률로 1.5초 완전 빙결', damageCoeff: 1.95, cooldown: 2.6, projectileCount: 1, areaRadius: 155, pierceCount: 999, duration: 0.5, knockbackForce: 40, statusEffect: { type: 'freeze', chance: 0.4, duration: 1.5 } },
-      { level: 4, description: '연속 2회 파동 폭발 방출', damageCoeff: 2.4, cooldown: 2.3, projectileCount: 2, areaRadius: 175, pierceCount: 999, duration: 0.6, knockbackForce: 45 },
-      { level: 5, description: '초광역 노바, 적 전체 100% 2초 빙결', damageCoeff: 3.0, cooldown: 2.0, projectileCount: 2, areaRadius: 210, pierceCount: 999, duration: 0.8, knockbackForce: 55, statusEffect: { type: 'freeze', chance: 1.0, duration: 2.0 } },
-    ],
-  },
+
+  // =========================================================================
+  // [계열 5: 근접 회전 / 참격 계열]
+  // =========================================================================
+  // 5-1. 하위 스킬 (기초)
   {
     id: 'ber_whirlwind',
     name: '중력 도끼 휠윈드',
     icon: 'assets/skills/skill_ber_whirlwind.png',
     category: 'weapon',
     isNecroSignature: false,
+    tier: 1,
     targeting: 'circular_orbit',
     behavior: 'orbit',
     evolvesFrom: undefined,
     requiredPassiveId: 'pas_iron_body',
     maxLevel: 5,
     levels: [
-      { level: 1, description: '회전하는 전투 도끼 1개 생성 (1회 충돌 시 소멸하는 일회용 도끼)', damageCoeff: 1.6, cooldown: 3.2, projectileCount: 1, areaRadius: 75, pierceCount: 1, duration: 9999, knockbackForce: 50 },
-      { level: 2, description: '전투 도끼 최대 보관 수 +1 (최대 2개), 쿨마다 1개 보충', damageCoeff: 1.9, cooldown: 3.0, projectileCount: 2, areaRadius: 85, pierceCount: 1, duration: 9999, knockbackForce: 55 },
-      { level: 3, description: '도끼 타격 횟수 +1회 (2회 타격 가능), 강력한 넉백', damageCoeff: 2.2, cooldown: 2.8, projectileCount: 2, areaRadius: 95, pierceCount: 2, duration: 9999, knockbackForce: 65 },
-      { level: 4, description: '도끼 최대 보관 수 +1 (최대 3개), 회전 반경 및 피해량 +30%', damageCoeff: 2.7, cooldown: 2.5, projectileCount: 3, areaRadius: 110, pierceCount: 2, duration: 9999, knockbackForce: 75 },
-      { level: 5, description: '도끼 타격 횟수 +1회 (3회 타격 가능, 최대 4개), 붉은 충격파 방출', damageCoeff: 3.3, cooldown: 2.2, projectileCount: 4, areaRadius: 125, pierceCount: 3, duration: 9999, knockbackForce: 90 },
+      { level: 1, description: '주변을 영구 회전하는 전투 도끼 1기 소환 (상시 유지, 지속 타격)', damageCoeff: 0.85, cooldown: 3.0, projectileCount: 1, areaRadius: 80, pierceCount: 999, duration: 9999, knockbackForce: 25 },
+      { level: 2, description: '회전 도끼 +1기 (총 2기 상시 회전), 회전 속도 증가', damageCoeff: 1.05, cooldown: 3.0, projectileCount: 2, areaRadius: 85, pierceCount: 999, duration: 9999, knockbackForce: 28 },
+      { level: 3, description: '회전 도끼 +1기 (총 3기 상시 회전) (상위 스킬 [청룡참] 해금!)', damageCoeff: 1.3, cooldown: 3.0, projectileCount: 3, areaRadius: 95, pierceCount: 999, duration: 9999, knockbackForce: 32 },
+      { level: 4, description: '회전 도끼 +1기 (총 4기 상시 회전), 회전 반경 증가', damageCoeff: 1.6, cooldown: 3.0, projectileCount: 4, areaRadius: 105, pierceCount: 999, duration: 9999, knockbackForce: 38 },
+      { level: 5, description: '회전 도끼 총 5기 완성! 영구 믹서기 방벽 형성 (피격된 적 25% 둔화)', damageCoeff: 1.95, cooldown: 3.0, projectileCount: 5, areaRadius: 120, pierceCount: 999, duration: 9999, knockbackForce: 45, statusEffect: { type: 'slow', chance: 1.0, duration: 1.2, value: 0.25 } },
     ],
   },
+  // 5-2. 상위 스킬 (심화: 휠윈드 도끼 Lv.3 이상 필요)
   {
     id: 'sm_dragon',
     name: '청룡참 검기',
     icon: 'assets/skills/skill_sm_dragon.png',
     category: 'weapon',
     isNecroSignature: false,
+    tier: 2,
+    prerequisiteSkillId: 'ber_whirlwind',
+    prerequisiteLevel: 3,
     targeting: 'facing',
     behavior: 'cone_slash',
     evolvesFrom: undefined,
@@ -198,12 +244,41 @@ export const ACTIVE_SKILLS: SkillData[] = [
       { level: 5, description: '5갈래 대검기 방출, 화면 끝까지 전원 관통 분쇄', damageCoeff: 3.8, cooldown: 1.3, projectileCount: 5, areaRadius: 85, pierceCount: 999, duration: 2.2, knockbackForce: 85 },
     ],
   },
+
+  // =========================================================================
+  // [계열 6: 원거리 사격 / 기계 계열]
+  // =========================================================================
+  // 6-1. 하위 스킬 (기초)
+  {
+    id: 'sniper_shot',
+    name: '대구경 관통 저격',
+    icon: 'assets/skills/skill_sniper_shot.png',
+    category: 'weapon',
+    isNecroSignature: false,
+    tier: 1,
+    targeting: 'highest_hp',
+    behavior: 'straight',
+    evolvesFrom: undefined,
+    requiredPassiveId: 'pas_hawk_eye',
+    maxLevel: 5,
+    levels: [
+      { level: 1, description: '체력이 가장 높은 적에게 초고속 관통탄 발사', damageCoeff: 2.2, cooldown: 2.8, projectileCount: 1, areaRadius: 20, pierceCount: 3, duration: 2.0, knockbackForce: 50 },
+      { level: 2, description: '피해량 +30%, 관통 횟수 +2', damageCoeff: 2.8, cooldown: 2.6, projectileCount: 1, areaRadius: 22, pierceCount: 5, duration: 2.0, knockbackForce: 60 },
+      { level: 3, description: '탄환 수 +1발, 치명타 피해 +50% (상위 스킬 [강습 드론] 해금!)', damageCoeff: 3.4, cooldown: 2.4, projectileCount: 2, areaRadius: 25, pierceCount: 7, duration: 2.0, knockbackForce: 70 },
+      { level: 4, description: '관통한 모든 적의 방어력 50% 무시', damageCoeff: 4.2, cooldown: 2.2, projectileCount: 2, areaRadius: 28, pierceCount: 10, duration: 2.2, knockbackForce: 80 },
+      { level: 5, description: '탄환 수 3발 연사, 보스/엘리트 대상 확정 치명타', damageCoeff: 5.2, cooldown: 1.9, projectileCount: 3, areaRadius: 32, pierceCount: 999, duration: 2.5, knockbackForce: 100 },
+    ],
+  },
+  // 6-2. 상위 스킬 (심화: 저격 Lv.3 이상 필요)
   {
     id: 'psi_drone',
     name: '외계 강습 드론',
     icon: 'assets/skills/skill_psi_drone.png',
     category: 'summon',
     isNecroSignature: false,
+    tier: 2,
+    prerequisiteSkillId: 'sniper_shot',
+    prerequisiteLevel: 3,
     targeting: 'self_aoe',
     behavior: 'straight',
     summonMinionId: 'drone',
@@ -218,23 +293,52 @@ export const ACTIVE_SKILLS: SkillData[] = [
       { level: 5, description: '강습 드론 총 3기 완성, 플라즈마 연사 속도 극대화', damageCoeff: 2.6, cooldown: 5.0, projectileCount: 3, areaRadius: 36, pierceCount: 5, duration: 9999, knockbackForce: 45 },
     ],
   },
+
+  // =========================================================================
+  // [계열 7: 자연 원소 계열]
+  // =========================================================================
+  // 7-1. 하위 스킬 (기초)
   {
-    id: 'priest_sanctuary',
-    name: '정화의 성염 장판',
-    icon: 'assets/skills/skill_priest_sanctuary.png',
+    id: 'cryo_nova',
+    name: '프로스트 노바',
+    icon: 'assets/skills/skill_cryo_nova.png',
     category: 'weapon',
     isNecroSignature: false,
+    tier: 1,
     targeting: 'self_aoe',
-    behavior: 'ground_zone',
+    behavior: 'instant_strike',
     evolvesFrom: undefined,
-    requiredPassiveId: 'pas_frost_heart',
+    requiredPassiveId: 'pas_speed',
     maxLevel: 5,
     levels: [
-      { level: 1, description: '발밑에 황금빛 성역 생성 (적 지속 화상 & 초당 체력 회복)', damageCoeff: 0.9, cooldown: 4.5, projectileCount: 1, areaRadius: 95, pierceCount: 999, duration: 3.0, knockbackForce: 15 },
-      { level: 2, description: '성역 반경 +20%, 화상 피해 +30%', damageCoeff: 1.2, cooldown: 4.2, projectileCount: 1, areaRadius: 115, pierceCount: 999, duration: 3.5, knockbackForce: 20 },
-      { level: 3, description: '성역 내 아군/소환수 방어력 +30% 증폭', damageCoeff: 1.5, cooldown: 4.0, projectileCount: 1, areaRadius: 135, pierceCount: 999, duration: 4.0, knockbackForce: 25 },
-      { level: 4, description: '성역 지속시간 증가 (상시 유지율 상승)', damageCoeff: 1.9, cooldown: 3.6, projectileCount: 1, areaRadius: 155, pierceCount: 999, duration: 4.8, knockbackForce: 30 },
-      { level: 5, description: '대성역 완성: 적 둔화 40% & 진입 즉시 성화 폭발', damageCoeff: 2.5, cooldown: 3.2, projectileCount: 1, areaRadius: 185, pierceCount: 999, duration: 5.5, knockbackForce: 40, statusEffect: { type: 'slow', chance: 1.0, duration: 2.0, value: 0.4 } },
+      { level: 1, description: '주변 원형 범위에 냉기 폭발을 일으켜 30% 둔화', damageCoeff: 1.3, cooldown: 3.0, projectileCount: 1, areaRadius: 110, pierceCount: 999, duration: 0.4, knockbackForce: 30, statusEffect: { type: 'slow', chance: 1.0, duration: 2.0, value: 0.3 } },
+      { level: 2, description: '폭발 반경 +20%, 피해량 +25%', damageCoeff: 1.6, cooldown: 2.8, projectileCount: 1, areaRadius: 132, pierceCount: 999, duration: 0.4, knockbackForce: 35 },
+      { level: 3, description: '피격된 적 40% 확률로 1.5초 완전 빙결 (상위 스킬 [체인 라이트닝] 해금!)', damageCoeff: 1.95, cooldown: 2.6, projectileCount: 1, areaRadius: 155, pierceCount: 999, duration: 0.5, knockbackForce: 40, statusEffect: { type: 'freeze', chance: 0.4, duration: 1.5 } },
+      { level: 4, description: '연속 2회 파동 폭발 방출', damageCoeff: 2.4, cooldown: 2.3, projectileCount: 2, areaRadius: 175, pierceCount: 999, duration: 0.6, knockbackForce: 45 },
+      { level: 5, description: '초광역 노바, 적 전체 100% 2초 빙결', damageCoeff: 3.0, cooldown: 2.0, projectileCount: 2, areaRadius: 210, pierceCount: 999, duration: 0.8, knockbackForce: 55, statusEffect: { type: 'freeze', chance: 1.0, duration: 2.0 } },
+    ],
+  },
+  // 7-2. 상위 스킬 (심화: 프로스트 노바 Lv.3 이상 필요)
+  {
+    id: 'storm_chain',
+    name: '체인 라이트닝',
+    icon: 'assets/skills/skill_storm_chain.png',
+    category: 'weapon',
+    isNecroSignature: false,
+    tier: 2,
+    prerequisiteSkillId: 'cryo_nova',
+    prerequisiteLevel: 3,
+    targeting: 'nearest',
+    behavior: 'chain',
+    evolvesFrom: undefined,
+    requiredPassiveId: 'pas_cooldown',
+    maxLevel: 5,
+    levels: [
+      { level: 1, description: '적 4기에게 연쇄 낙뢰를 튕기며 감전 피해', damageCoeff: 1.1, cooldown: 2.2, projectileCount: 1, areaRadius: 200, pierceCount: 4, duration: 0.4, knockbackForce: 15 },
+      { level: 2, description: '연쇄 횟수 +2기 (총 6기), 피해량 +20%', damageCoeff: 1.35, cooldown: 2.0, projectileCount: 1, areaRadius: 220, pierceCount: 6, duration: 0.4, knockbackForce: 20 },
+      { level: 3, description: '연쇄 횟수 +2기 (총 8기), 쿨타임 -10%', damageCoeff: 1.6, cooldown: 1.8, projectileCount: 1, areaRadius: 240, pierceCount: 8, duration: 0.5, knockbackForce: 25 },
+      { level: 4, description: '동시 2갈래 연쇄 벼락 방출', damageCoeff: 1.9, cooldown: 1.6, projectileCount: 2, areaRadius: 260, pierceCount: 10, duration: 0.5, knockbackForce: 30 },
+      { level: 5, description: '3갈래 연쇄 벼락, 12기 연쇄 및 30% 확률 기절', damageCoeff: 2.4, cooldown: 1.4, projectileCount: 3, areaRadius: 300, pierceCount: 12, duration: 0.6, knockbackForce: 35, statusEffect: { type: 'stun', chance: 0.3, duration: 1.0 } },
     ],
   },
 ];

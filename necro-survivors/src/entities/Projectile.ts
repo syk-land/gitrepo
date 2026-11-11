@@ -158,6 +158,12 @@ export class Projectile {
       }
       this.checkCollisions(grid);
     } else if (this.behavior === 'ground_zone') {
+      if (this.orbitCaster) {
+        const center = this.orbitCaster.getPosition();
+        this.x = center.x;
+        this.y = center.y;
+        this.sprite.setPosition(this.x, this.y);
+      }
       this.sprite.setRotation(this.sprite.rotation + dt * 0.5);
       this.tickTimer -= dt;
       if (this.tickTimer <= 0) {
@@ -214,7 +220,13 @@ export class Projectile {
         hitDmg = Math.round(this.damage * this.critDamage);
       }
 
-      const tookDmg = enemy.takeDamage(hitDmg, (dx / dist) * this.knockback, (dy / dist) * this.knockback);
+      let effKnockback = this.knockback;
+      // 캐릭터 중심 흡인 기술(죽음의 손아귀)은 플레이어 접촉 피격 안전 반경(42px) 까지만 적을 끌어당김
+      if (effKnockback < 0 && dist < 42) {
+        effKnockback = 0;
+      }
+
+      const tookDmg = enemy.takeDamage(hitDmg, (dx / dist) * effKnockback, (dy / dist) * effKnockback);
       if (!tookDmg) continue; // 화면 밖 1.2배 무적 적은 관통 및 데미지 미소모!
 
       if (isCrit) {
@@ -235,9 +247,9 @@ export class Projectile {
       if (this.pierceLeft <= 0 && this.behavior !== 'ground_zone') {
         this.destroyVisuals();
         this.active = false;
-        if (this.behavior === 'orbit' && this.scene) {
-          // 일회용 방패/도끼 파괴 시 파열 시각효과
-          const burst = this.scene.add.circle(this.x, this.y, 14, 0xffd000, 0.85).setDepth(25);
+        if (this.behavior === 'orbit' && this.skillId === 'necro_armor' && this.scene) {
+          // 일회용 뼈방패 파괴 시 파열 시각효과
+          const burst = this.scene.add.circle(this.x, this.y, 14, 0x00f0ff, 0.85).setDepth(25);
           this.scene.tweens.add({
             targets: burst,
             scale: 2.2,

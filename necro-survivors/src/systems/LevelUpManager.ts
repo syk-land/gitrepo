@@ -30,6 +30,15 @@ export class LevelUpManager {
         }
       }
 
+      // 1-1. 상위 스킬(Tier 2) 규칙: 선행 하위 스킬을 3레벨 이상 달성해야만 후보군에 등장!
+      if (skill.tier === 2 && skill.prerequisiteSkillId) {
+        const prereqLv = player.activeSkills.get(skill.prerequisiteSkillId) ?? 0;
+        const requiredLv = skill.prerequisiteLevel ?? 3;
+        if (prereqLv < requiredLv) {
+          return false;
+        }
+      }
+
       const isActive = skill.category === 'weapon' || skill.category === 'summon';
       const curLv = isActive
         ? player.activeSkills.get(skill.id) ?? 0
@@ -68,6 +77,17 @@ export class LevelUpManager {
 
       let synergyHint: string | undefined;
 
+      // 상위 스킬 배지 및 해금 안내
+      if (skill.tier === 2 && skill.prerequisiteSkillId) {
+        const prereqSkill = ALL_SKILLS_MAP.get(skill.prerequisiteSkillId);
+        synergyHint = `🌟 [상위 무기! ${prereqSkill ? prereqSkill.name : ''} 연계 심화]`;
+      } else if (skill.tier === 1 && curLv < 3) {
+        const upperSkill = ACTIVE_SKILLS.find((s) => s.prerequisiteSkillId === skill.id);
+        if (upperSkill) {
+          synergyHint = `🔒 [Lv.3 달성 시 상위 무기 '${upperSkill.name}' 해금!]`;
+        }
+      }
+
       // 패시브 카드인 경우: 플레이어가 소유한 액티브의 짝꿍인지 체크
       if (skill.category === 'passive') {
         for (const activeId of ownedActives) {
@@ -77,7 +97,7 @@ export class LevelUpManager {
             break;
           }
         }
-      } else if (isActive && skill.requiredPassiveId) {
+      } else if (isActive && skill.requiredPassiveId && !synergyHint) {
         // 액티브 카드인 경우: 각성에 필요한 재료 패시브 안내
         const hasPartner = (player.passiveSkills.get(skill.requiredPassiveId) ?? 0) > 0;
         const partnerPassive = ALL_SKILLS_MAP.get(skill.requiredPassiveId);

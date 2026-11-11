@@ -75,6 +75,9 @@ export interface SkillData {
   summonMinionId?: string;   // category === 'summon'일 때 소환할 유닛 ID
   evolvesFrom?: string;      // 각성 스킬인 경우 원본 액티브 스킬 ID
   requiredPassiveId?: string;// 각성에 필요한 짝꿍 패시브 ID
+  tier?: 1 | 2;              // 1: 하위(기초) 스킬, 2: 상위(심화) 스킬
+  prerequisiteSkillId?: string; // 상위 스킬 등장에 필요한 선행 하위 스킬 ID
+  prerequisiteLevel?: number;   // 선행 스킬 요구 레벨 (기본 3)
   maxLevel: number;          // 일반 액티브/패시브 = 5, 각성 = 1
   levels: SkillLevelData[];
 }

@@ -25,6 +25,7 @@ export class Player implements ISkillCaster {
   public readonly ultMaxCooldown: number = 12.0;
 
   public sprite: Phaser.GameObjects.Sprite;
+  public hpBarGraphics: Phaser.GameObjects.Graphics;
   public facingDir: Vector2 = { x: 1, y: 0 };
   private moveTimer: number = 0;
 
@@ -43,6 +44,10 @@ export class Player implements ISkillCaster {
     this.sprite = scene.add.sprite(x, y, 'hero_nemesis');
     this.sprite.setDisplaySize(64, 64);
     this.sprite.setDepth(25);
+
+    this.hpBarGraphics = scene.add.graphics();
+    this.hpBarGraphics.setDepth(27);
+    this.renderHpBar(0);
   }
 
   public getPosition(): Vector2 {
@@ -207,8 +212,10 @@ export class Player implements ISkillCaster {
       this.moveTimer += dt;
       const bounceY = Math.sin(this.moveTimer * 14) * 3;
       this.sprite.setPosition(this.x, this.y + bounceY);
+      this.renderHpBar(bounceY);
     } else {
       this.sprite.setPosition(this.x, this.y);
+      this.renderHpBar(0);
     }
   }
 
@@ -233,6 +240,29 @@ export class Player implements ISkillCaster {
     if (this.ultCooldown > 0) {
       this.ultCooldown = Math.max(0, this.ultCooldown - dt);
     }
+
+    this.renderHpBar(0);
+  }
+
+  public renderHpBar(bounceY: number = 0): void {
+    if (!this.hpBarGraphics || !this.sprite.active) return;
+    this.hpBarGraphics.clear();
+
+    const barW = 46;
+    const barH = 6;
+    const barX = this.x - barW / 2;
+    const barY = this.y + bounceY - 38;
+
+    // 바깥 어두운 배경 및 테두리
+    this.hpBarGraphics.fillStyle(0x0c0908, 0.85);
+    this.hpBarGraphics.lineStyle(1.5, 0x3d3024, 1);
+    this.hpBarGraphics.strokeRoundedRect(barX - 1, barY - 1, barW + 2, barH + 2, 2);
+    this.hpBarGraphics.fillRoundedRect(barX - 1, barY - 1, barW + 2, barH + 2, 2);
+
+    const ratio = Math.max(0, Math.min(1, this.hp / this.maxHp));
+    const fillColor = ratio > 0.5 ? 0x00ff88 : ratio > 0.25 ? 0xffaa00 : 0xff2244;
+    this.hpBarGraphics.fillStyle(fillColor, 1.0);
+    this.hpBarGraphics.fillRoundedRect(barX, barY, Math.max(2, barW * ratio), barH, 2);
   }
 
   public isJinBlizzard(): boolean {
@@ -241,5 +271,6 @@ export class Player implements ISkillCaster {
 
   public destroy(): void {
     this.sprite.destroy();
+    this.hpBarGraphics.destroy();
   }
 }
