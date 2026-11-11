@@ -311,11 +311,11 @@ export const ACTIVE_SKILLS: SkillData[] = [
     requiredPassiveId: 'pas_speed',
     maxLevel: 5,
     levels: [
-      { level: 1, description: '주변 원형 범위에 냉기 폭발을 일으켜 30% 둔화', damageCoeff: 1.3, cooldown: 3.0, projectileCount: 1, areaRadius: 110, pierceCount: 999, duration: 0.4, knockbackForce: 30, statusEffect: { type: 'slow', chance: 1.0, duration: 2.0, value: 0.3 } },
-      { level: 2, description: '폭발 반경 +20%, 피해량 +25%', damageCoeff: 1.6, cooldown: 2.8, projectileCount: 1, areaRadius: 132, pierceCount: 999, duration: 0.4, knockbackForce: 35 },
-      { level: 3, description: '피격된 적 40% 확률로 1.5초 완전 빙결 (상위 스킬 [체인 라이트닝] 해금!)', damageCoeff: 1.95, cooldown: 2.6, projectileCount: 1, areaRadius: 155, pierceCount: 999, duration: 0.5, knockbackForce: 40, statusEffect: { type: 'freeze', chance: 0.4, duration: 1.5 } },
-      { level: 4, description: '연속 2회 파동 폭발 방출', damageCoeff: 2.4, cooldown: 2.3, projectileCount: 2, areaRadius: 175, pierceCount: 999, duration: 0.6, knockbackForce: 45 },
-      { level: 5, description: '초광역 노바, 적 전체 100% 2초 빙결', damageCoeff: 3.0, cooldown: 2.0, projectileCount: 2, areaRadius: 210, pierceCount: 999, duration: 0.8, knockbackForce: 55, statusEffect: { type: 'freeze', chance: 1.0, duration: 2.0 } },
+      { level: 1, description: '주변 원형 범위에 혹한의 냉기 폭발 (적 60% 확률 1.5초 완전 빙결, 40% 둔화)', damageCoeff: 1.3, cooldown: 3.0, projectileCount: 1, areaRadius: 110, pierceCount: 999, duration: 0.4, knockbackForce: 30, statusEffect: { type: 'freeze', chance: 0.6, duration: 1.5 } },
+      { level: 2, description: '폭발 반경 +20%, 적 75% 확률 1.8초 완전 빙결', damageCoeff: 1.6, cooldown: 2.8, projectileCount: 1, areaRadius: 132, pierceCount: 999, duration: 0.4, knockbackForce: 35, statusEffect: { type: 'freeze', chance: 0.75, duration: 1.8 } },
+      { level: 3, description: '적 90% 확률 2.0초 완전 빙결 (상위 스킬 [체인 라이트닝] 해금!)', damageCoeff: 1.95, cooldown: 2.6, projectileCount: 1, areaRadius: 155, pierceCount: 999, duration: 0.5, knockbackForce: 40, statusEffect: { type: 'freeze', chance: 0.9, duration: 2.0 } },
+      { level: 4, description: '연속 2회 파동 폭발 방출, 적 100% 확정 2.5초 완전 빙결', damageCoeff: 2.4, cooldown: 2.3, projectileCount: 2, areaRadius: 175, pierceCount: 999, duration: 0.6, knockbackForce: 45, statusEffect: { type: 'freeze', chance: 1.0, duration: 2.5 } },
+      { level: 5, description: '초광역 절대영도 노바, 화면 내 모든 적 100% 3.5초 절대 빙결', damageCoeff: 3.0, cooldown: 2.0, projectileCount: 2, areaRadius: 210, pierceCount: 999, duration: 0.8, knockbackForce: 55, statusEffect: { type: 'freeze', chance: 1.0, duration: 3.5 } },
     ],
   },
   // 7-2. 상위 스킬 (심화: 프로스트 노바 Lv.3 이상 필요)
@@ -357,11 +357,11 @@ export const PASSIVE_SKILLS: SkillData[] = [
     behavior: 'straight',
     maxLevel: 5,
     levels: [
-      { level: 1, description: '모든 공격력 +15%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'damageMul', op: 'add', value: 0.15 }] },
-      { level: 2, description: '모든 공격력 +30%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'damageMul', op: 'add', value: 0.30 }] },
-      { level: 3, description: '모든 공격력 +45%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'damageMul', op: 'add', value: 0.45 }] },
-      { level: 4, description: '모든 공격력 +60%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'damageMul', op: 'add', value: 0.60 }] },
-      { level: 5, description: '모든 공격력 +75%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'damageMul', op: 'add', value: 0.75 }] },
+      { level: 1, description: '모든 공격력 +15% & 피격된 적 20% 확률 1.2초 빙결', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'damageMul', op: 'add', value: 0.15 }] },
+      { level: 2, description: '모든 공격력 +30% & 피격된 적 32% 확률 1.4초 빙결', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'damageMul', op: 'add', value: 0.30 }] },
+      { level: 3, description: '모든 공격력 +45% & 피격된 적 44% 확률 1.6초 빙결', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'damageMul', op: 'add', value: 0.45 }] },
+      { level: 4, description: '모든 공격력 +60% & 피격된 적 56% 확률 1.8초 빙결', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'damageMul', op: 'add', value: 0.60 }] },
+      { level: 5, description: '모든 공격력 +75% & 피격된 적 70% 확률 2.0초 빙결', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'damageMul', op: 'add', value: 0.75 }] },
     ],
   },
   {

@@ -243,6 +243,18 @@ export class Projectile {
         enemy.applyStatus(this.statusEffect.type, this.statusEffect.duration, this.statusEffect.value);
       }
 
+      // [극한의 심장] 패시브 효과: 서리 동결 오라 (레벨당 20%~70% 확률로 적 1.2~2.0초 완전 빙결)
+      const battlePlayer = (this.scene as any)?.player;
+      if (battlePlayer && battlePlayer.passiveSkills) {
+        const frostHeartLv = battlePlayer.passiveSkills.get('pas_frost_heart') ?? 0;
+        if (frostHeartLv > 0) {
+          const freezeChance = 0.08 + frostHeartLv * 0.12; // Lv.1: 20%, Lv.5: 68%
+          if (Math.random() <= freezeChance) {
+            enemy.applyStatus('freeze', 1.0 + frostHeartLv * 0.2);
+          }
+        }
+      }
+
       this.pierceLeft--;
       if (this.pierceLeft <= 0 && this.behavior !== 'ground_zone') {
         this.destroyVisuals();
@@ -321,6 +333,16 @@ export class Projectile {
       }
       if (this.statusEffect && Math.random() <= this.statusEffect.chance) {
         nextTarget.applyStatus(this.statusEffect.type, this.statusEffect.duration, this.statusEffect.value);
+      }
+      const battlePlayer = (this.scene as any)?.player;
+      if (battlePlayer && battlePlayer.passiveSkills) {
+        const frostHeartLv = battlePlayer.passiveSkills.get('pas_frost_heart') ?? 0;
+        if (frostHeartLv > 0) {
+          const freezeChance = 0.08 + frostHeartLv * 0.12;
+          if (Math.random() <= freezeChance) {
+            nextTarget.applyStatus('freeze', 1.0 + frostHeartLv * 0.2);
+          }
+        }
       }
       currentX = nextTarget.x;
       currentY = nextTarget.y;

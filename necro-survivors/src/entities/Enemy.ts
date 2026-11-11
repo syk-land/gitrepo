@@ -28,6 +28,7 @@ export class Enemy implements SpatialEntity {
   public bleedTimer: number = 0;
   public bleedDps: number = 0;
 
+  public iceGraphics?: Phaser.GameObjects.Graphics;
   public onKilled?: (enemy: Enemy) => void;
   private scene: Phaser.Scene;
 
@@ -76,6 +77,10 @@ export class Enemy implements SpatialEntity {
     }
     this.sprite.setDepth(15);
 
+    // 빙결 시각 효과 전용 그래픽스
+    this.iceGraphics = scene.add.graphics();
+    this.iceGraphics.setDepth(17);
+
     if (isElite || isNamed || isBoss) {
       this.hpBarGraphics = scene.add.graphics();
       this.hpBarGraphics.setDepth(16);
@@ -99,16 +104,20 @@ export class Enemy implements SpatialEntity {
 
     this.hp -= amount;
 
-    // 넉백 적용 및 스프라이트 좌표 즉시 동기화 (Issue 5)
-    if (knockbackDx !== 0 || knockbackDy !== 0) {
+    // 빙결 상태에서는 넉백 면제! (얼어붙은 얼음 조각상처럼 제자리에 완전 고정)
+    if (this.freezeTimer <= 0 && (knockbackDx !== 0 || knockbackDy !== 0)) {
       const bossKnockbackResist = this.isBoss ? 0.15 : this.isNamed ? 0.4 : this.isElite ? 0.5 : 1.0;
       this.x += knockbackDx * bossKnockbackResist;
       this.y += knockbackDy * bossKnockbackResist;
       this.sprite.setPosition(this.x, this.y);
     }
 
-    // 피격 화이트 플래시 (0.06초)
-    this.sprite.setTintFill(0xffffff);
+    // 피격 플래시: 빙결 상태일 때는 푸른빛(0x88ffff) 플래시, 평상시에는 화이트 플래시
+    if (this.freezeTimer > 0) {
+      this.sprite.setTint(0x88ffff);
+    } else {
+      this.sprite.setTintFill(0xffffff);
+    }
     this.flashTimer = 0.06;
 
     if (this.hp <= 0) {
@@ -119,6 +128,11 @@ export class Enemy implements SpatialEntity {
         this.hpBarGraphics.clear();
         this.hpBarGraphics.destroy();
         this.hpBarGraphics = undefined;
+      }
+      if (this.iceGraphics) {
+        this.iceGraphics.clear();
+        this.iceGraphics.destroy();
+        this.iceGraphics = undefined;
       }
       if (this.onKilled) {
         this.onKilled(this);
@@ -131,15 +145,23 @@ export class Enemy implements SpatialEntity {
   public applyStatus(type: 'slow' | 'freeze' | 'stun' | 'bleed' | 'pull', duration: number, value: number = 0.4): void {
     if (!this.active) return;
     if (type === 'freeze') {
+      const wasFrozen = this.freezeTimer > 0;
       this.freezeTimer = Math.max(this.freezeTimer, duration);
       this.sprite.setTint(0x00f0ff);
+      if (!wasFrozen && typeof (this.scene as any).showDamageText === 'function') {
+        (this.scene as any).showDamageText(this.x, this.y - 20, '❄️ 빙결!', 0x00f0ff, true);
+      }
     } else if (type === 'slow') {
       this.slowTimer = Math.max(this.slowTimer, duration);
       this.slowRatio = value;
-      this.sprite.setTint(0x3388ff);
+      if (this.freezeTimer <= 0) {
+        this.sprite.setTint(0x3388ff);
+      }
     } else if (type === 'stun') {
       this.stunTimer = Math.max(this.stunTimer, duration);
-      this.sprite.setTint(0xffd000);
+      if (this.freezeTimer <= 0) {
+        this.sprite.setTint(0xffd000);
+      }
     } else if (type === 'bleed') {
       this.bleedTimer = Math.max(this.bleedTimer, duration);
       this.bleedDps = value;
@@ -168,18 +190,47 @@ export class Enemy implements SpatialEntity {
     // 빙결 및 기절 체크
     if (this.freezeTimer > 0) {
       this.freezeTimer -= dt;
+
+      // 얼음 결정 & 얼음 큐브 오버레이 실시간 렌더링
+      if (this.iceGraphics) {
+        this.iceGraphics.clear();
+        const boxSize = this.radius * 2.2;
+        const boxX = this.x - boxSize / 2;
+        const boxY = this.y - boxSize / 2;
+        // 반투명 푸른빛 얼음 블록
+        this.iceGraphics.fillStyle(0x00f0ff, 0.35);
+        this.iceGraphics.fillRoundedRect(boxX, boxY, boxSize, boxSize, 6);
+        // 밝은 하늘색 테두리
+        this.iceGraphics.lineStyle(2, 0xaaf0ff, 0.85);
+        this.iceGraphics.strokeRoundedRect(boxX, boxY, boxSize, boxSize, 6);
+        // 얼음 십자 결정
+        this.iceGraphics.lineStyle(1.5, 0xffffff, 0.9);
+        this.iceGraphics.lineBetween(this.x, boxY + 3, this.x, boxY + boxSize - 3);
+        this.iceGraphics.lineBetween(boxX + 3, this.y, boxX + boxSize - 3, this.y);
+      }
+
       if (this.freezeTimer <= 0) {
         this.sprite.clearTint();
         if (this.isElite) this.sprite.setTint(0xffd700);
+        if (this.iceGraphics) this.iceGraphics.clear();
       }
+
+      // 빙결 상태에서는 이동 및 방향 전환 완전 정지! (체력바는 유지)
+      this.renderHpBar();
       return;
+    } else {
+      if (this.iceGraphics) {
+        this.iceGraphics.clear();
+      }
     }
+
     if (this.stunTimer > 0) {
       this.stunTimer -= dt;
       if (this.stunTimer <= 0) {
         this.sprite.clearTint();
         if (this.isElite) this.sprite.setTint(0xffd700);
       }
+      this.renderHpBar();
       return;
     }
 
@@ -195,6 +246,11 @@ export class Enemy implements SpatialEntity {
           this.hpBarGraphics.clear();
           this.hpBarGraphics.destroy();
           this.hpBarGraphics = undefined;
+        }
+        if (this.iceGraphics) {
+          this.iceGraphics.clear();
+          this.iceGraphics.destroy();
+          this.iceGraphics = undefined;
         }
         if (this.onKilled) {
           this.onKilled(this);
@@ -244,7 +300,10 @@ export class Enemy implements SpatialEntity {
     }
 
     this.sprite.setPosition(this.x, this.y);
+    this.renderHpBar();
+  }
 
+  private renderHpBar(): void {
     // 정예 / 수문장 / 보스 머리 위 체력바 실시간 렌더링
     if (this.hpBarGraphics && this.active) {
       const ratio = Math.max(0, this.hp / this.maxHp);
@@ -265,6 +324,10 @@ export class Enemy implements SpatialEntity {
     if (this.hpBarGraphics) {
       this.hpBarGraphics.destroy();
       this.hpBarGraphics = undefined;
+    }
+    if (this.iceGraphics) {
+      this.iceGraphics.destroy();
+      this.iceGraphics = undefined;
     }
     this.sprite.destroy();
   }

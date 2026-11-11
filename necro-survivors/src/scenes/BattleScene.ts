@@ -156,6 +156,11 @@ export class BattleScene extends Phaser.Scene {
       // 플레이어 또는 타겟 소환수를 향해 이동
       enemy.update(dt, targetX, targetY, this.spatialGrid);
 
+      // 빙결 또는 기절 상태인 몬스터는 행동 불능: 소환수/플레이어 공격 불가!
+      if (enemy.freezeTimer > 0 || enemy.stunTimer > 0) {
+        continue;
+      }
+
       // 소환수와의 접촉 피격 판정 (소환수 피격 시스템 및 바리케이드 충돌)
       if (nearestMinion) {
         const mdx = nearestMinion.x - enemy.x;
