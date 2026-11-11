@@ -4,6 +4,7 @@ import { ISkillCaster, Vector2 } from './ISkillCaster';
 import { ALL_SKILLS_MAP } from '../data/skillsData';
 import { ALL_ALTAR_MAP, getAltarEffectiveValue } from '../data/altarData';
 import { SaveManager } from '../core/SaveManager';
+import { SoundEngine } from '../core/SoundEngine';
 
 export class Player implements ISkillCaster {
   public x: number = 0;
@@ -29,7 +30,13 @@ export class Player implements ISkillCaster {
   public facingDir: Vector2 = { x: 1, y: 0 };
   private moveTimer: number = 0;
 
+  // 피격 넉백 물리 가속도
+  public knockbackVx: number = 0;
+  public knockbackVy: number = 0;
+  private scene: Phaser.Scene;
+
   constructor(scene: Phaser.Scene, x: number = 0, y: number = 0) {
+    this.scene = scene;
     this.x = x;
     this.y = y;
 
@@ -143,19 +150,36 @@ export class Player implements ISkillCaster {
     return stats;
   }
 
-  public takeDamage(amount: number): boolean {
+  public takeDamage(amount: number, knockbackDirX: number = 0, knockbackDirY: number = 0): boolean {
     if (this.invulnTimer > 0 || this.hp <= 0) return false;
 
     const stats = this.getEffectiveStats();
     const finalDamage = Math.max(5, Math.round(amount - stats.armor));
     this.hp -= finalDamage;
-    this.invulnTimer = 0.5; // 0.5초 피격 무적 시간 (i-frame)
+    this.invulnTimer = 0.75; // 0.75초 피격 무적 시간 (i-frame)
 
-    this.sprite.setTintFill(0xffffff);
+    // 피격 시 넉백 물리 가속도 부여 (부드러운 감속 넉백)
+    if (knockbackDirX !== 0 || knockbackDirY !== 0) {
+      const knockbackSpeed = 420; // 420px/s 넉백 속도
+      this.knockbackVx = knockbackDirX * knockbackSpeed;
+      this.knockbackVy = knockbackDirY * knockbackSpeed;
+    }
+
+    // 피격 붉은색 플래시
+    this.sprite.setTint(0xff3333);
     setTimeout(() => {
-      if (this.sprite.active) this.sprite.clearTint();
-    }, 60);
+      if (this.sprite && this.sprite.active) this.sprite.clearTint();
+    }, 120);
 
+    // 플레이어 머리 위 피격 데미지 텍스트 팝업
+    if (typeof (this.scene as any).showDamageText === 'function') {
+      (this.scene as any).showDamageText(this.x, this.y - 30, `-${finalDamage}`, 0xff3333, false);
+    }
+
+    // 피격 사운드
+    SoundEngine.getInstance().playTone(180, 'sawtooth', 0.15, 0.25);
+
+    this.renderHpBar(0);
     return this.hp <= 0;
   }
 
@@ -217,10 +241,24 @@ export class Player implements ISkillCaster {
   }
 
   public update(dt: number): void {
+    // 피격 넉백 물리 업데이트 (부드러운 지수 감쇠)
+    if (this.knockbackVx !== 0 || this.knockbackVy !== 0) {
+      this.x += this.knockbackVx * dt;
+      this.y += this.knockbackVy * dt;
+      this.sprite.setPosition(this.x, this.y);
+      this.renderHpBar(0);
+
+      const decay = Math.exp(-dt * 14);
+      this.knockbackVx *= decay;
+      this.knockbackVy *= decay;
+      if (Math.abs(this.knockbackVx) < 8) this.knockbackVx = 0;
+      if (Math.abs(this.knockbackVy) < 8) this.knockbackVy = 0;
+    }
+
     if (this.invulnTimer > 0) {
       this.invulnTimer -= dt;
-      // 반투명 깜빡임
-      this.sprite.setAlpha(Math.floor(this.invulnTimer * 20) % 2 === 0 ? 0.4 : 1.0);
+      // 피격 무적 상태일 때 캐릭터 깜빡임 연출
+      this.sprite.setAlpha(Math.floor(this.invulnTimer * 16) % 2 === 0 ? 0.35 : 1.0);
       if (this.invulnTimer <= 0) {
         this.sprite.setAlpha(1.0);
       }

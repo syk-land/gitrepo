@@ -179,16 +179,30 @@ export class BattleScene extends Phaser.Scene {
       }
 
       // 플레이어와의 접촉 피격 판정 (Section 6.1)
-      const dx = this.player.x - enemy.x;
-      const dy = enemy.y - this.player.y;
-      const distSq = dx * dx + dy * dy;
+      const pDx = this.player.x - enemy.x;
+      const pDy = this.player.y - enemy.y;
+      const distSq = pDx * pDx + pDy * pDy;
       const touchRadius = 24 + enemy.radius;
 
       if (distSq <= touchRadius * touchRadius) {
-        if (this.player.takeDamage(enemy.atk)) {
+        const pDist = Math.sqrt(distSq) || 1;
+        const dirX = pDx / pDist;
+        const dirY = pDy / pDist;
+
+        if (this.player.takeDamage(enemy.atk, dirX, dirY)) {
           this.handleGameOver();
           return;
         }
+
+        // 충돌한 적도 살짝 밀어내어 지속 겹침 방지
+        if (enemy.freezeTimer <= 0) {
+          enemy.x -= dirX * 16;
+          enemy.y -= dirY * 16;
+          enemy.sprite.setPosition(enemy.x, enemy.y);
+        }
+
+        // 피격 시 카메라 미세 진동 효과
+        this.cameras.main.shake(80, 0.004);
       }
     }
 

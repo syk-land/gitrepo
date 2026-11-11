@@ -31,10 +31,10 @@ export class SkillExecutor {
 
     // 2. 발사 투사체 수 계산 (기본 + 패시브 추가 투사체)
     const totalProjectiles = Math.max(1, lvData.projectileCount + stats.bonusProjectiles);
-    const isShield = skill.id === 'necro_armor';
-    const isAxe = skill.id === 'ber_whirlwind';
-    // 회전도끼는 영구 유지이므로 틱 데미지를 12로 대폭 낮춤 (뼈방패는 일회용 강력 45)
-    const baseDamageScale = isShield ? 45 : isAxe ? 12 : 25;
+    const isShield = skill.id === 'necro_armor' || skill.id === 'awakened_armor';
+    const isAxe = skill.id === 'ber_whirlwind' || skill.id === 'awakened_whirlwind';
+    // 회전도끼/발키리는 다중 유지이므로 틱 데미지를 조정 (일회용 홀리 방패는 강력 45)
+    const baseDamageScale = isShield && lvData.pierceCount < 999 ? 45 : isAxe || (isShield && lvData.pierceCount >= 999) ? 14 : 25;
     const finalDamage = Math.round(stats.damageMul * lvData.damageCoeff * baseDamageScale);
     const finalRadius = Math.round(lvData.areaRadius * stats.areaMul);
     const finalKnockback = lvData.knockbackForce;
@@ -100,62 +100,77 @@ export class SkillExecutor {
     if (skill.behavior === 'orbit') {
       const currentOrbiters = projectiles.filter((p) => p.active && p.skillId === skill.id);
       const maxAllowed = totalProjectiles;
+      const isPermanentOrbit = lvData.pierceCount >= 999;
 
-      if (isAxe) {
-        // [회전 도끼]: 영구 유지! 부족한 개수만큼 즉시 생성하여 상시 회전
-        const needed = maxAllowed - currentOrbiters.length;
-        for (let i = 0; i < needed; i++) {
-          const index = currentOrbiters.length + i;
-          const angleOffset = (Math.PI * 2 / maxAllowed) * index;
-          const p = new Projectile(
-            scene,
-            vfxKey,
-            casterPos.x,
-            casterPos.y,
-            'orbit',
-            finalDamage,
-            999, // 영구 유지 무한 관통
-            9999,
-            finalRadius,
-            finalKnockback,
-            1,
-            0,
-            finalSpeed,
-            lvData.statusEffect,
-            caster,
-            angleOffset,
-            skill.id,
-            stats.critRate,
-            stats.critDamage
-          );
-          projectiles.push(p);
+      if (isPermanentOrbit) {
+        // [영구 공전체: 회전 도끼 / 발키리 부대 등]: 수량이 변경되면 기존 것을 정리하고 360도 균등 재배치
+        if (currentOrbiters.length !== maxAllowed) {
+          for (const oldP of currentOrbiters) {
+            oldP.destroyVisuals();
+            oldP.active = false;
+          }
+          for (let i = 0; i < maxAllowed; i++) {
+            const angleOffset = ((Math.PI * 2) / maxAllowed) * i;
+            const p = new Projectile(
+              scene,
+              vfxKey,
+              casterPos.x,
+              casterPos.y,
+              'orbit',
+              finalDamage,
+              999, // 영구 유지 무한 관통
+              9999,
+              finalRadius,
+              finalKnockback,
+              1,
+              0,
+              finalSpeed,
+              lvData.statusEffect,
+              caster,
+              angleOffset,
+              skill.id,
+              stats.critRate,
+              stats.critDamage
+            );
+            projectiles.push(p);
+          }
         }
       } else {
-        // [뼈방패]: 일회용 방패! 쿨타임마다 1개씩 보충 생성 (최대 보관 수까지)
+        // [홀리 아머 방패]: 피격 시 소모되는 일회용 방패! 쿨타임마다 최대 보관 수량까지 보충
         if (currentOrbiters.length < maxAllowed) {
-          const angleOffset = (Math.PI * 2 / maxAllowed) * currentOrbiters.length + (Math.random() * 0.2);
-          const p = new Projectile(
-            scene,
-            vfxKey,
-            casterPos.x,
-            casterPos.y,
-            'orbit',
-            finalDamage,
-            lvData.pierceCount, // 레벨별 타격 횟수 (1~3회 후 파괴)
-            lvData.duration || 9999,
-            finalRadius,
-            finalKnockback,
-            1,
-            0,
-            finalSpeed,
-            lvData.statusEffect,
-            caster,
-            angleOffset,
-            skill.id,
-            stats.critRate,
-            stats.critDamage
-          );
-          projectiles.push(p);
+          const needed = maxAllowed - currentOrbiters.length;
+          // 1, 2개일 때는 1개씩, 4, 8, 16개일 때는 한번에 최소 2~4개씩 빠르게 보충
+          const batch = Math.min(needed, Math.max(1, Math.floor(maxAllowed / 4)));
+          const baseAngle = currentOrbiters.length > 0 ? currentOrbiters[0].orbitAngle : 0;
+          for (let i = 0; i < batch; i++) {
+            const p = new Projectile(
+              scene,
+              vfxKey,
+              casterPos.x,
+              casterPos.y,
+              'orbit',
+              finalDamage,
+              lvData.pierceCount, // 레벨별 타격 횟수 후 파괴
+              lvData.duration || 9999,
+              finalRadius,
+              finalKnockback,
+              1,
+              0,
+              finalSpeed,
+              lvData.statusEffect,
+              caster,
+              0,
+              skill.id,
+              stats.critRate,
+              stats.critDamage
+            );
+            projectiles.push(p);
+            currentOrbiters.push(p);
+          }
+          // 전체 방패 각도 360도 균등 재정렬
+          for (let i = 0; i < currentOrbiters.length; i++) {
+            currentOrbiters[i].orbitAngle = baseAngle + ((Math.PI * 2) / currentOrbiters.length) * i;
+          }
         }
       }
     } else if (skill.behavior === 'ground_zone' || skill.behavior === 'instant_strike') {

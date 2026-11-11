@@ -26,7 +26,7 @@ export class Projectile {
   private vx: number = 0;
   private vy: number = 0;
   private speed: number = 320;
-  private orbitAngle: number = 0;
+  public orbitAngle: number = 0;
   private orbitCaster?: ISkillCaster;
   private hitEnemies = new Set<Enemy>();
   private tickTimer: number = 0;
