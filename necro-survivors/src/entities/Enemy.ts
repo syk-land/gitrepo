@@ -27,6 +27,7 @@ export class Enemy implements SpatialEntity {
   public stunTimer: number = 0;
   public bleedTimer: number = 0;
   public bleedDps: number = 0;
+  public bleedTickTimer: number = 0;
 
   public iceGraphics?: Phaser.GameObjects.Graphics;
   public onKilled?: (enemy: Enemy) => void;
@@ -112,9 +113,11 @@ export class Enemy implements SpatialEntity {
       this.sprite.setPosition(this.x, this.y);
     }
 
-    // 피격 플래시: 빙결 상태일 때는 푸른빛(0x88ffff) 플래시, 평상시에는 화이트 플래시
+    // 피격 플래시: 빙결/기절 상태일 때는 고유 색상 플래시, 평상시에는 화이트 플래시
     if (this.freezeTimer > 0) {
       this.sprite.setTint(0x88ffff);
+    } else if (this.stunTimer > 0) {
+      this.sprite.setTint(0xffea60);
     } else {
       this.sprite.setTintFill(0xffffff);
     }
@@ -154,17 +157,32 @@ export class Enemy implements SpatialEntity {
     } else if (type === 'slow') {
       this.slowTimer = Math.max(this.slowTimer, duration);
       this.slowRatio = value;
-      if (this.freezeTimer <= 0) {
+      if (this.freezeTimer <= 0 && this.stunTimer <= 0) {
         this.sprite.setTint(0x3388ff);
       }
     } else if (type === 'stun') {
+      const wasStunned = this.stunTimer > 0;
       this.stunTimer = Math.max(this.stunTimer, duration);
       if (this.freezeTimer <= 0) {
         this.sprite.setTint(0xffd000);
       }
+      if (!wasStunned && typeof (this.scene as any).showDamageText === 'function') {
+        (this.scene as any).showDamageText(this.x, this.y - 20, '⚡ 기절!', 0xffd000, true);
+      }
     } else if (type === 'bleed') {
+      const wasBleeding = this.bleedTimer > 0;
       this.bleedTimer = Math.max(this.bleedTimer, duration);
       this.bleedDps = value;
+      if (this.freezeTimer <= 0 && this.stunTimer <= 0) {
+        this.sprite.setTint(0xff5566);
+      }
+      if (!wasBleeding && typeof (this.scene as any).showDamageText === 'function') {
+        (this.scene as any).showDamageText(this.x, this.y - 20, '🩸 출혈!', 0xff2244, true);
+      }
+    } else if (type === 'pull') {
+      // 흡인 영역 내부: 이동속도 50% 둔화 적용
+      this.slowTimer = Math.max(this.slowTimer, duration);
+      this.slowRatio = Math.max(this.slowRatio, 0.5);
     }
   }
 
@@ -182,7 +200,9 @@ export class Enemy implements SpatialEntity {
       if (this.flashTimer <= 0) {
         this.sprite.clearTint();
         if (this.freezeTimer > 0) this.sprite.setTint(0x00f0ff);
+        else if (this.stunTimer > 0) this.sprite.setTint(0xffd000);
         else if (this.slowTimer > 0) this.sprite.setTint(0x3388ff);
+        else if (this.bleedTimer > 0) this.sprite.setTint(0xff5566);
         else if (this.isElite) this.sprite.setTint(0xffd700);
       }
     }
@@ -234,10 +254,19 @@ export class Enemy implements SpatialEntity {
       return;
     }
 
-    // 출혈 피해
+    // 출혈 피해 (0.5초마다 가시적 틱 데미지 발생)
     if (this.bleedTimer > 0) {
       this.bleedTimer -= dt;
-      this.hp -= this.bleedDps * dt * 50;
+      this.bleedTickTimer -= dt;
+      if (this.bleedTickTimer <= 0) {
+        this.bleedTickTimer = 0.5;
+        const bleedDmg = Math.max(1, Math.round(this.bleedDps * 28));
+        this.hp -= bleedDmg;
+        if (typeof (this.scene as any).showDamageText === 'function') {
+          (this.scene as any).showDamageText(this.x, this.y - 12, `🩸 ${bleedDmg}`, 0xff3355);
+        }
+      }
+
       if (this.hp <= 0) {
         this.hp = 0;
         this.active = false;

@@ -430,7 +430,12 @@ export class BattleScene extends Phaser.Scene {
     if (vampLv > 0) {
       const heal = vampLv >= 5 ? 6 : vampLv;
       const effectiveMaxHp = this.player.getEffectiveStats().maxHp;
-      this.player.hp = Math.min(effectiveMaxHp, this.player.hp + heal);
+      if (this.player.hp < effectiveMaxHp) {
+        this.player.hp = Math.min(effectiveMaxHp, this.player.hp + heal);
+        if (Math.random() < 0.25) {
+          this.showDamageText(this.player.x, this.player.y - 25, `+${heal} HP`, 0x00ff88);
+        }
+      }
     }
 
     if (enemy.isBoss || enemy.isNamed || this.killCount % 10 === 0) {

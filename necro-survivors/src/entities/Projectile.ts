@@ -170,6 +170,22 @@ export class Projectile {
         this.tickTimer = 0.25; // 0.25초마다 틱 데미지
         this.hitEnemies.clear();
         this.checkCollisions(grid);
+
+        // 성역(정화의 성염 장판 / 대성역) 내부 아군/플레이어 지속 치유
+        if (this.skillId === 'priest_sanctuary' || this.skillId === 'awakened_sanctuary') {
+          const player = (this.scene as any)?.player;
+          if (player && player.hp < player.maxHp) {
+            const pdx = player.x - this.x;
+            const pdy = player.y - this.y;
+            if (pdx * pdx + pdy * pdy <= this.areaRadius * this.areaRadius) {
+              const heal = this.skillId === 'awakened_sanctuary' ? 8 : 4;
+              player.hp = Math.min(player.maxHp, player.hp + heal);
+              if (Math.random() < 0.35 && typeof (this.scene as any).showDamageText === 'function') {
+                (this.scene as any).showDamageText(player.x, player.y - 25, `+${heal} HP`, 0x00ff88);
+              }
+            }
+          }
+        }
       }
     } else if (this.behavior === 'chain') {
       this.checkChainCollisions(grid);
