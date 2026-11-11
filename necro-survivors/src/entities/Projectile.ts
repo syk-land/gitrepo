@@ -241,6 +241,10 @@ export class Projectile {
       if (effKnockback < 0 && dist < 42) {
         effKnockback = 0;
       }
+      // 장판류(ground_zone)는 적을 밀쳐내는 양수 넉백을 일체 가하지 않음 (게임 난이도 과도 하락 방지)
+      if (this.behavior === 'ground_zone' && effKnockback > 0) {
+        effKnockback = 0;
+      }
 
       const tookDmg = enemy.takeDamage(hitDmg, (dx / dist) * effKnockback, (dy / dist) * effKnockback);
       if (!tookDmg) continue; // 화면 밖 1.2배 무적 적은 관통 및 데미지 미소모!

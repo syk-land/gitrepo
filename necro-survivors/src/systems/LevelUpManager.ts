@@ -65,6 +65,22 @@ export class LevelUpManager {
       }
     }
 
+    // ⭐ 상위 스킬(Tier 2) 해금 즉시 확정 노출:
+    // 하위 스킬을 3레벨 달성했으나 아직 미보유한 상위 스킬이 있다면 다음 레벨업에 즉시 1자리 확정 배정!
+    if (guaranteedChoices.length < count && ownedActives.length < this.maxActiveSlots) {
+      const unlockedTier2 = candidates.find((skill) => {
+        if (skill.tier !== 2 || !skill.prerequisiteSkillId) return false;
+        const curLv = player.activeSkills.get(skill.id) ?? 0;
+        if (curLv > 0) return false;
+        const prereqLv = player.activeSkills.get(skill.prerequisiteSkillId) ?? 0;
+        const requiredLv = skill.prerequisiteLevel ?? 3;
+        return prereqLv >= requiredLv;
+      });
+      if (unlockedTier2) {
+        guaranteedChoices.push(unlockedTier2);
+      }
+    }
+
     // 2단계: 가중치 비복원 추출 (보유 스킬 1.8배, 사령 고유 1.3배 우대)
     const pickedSkills = this.pickWeighted(candidates, player, count, guaranteedChoices);
 
@@ -170,7 +186,12 @@ export class LevelUpManager {
           skill.category === 'passive'
             ? player.passiveSkills.get(skill.id) ?? 0
             : player.activeSkills.get(skill.id) ?? 0;
-        if (curLv > 0) w *= 1.8; // 보유 스킬 레벨업 우대
+        if (curLv > 0) {
+          w *= 1.8; // 보유 스킬 레벨업 우대
+        } else if (skill.tier === 2 && skill.prerequisiteSkillId) {
+          // 선행 스킬 3레벨 달성으로 해금된 상위 스킬은 높은 출현 가중치 부여
+          w = 350;
+        }
         return w;
       });
 
