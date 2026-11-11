@@ -10,7 +10,7 @@ export const ACTIVE_SKILLS: SkillData[] = [
   // 1-1. 하위 스킬 (기초)
   {
     id: 'necro_spear',
-    name: '본 스피어',
+    name: '마력탄',
     icon: 'assets/skills/skill_necro_spear.png',
     category: 'weapon',
     isNecroSignature: true,
@@ -21,17 +21,17 @@ export const ACTIVE_SKILLS: SkillData[] = [
     requiredPassiveId: 'pas_frost_heart',
     maxLevel: 5,
     levels: [
-      { level: 1, description: '가장 가까운 적에게 날카로운 관통 뼈창 1발 투척', damageCoeff: 1.2, cooldown: 1.1, projectileCount: 1, areaRadius: 18, pierceCount: 2, duration: 2.0, knockbackForce: 25 },
-      { level: 2, description: '투사체 수 +1, 피해량 +20%', damageCoeff: 1.44, cooldown: 1.05, projectileCount: 2, areaRadius: 20, pierceCount: 3, duration: 2.0, knockbackForce: 30 },
-      { level: 3, description: '관통 횟수 +2, 쿨타임 -10% (상위 스킬 [본 스톰] 해금!)', damageCoeff: 1.6, cooldown: 0.95, projectileCount: 2, areaRadius: 22, pierceCount: 5, duration: 2.0, knockbackForce: 35 },
-      { level: 4, description: '투사체 수 +1, 피해량 +25%', damageCoeff: 2.0, cooldown: 0.9, projectileCount: 3, areaRadius: 24, pierceCount: 6, duration: 2.2, knockbackForce: 40 },
-      { level: 5, description: '투사체 수 +1, 무한 관통, 적 방어력 무시', damageCoeff: 2.5, cooldown: 0.8, projectileCount: 4, areaRadius: 28, pierceCount: 999, duration: 2.5, knockbackForce: 50 },
+      { level: 1, description: '가장 가까운 적에게 영롱한 관통 마력탄 1발 발사', damageCoeff: 1.2, cooldown: 1.1, projectileCount: 1, areaRadius: 18, pierceCount: 2, duration: 2.0, knockbackForce: 25 },
+      { level: 2, description: '마력탄 수 +1, 피해량 +20%', damageCoeff: 1.44, cooldown: 1.05, projectileCount: 2, areaRadius: 20, pierceCount: 3, duration: 2.0, knockbackForce: 30 },
+      { level: 3, description: '관통 횟수 +2, 쿨타임 -10% (상위 스킬 [마력폭풍] 해금!)', damageCoeff: 1.6, cooldown: 0.95, projectileCount: 2, areaRadius: 22, pierceCount: 5, duration: 2.0, knockbackForce: 35 },
+      { level: 4, description: '마력탄 수 +1, 피해량 +25%', damageCoeff: 2.0, cooldown: 0.9, projectileCount: 3, areaRadius: 24, pierceCount: 6, duration: 2.2, knockbackForce: 40 },
+      { level: 5, description: '마력탄 수 +1, 무한 관통, 적 방어력 무시', damageCoeff: 2.5, cooldown: 0.8, projectileCount: 4, areaRadius: 28, pierceCount: 999, duration: 2.5, knockbackForce: 50 },
     ],
   },
-  // 1-2. 상위 스킬 (심화: 본 스피어 Lv.3 이상 필요)
+  // 1-2. 상위 스킬 (심화: 마력탄 Lv.3 이상 필요)
   {
     id: 'necro_bone_storm',
-    name: '본 스톰 (뼈폭풍)',
+    name: '마력폭풍',
     icon: 'assets/skills/skill_necro_bone_storm.png',
     category: 'weapon',
     isNecroSignature: true,
@@ -44,11 +44,11 @@ export const ACTIVE_SKILLS: SkillData[] = [
     requiredPassiveId: 'pas_frost_heart',
     maxLevel: 5,
     levels: [
-      { level: 1, description: '사방으로 회전하는 날카로운 뼈가시 6발을 나선형 난사', damageCoeff: 1.3, cooldown: 2.2, projectileCount: 6, areaRadius: 22, pierceCount: 3, duration: 2.2, knockbackForce: 30 },
-      { level: 2, description: '뼈가시 +2발 (총 8발), 투사체 비행속도 +20%', damageCoeff: 1.55, cooldown: 2.0, projectileCount: 8, areaRadius: 24, pierceCount: 4, duration: 2.4, knockbackForce: 35 },
-      { level: 3, description: '뼈가시 관통 횟수 +2회, 쿨타임 -10%', damageCoeff: 1.8, cooldown: 1.8, projectileCount: 8, areaRadius: 26, pierceCount: 6, duration: 2.4, knockbackForce: 40 },
-      { level: 4, description: '뼈가시 +4발 (총 12발 전방위 난사)', damageCoeff: 2.2, cooldown: 1.6, projectileCount: 12, areaRadius: 28, pierceCount: 8, duration: 2.6, knockbackForce: 45 },
-      { level: 5, description: '초거대 뼈폭풍: 16발 방출, 적 출혈 40% 도트 피해 부여', damageCoeff: 2.7, cooldown: 1.4, projectileCount: 16, areaRadius: 32, pierceCount: 999, duration: 3.0, knockbackForce: 55, statusEffect: { type: 'bleed', chance: 1.0, duration: 2.5, value: 0.4 } },
+      { level: 1, description: '사방으로 회전하는 영롱한 마력 탄환 6발을 나선형 난사', damageCoeff: 1.3, cooldown: 2.2, projectileCount: 6, areaRadius: 22, pierceCount: 3, duration: 2.2, knockbackForce: 30 },
+      { level: 2, description: '마력 탄환 +2발 (총 8발), 투사체 비행속도 +20%', damageCoeff: 1.55, cooldown: 2.0, projectileCount: 8, areaRadius: 24, pierceCount: 4, duration: 2.4, knockbackForce: 35 },
+      { level: 3, description: '마력 탄환 관통 횟수 +2회, 쿨타임 -10%', damageCoeff: 1.8, cooldown: 1.8, projectileCount: 8, areaRadius: 26, pierceCount: 6, duration: 2.4, knockbackForce: 40 },
+      { level: 4, description: '마력 탄환 +4발 (총 12발 전방위 난사)', damageCoeff: 2.2, cooldown: 1.6, projectileCount: 12, areaRadius: 28, pierceCount: 8, duration: 2.6, knockbackForce: 45 },
+      { level: 5, description: '초거대 마력폭풍: 16발 방출, 적 출혈 40% 도트 피해 부여', damageCoeff: 2.7, cooldown: 1.4, projectileCount: 16, areaRadius: 32, pierceCount: 999, duration: 3.0, knockbackForce: 55, statusEffect: { type: 'bleed', chance: 1.0, duration: 2.5, value: 0.4 } },
     ],
   },
 
@@ -107,7 +107,7 @@ export const ACTIVE_SKILLS: SkillData[] = [
   // 3-1. 하위 스킬 (기초)
   {
     id: 'necro_armor',
-    name: '본 아머 (뼈방패)',
+    name: '홀리 아머',
     icon: 'assets/skills/skill_necro_armor.png',
     category: 'weapon',
     isNecroSignature: true,
@@ -118,14 +118,14 @@ export const ACTIVE_SKILLS: SkillData[] = [
     requiredPassiveId: 'pas_iron_body',
     maxLevel: 5,
     levels: [
-      { level: 1, description: '회전하는 뼈방패 1개 생성 (적 충돌 시 파괴되는 일회용 방패, 강력한 데미지 & 넉백)', damageCoeff: 1.5, cooldown: 3.5, projectileCount: 1, areaRadius: 65, pierceCount: 1, duration: 9999, knockbackForce: 55 },
-      { level: 2, description: '뼈방패 최대 보관 수 +1 (최대 2개), 쿨마다 1개 보충', damageCoeff: 1.8, cooldown: 3.3, projectileCount: 2, areaRadius: 75, pierceCount: 1, duration: 9999, knockbackForce: 60 },
-      { level: 3, description: '뼈방패 타격 횟수 +1회 (2회 타격 가능) (상위 스킬 [정화의 성역] 해금!)', damageCoeff: 2.2, cooldown: 3.0, projectileCount: 2, areaRadius: 85, pierceCount: 2, duration: 9999, knockbackForce: 65 },
-      { level: 4, description: '뼈방패 최대 보관 수 +1 (최대 3개), 피해량 +25%', damageCoeff: 2.7, cooldown: 2.8, projectileCount: 3, areaRadius: 95, pierceCount: 2, duration: 9999, knockbackForce: 75 },
-      { level: 5, description: '뼈방패 타격 횟수 +1회 (3회 타격 가능, 최대 3개) & 충돌 시 둔화 40%', damageCoeff: 3.4, cooldown: 2.5, projectileCount: 3, areaRadius: 105, pierceCount: 3, duration: 9999, knockbackForce: 90, statusEffect: { type: 'slow', chance: 1.0, duration: 1.8, value: 0.4 } },
+      { level: 1, description: '회전하는 성스러운 빛의 방패 1개 생성 (적 충돌 시 파괴되는 일회용 방패, 강력한 신성 데미지 & 넉백)', damageCoeff: 1.5, cooldown: 3.5, projectileCount: 1, areaRadius: 65, pierceCount: 1, duration: 9999, knockbackForce: 55 },
+      { level: 2, description: '성스러운 방패 최대 보관 수 +1 (최대 2개), 쿨마다 1개 보충', damageCoeff: 1.8, cooldown: 3.3, projectileCount: 2, areaRadius: 75, pierceCount: 1, duration: 9999, knockbackForce: 60 },
+      { level: 3, description: '방패 타격 횟수 +1회 (2회 타격 가능) (상위 스킬 [정화의 성염 장판] 해금!)', damageCoeff: 2.2, cooldown: 3.0, projectileCount: 2, areaRadius: 85, pierceCount: 2, duration: 9999, knockbackForce: 65 },
+      { level: 4, description: '방패 최대 보관 수 +1 (최대 3개), 피해량 +25%', damageCoeff: 2.7, cooldown: 2.8, projectileCount: 3, areaRadius: 95, pierceCount: 2, duration: 9999, knockbackForce: 75 },
+      { level: 5, description: '방패 타격 횟수 +1회 (3회 타격 가능, 최대 3개) & 충돌 시 둔화 40%', damageCoeff: 3.4, cooldown: 2.5, projectileCount: 3, areaRadius: 105, pierceCount: 3, duration: 9999, knockbackForce: 90, statusEffect: { type: 'slow', chance: 1.0, duration: 1.8, value: 0.4 } },
     ],
   },
-  // 3-2. 상위 스킬 (심화: 본 아머 Lv.3 이상 필요)
+  // 3-2. 상위 스킬 (심화: 홀리 아머 Lv.3 이상 필요)
   {
     id: 'priest_sanctuary',
     name: '정화의 성염 장판',
@@ -508,7 +508,7 @@ export const PASSIVE_SKILLS: SkillData[] = [
 export const AWAKENED_SKILLS: SkillData[] = [
   {
     id: 'awakened_spear',
-    name: '❄️ 진(眞) 블리자드',
+    name: '✨ 진(眞) 마력폭풍',
     icon: 'assets/pixel_vfx/skills/vfx_necro_ult.png',
     category: 'awakened',
     isNecroSignature: true,
@@ -520,7 +520,7 @@ export const AWAKENED_SKILLS: SkillData[] = [
     levels: [
       {
         level: 1,
-        description: '서리 냉기창 8갈래 동시 방출! 전원 무한 관통 및 피격된 모든 적 3초 완전 빙결',
+        description: '초월적 마력탄 8갈래 동시 방출! 전원 무한 관통 및 피격된 모든 적 3초 완전 빙결',
         damageCoeff: 4.8,
         cooldown: 0.65,
         projectileCount: 8,
@@ -560,7 +560,7 @@ export const AWAKENED_SKILLS: SkillData[] = [
   },
   {
     id: 'awakened_armor',
-    name: '💀 불멸의 백골 성채',
+    name: '✨ 발키리 부대',
     icon: 'assets/pixel_vfx/skills/vfx_dk_ult.png',
     category: 'awakened',
     isNecroSignature: true,
@@ -572,7 +572,7 @@ export const AWAKENED_SKILLS: SkillData[] = [
     levels: [
       {
         level: 1,
-        description: '거대 칠흑 뼈방패 8개가 초고속 회전하며 적 접근 완전 차단! 타격 시 체력 3% 흡혈',
+        description: '천상의 수호자 발키리 8기가 초고속 회전하며 적 접근 완전 차단! 타격 시 체력 3% 흡혈',
         damageCoeff: 4.0,
         cooldown: 2.0,
         projectileCount: 8,

@@ -578,7 +578,7 @@ export class BattleScene extends Phaser.Scene {
     const stats = this.player.getEffectiveStats();
 
     if (this.player.isJinBlizzard()) {
-      // 각성 궁극기: ❄️ 진(眞) 블리자드 (화면 전체 4초 완전 빙결 + 혹한 얼음창 폭격 + 연쇄 폭발)
+      // 각성 궁극기: ✨ 진(眞) 마력폭풍 (화면 전체 4초 완전 빙결 + 초월 마력폭풍 폭격 + 연쇄 폭발)
       this.cameras.main.shake(350, 0.025);
       this.cameras.main.flash(200, 80, 220, 255);
       SoundEngine.getInstance().playTone(960, 'sawtooth', 0.6, 0.35, 180);
@@ -588,7 +588,7 @@ export class BattleScene extends Phaser.Scene {
         if (!enemy.active) continue;
         enemy.applyStatus('freeze', 4.0);
         enemy.takeDamage(blizzardDmg, 0, 0);
-        this.showDamageText(enemy.x, enemy.y - 15, `❄️ ${blizzardDmg}`, 0x00f0ff);
+        this.showDamageText(enemy.x, enemy.y - 15, `✨ ${blizzardDmg}`, 0x00f0ff);
       }
 
       // 화면 곳곳에 거대 얼음창 8개 낙하 VFX

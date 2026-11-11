@@ -263,7 +263,7 @@ export class UIScene extends Phaser.Scene {
 
     // 3. 필살기 버튼 쿨타임 업데이트
     if (player.isJinBlizzard()) {
-      this.ultIconText.setText('❄️\n진블리자드');
+      this.ultIconText.setText('✨\n진마력폭풍');
       this.ultIconText.setColor('#00f0ff');
     } else {
       this.ultIconText.setText('💥\n시체폭발');
