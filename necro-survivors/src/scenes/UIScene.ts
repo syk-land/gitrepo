@@ -38,6 +38,13 @@ export class UIScene extends Phaser.Scene {
   // 모달 레이어 컨테이너
   private modalContainer!: Phaser.GameObjects.Container;
 
+  // 배속 버튼
+  private speedButtonContainer!: Phaser.GameObjects.Container;
+  private speedBg!: Phaser.GameObjects.Graphics;
+  private speedText!: Phaser.GameObjects.Text;
+  private currentSpeedIndex: number = 0;
+  private readonly speedOptions: number[] = [1.0, 1.5, 2.0, 3.0];
+
   constructor() {
     super('UIScene');
   }
@@ -127,6 +134,87 @@ export class UIScene extends Phaser.Scene {
       color: '#ff2a6d',
     }).setOrigin(0.5);
     this.bossHpContainer.add(this.bossHpTitle);
+
+    // 배속 조절 버튼 (1x / 1.5x / 2x / 3x)
+    this.createSpeedButton(width - 48, 54);
+  }
+
+  private createSpeedButton(x: number, y: number): void {
+    this.currentSpeedIndex = 0;
+    this.speedButtonContainer = this.add.container(x, y);
+
+    this.speedBg = this.add.graphics();
+    this.speedButtonContainer.add(this.speedBg);
+
+    this.speedText = this.add.text(0, 0, '⏩ 1x', {
+      fontFamily: 'NeoDunggeunmo, Pretendard, monospace',
+      fontSize: '13px',
+      color: '#f5ede2',
+    }).setOrigin(0.5);
+    this.speedButtonContainer.add(this.speedText);
+
+    this.updateSpeedButtonVisual(1.0);
+
+    const hitArea = this.add.zone(0, 0, 68, 30).setInteractive({ useHandCursor: true });
+    hitArea.on('pointerdown', () => {
+      this.toggleGameSpeed();
+    });
+    hitArea.on('pointerover', () => {
+      this.speedButtonContainer.setScale(1.06);
+    });
+    hitArea.on('pointerout', () => {
+      this.speedButtonContainer.setScale(1.0);
+    });
+    this.speedButtonContainer.add(hitArea);
+  }
+
+  public toggleGameSpeed(): void {
+    this.currentSpeedIndex = (this.currentSpeedIndex + 1) % this.speedOptions.length;
+    const speed = this.speedOptions[this.currentSpeedIndex];
+    this.applyGameSpeed(speed);
+  }
+
+  public setGameSpeedByValue(speed: number): void {
+    const idx = this.speedOptions.indexOf(speed);
+    if (idx !== -1) {
+      this.currentSpeedIndex = idx;
+    }
+    this.applyGameSpeed(speed);
+  }
+
+  private applyGameSpeed(speed: number): void {
+    if (this.battleScene) {
+      this.battleScene.setGameSpeed(speed);
+    }
+    this.updateSpeedButtonVisual(speed);
+    SoundEngine.getInstance().playTone(380 + this.currentSpeedIndex * 120, 'sine', 0.12, 0.22);
+  }
+
+  private updateSpeedButtonVisual(speed: number): void {
+    this.speedBg.clear();
+    const w = 68;
+    const h = 28;
+
+    let strokeColor = 0x543b28;
+    let textColor = '#f5ede2';
+
+    if (speed === 1.5) {
+      strokeColor = 0x00ffaa;
+      textColor = '#00ffaa';
+    } else if (speed === 2.0) {
+      strokeColor = 0x00f0ff;
+      textColor = '#00f0ff';
+    } else if (speed === 3.0) {
+      strokeColor = 0xff0055;
+      textColor = '#ff5577';
+    }
+
+    this.speedBg.fillStyle(0x18120e, 0.95);
+    this.speedBg.lineStyle(1.5, strokeColor, 1);
+    this.speedBg.fillRoundedRect(-w / 2, -h / 2, w, h, 6);
+    this.speedBg.strokeRoundedRect(-w / 2, -h / 2, w, h, 6);
+
+    this.speedText.setText(`⏩ ${speed}x`).setColor(textColor);
   }
 
   private createUltButton(width: number, height: number): void {
@@ -218,6 +306,18 @@ export class UIScene extends Phaser.Scene {
     if (this.input.keyboard) {
       this.cursors = this.input.keyboard.createCursorKeys();
       this.wasdKeys = this.input.keyboard.addKeys('W,A,S,D') as typeof this.wasdKeys;
+
+      this.input.keyboard.on('keydown', (event: KeyboardEvent) => {
+        if (event.key === 'b' || event.key === 'B' || event.key === 'x' || event.key === 'X') {
+          this.toggleGameSpeed();
+        } else if (event.key === '1') {
+          this.setGameSpeedByValue(1.0);
+        } else if (event.key === '2') {
+          this.setGameSpeedByValue(2.0);
+        } else if (event.key === '3') {
+          this.setGameSpeedByValue(3.0);
+        }
+      });
     }
   }
 

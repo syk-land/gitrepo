@@ -37,6 +37,7 @@ export class BattleScene extends Phaser.Scene {
   // 진화 보물상자 객체
   private evolutionChest: Phaser.GameObjects.Sprite | null = null;
   public awakeningDrops: { sprite: Phaser.GameObjects.Sprite; label: Phaser.GameObjects.Text; x: number; y: number; active: boolean }[] = [];
+  public gameSpeed: number = 1.0;
 
   constructor() {
     super('BattleScene');
@@ -48,6 +49,7 @@ export class BattleScene extends Phaser.Scene {
     this.killCount = 0;
     this.earnedGold = 0;
     this.isPaused = false;
+    this.gameSpeed = 1.0;
     this.minions = [];
     this.enemies = [];
     this.projectiles = [];
@@ -55,6 +57,12 @@ export class BattleScene extends Phaser.Scene {
     this.recentCorpses = [];
     this.evolutionChest = null;
     this.awakeningDrops = [];
+  }
+
+  public setGameSpeed(speed: number): void {
+    this.gameSpeed = speed;
+    this.time.timeScale = speed;
+    this.tweens.timeScale = speed;
   }
 
   create(): void {
@@ -93,7 +101,8 @@ export class BattleScene extends Phaser.Scene {
 
   public update(_time: number, delta: number): void {
     if (this.isPaused) return;
-    const dt = delta / 1000;
+    const rawDt = delta / 1000;
+    const dt = Math.min(0.12, rawDt * this.gameSpeed);
 
     // 1. 무한 타일 배경 카메라 동기화
     this.tileBg.tilePositionX = this.cameras.main.scrollX;
