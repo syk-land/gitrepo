@@ -370,7 +370,9 @@ export class BattleScene extends Phaser.Scene {
     let mages = 0;
     const arthurs = hasArthur ? 1 : 0;
     let drones = 0;
-    if (this.player.activeSkills.has('awakened_drone') || droneLv >= 5) {
+    if (this.player.activeSkills.has('awakened_drone')) {
+      drones = 5;
+    } else if (droneLv >= 5) {
       drones = 3;
     } else if (droneLv >= 3) {
       drones = 2;
