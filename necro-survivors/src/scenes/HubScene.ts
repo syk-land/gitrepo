@@ -2,13 +2,14 @@ import Phaser from 'phaser';
 import { REGIONS_DATA } from '../data/regionsData';
 import { SaveManager } from '../core/SaveManager';
 import { SoundEngine } from '../core/SoundEngine';
-import { TRAITS_DATA, TALENTS_DATA, getAltarUpgradeCost, getAltarEffectiveValue } from '../data/altarData';
+import { COMBAT_TRAITS, SURVIVAL_TRAITS, getAltarUpgradeCost, formatAltarBonus } from '../data/altarData';
 
 export class HubScene extends Phaser.Scene {
   private selectedRegionId: number = 1;
   private goldText!: Phaser.GameObjects.Text;
   private regionCardContainer!: Phaser.GameObjects.Container;
   private altarModalContainer?: Phaser.GameObjects.Container;
+  private currentAltarTab: 'combat' | 'survival' = 'combat';
 
   constructor() {
     super('HubScene');
@@ -251,53 +252,118 @@ export class HubScene extends Phaser.Scene {
     });
     this.altarModalContainer.add(closeBtn);
 
-    // 특성/재능 목록 렌더링 (스크롤 가능하거나 대표 6종 배치)
-    const items = [...TRAITS_DATA.slice(0, 4), ...TALENTS_DATA.slice(0, 4)];
+    // 탭 버튼 [⚔️ 전투 특성 (8종)] / [🛡️ 생존 및 성장 (8종)]
+    const isCombat = this.currentAltarTab === 'combat';
+    const tabY = 104;
+    const tabW = 210;
+    const tabH = 34;
+
+    // 1. 전투 특성 탭
+    const combatTab = this.add.graphics();
+    combatTab.fillStyle(isCombat ? 0x3d2714 : 0x18120e, 1);
+    combatTab.lineStyle(isCombat ? 2 : 1, isCombat ? 0xffd000 : 0x543b28, 1);
+    combatTab.fillRoundedRect(35, tabY, tabW, tabH, 6);
+    combatTab.strokeRoundedRect(35, tabY, tabW, tabH, 6);
+    this.altarModalContainer.add(combatTab);
+
+    const combatText = this.add.text(35 + tabW / 2, tabY + tabH / 2, '⚔️ 전투 특성 (8종)', {
+      fontFamily: 'NeoDunggeunmo, Pretendard, monospace',
+      fontSize: '14px',
+      color: isCombat ? '#ffd000' : '#887564',
+    }).setOrigin(0.5);
+    this.altarModalContainer.add(combatText);
+
+    const combatHit = this.add.zone(35 + tabW / 2, tabY + tabH / 2, tabW, tabH).setInteractive({ useHandCursor: true });
+    combatHit.on('pointerdown', () => {
+      SoundEngine.getInstance().click();
+      this.currentAltarTab = 'combat';
+      this.openAltarModal(width, height);
+    });
+    this.altarModalContainer.add(combatHit);
+
+    // 2. 생존 및 성장 탭
+    const survivalX = width - 35 - tabW;
+    const survivalTab = this.add.graphics();
+    survivalTab.fillStyle(!isCombat ? 0x3d2714 : 0x18120e, 1);
+    survivalTab.lineStyle(!isCombat ? 2 : 1, !isCombat ? 0xffd000 : 0x543b28, 1);
+    survivalTab.fillRoundedRect(survivalX, tabY, tabW, tabH, 6);
+    survivalTab.strokeRoundedRect(survivalX, tabY, tabW, tabH, 6);
+    this.altarModalContainer.add(survivalTab);
+
+    const survivalText = this.add.text(survivalX + tabW / 2, tabY + tabH / 2, '🛡️ 생존 및 성장 (8종)', {
+      fontFamily: 'NeoDunggeunmo, Pretendard, monospace',
+      fontSize: '14px',
+      color: !isCombat ? '#ffd000' : '#887564',
+    }).setOrigin(0.5);
+    this.altarModalContainer.add(survivalText);
+
+    const survivalHit = this.add.zone(survivalX + tabW / 2, tabY + tabH / 2, tabW, tabH).setInteractive({ useHandCursor: true });
+    survivalHit.on('pointerdown', () => {
+      SoundEngine.getInstance().click();
+      this.currentAltarTab = 'survival';
+      this.openAltarModal(width, height);
+    });
+    this.altarModalContainer.add(survivalHit);
+
+    const items = isCombat ? COMBAT_TRAITS : SURVIVAL_TRAITS;
     const save = SaveManager.getInstance().getData();
 
     items.forEach((item, idx) => {
-      const rowY = 135 + idx * 82;
+      const rowY = 148 + idx * 88;
       const curLv = item.category === 'talent' ? save.talents[item.id] || 0 : save.traits[item.id] || 0;
       const isMax = curLv >= item.maxLevel;
       const cost = getAltarUpgradeCost(Math.max(1, curLv));
 
       const rowBox = this.add.graphics();
-      rowBox.fillStyle(0x231b15, 0.9);
+      rowBox.fillStyle(0x231b15, 0.92);
       rowBox.lineStyle(1, 0x543b28, 1);
-      rowBox.fillRoundedRect(35, rowY, width - 70, 72, 6);
-      rowBox.strokeRoundedRect(35, rowY, width - 70, 72, 6);
+      rowBox.fillRoundedRect(35, rowY, width - 70, 78, 6);
+      rowBox.strokeRoundedRect(35, rowY, width - 70, 78, 6);
       this.altarModalContainer!.add(rowBox);
 
       const nameText = this.add.text(48, rowY + 12, `${item.name} (Lv.${curLv}/${item.maxLevel})`, {
-        fontFamily: 'NeoDunggeunmo, monospace',
+        fontFamily: 'NeoDunggeunmo, Pretendard, monospace',
         fontSize: '15px',
         color: curLv >= 10 ? '#ffd000' : '#00ffaa',
       });
       this.altarModalContainer!.add(nameText);
 
-      const descText = this.add.text(48, rowY + 38, item.desc, {
-        fontFamily: 'NeoDunggeunmo, monospace',
-        fontSize: '13px',
+      const descText = this.add.text(48, rowY + 34, item.desc, {
+        fontFamily: 'NeoDunggeunmo, Pretendard, monospace',
+        fontSize: '12px',
         color: '#b8a692',
       });
       this.altarModalContainer!.add(descText);
 
+      const bonusText = this.add.text(48, rowY + 54, formatAltarBonus(item, curLv), {
+        fontFamily: 'NeoDunggeunmo, Pretendard, monospace',
+        fontSize: '12px',
+        color: curLv > 0 ? '#ffd000' : '#66594d',
+      });
+      this.altarModalContainer!.add(bonusText);
+
       // 강화 버튼
       const canAfford = save.gold >= cost && !isMax;
       const upBtn = this.add.graphics();
-      upBtn.fillStyle(canAfford ? 0xd4a338 : 0x444444, 1);
-      upBtn.fillRoundedRect(width - 150, rowY + 16, 100, 40, 6);
+      upBtn.fillStyle(isMax ? 0x33281f : canAfford ? 0xd4a338 : 0x444444, 1);
+      if (canAfford) {
+        upBtn.lineStyle(1.5, 0xffd000, 1);
+      }
+      upBtn.fillRoundedRect(width - 150, rowY + 18, 100, 42, 6);
+      if (canAfford) {
+        upBtn.strokeRoundedRect(width - 150, rowY + 18, 100, 42, 6);
+      }
       this.altarModalContainer!.add(upBtn);
 
-      const btnText = this.add.text(width - 100, rowY + 36, isMax ? '만렙' : `${cost} G`, {
-        fontFamily: 'NeoDunggeunmo, monospace',
+      const btnText = this.add.text(width - 100, rowY + 39, isMax ? '만렙 달성' : `${cost.toLocaleString()} G`, {
+        fontFamily: 'NeoDunggeunmo, Pretendard, monospace',
         fontSize: '13px',
-        color: isMax ? '#ffd000' : '#0c0908',
+        color: isMax ? '#ffd000' : canAfford ? '#0c0908' : '#888888',
       }).setOrigin(0.5);
       this.altarModalContainer!.add(btnText);
 
       if (canAfford) {
-        const hit = this.add.zone(width - 100, rowY + 36, 100, 40).setInteractive({ useHandCursor: true });
+        const hit = this.add.zone(width - 100, rowY + 39, 100, 42).setInteractive({ useHandCursor: true });
         hit.on('pointerdown', () => {
           if (SaveManager.getInstance().upgradeAltarItem(item.id, item.category === 'talent', cost)) {
             SoundEngine.getInstance().playTone(1046, 'square', 0.1, 0.15, 1318);

@@ -95,38 +95,31 @@ export class Player implements ISkillCaster {
     };
 
     // 1. 영혼 각인의 제단 (영구 특성/재능) 적용
-    for (const [id, lv] of Object.entries(save.traits)) {
-      const def = ALL_ALTAR_MAP.get(id);
-      if (!def || lv <= 0) continue;
-      const isMaster = save.masterSlotId === id;
-      const val = getAltarEffectiveValue(def, lv, isMaster);
-      if (def.statKey in stats) {
-        if (def.statKey === 'pickupRadius') {
-          stats.pickupRadius += Math.round(95 * val); // 자석 반경 % 증폭 실반영
-        } else if (def.statKey === 'maxHp') {
-          stats.maxHp += Math.round(200 * val);
-        } else if (def.statKey === 'moveSpeed') {
-          stats.moveSpeed += Math.round(165 * val);
-        } else {
-          (stats[def.statKey as keyof CombatStats] as number) += val;
+    const applyAltarRecords = (records: Record<string, number>) => {
+      for (const [id, lv] of Object.entries(records)) {
+        const def = ALL_ALTAR_MAP.get(id);
+        if (!def || lv <= 0) continue;
+        const isMaster = save.masterSlotId === id;
+        const val = getAltarEffectiveValue(def, lv, isMaster);
+        if (def.statKey in stats) {
+          if (def.statKey === 'pickupRadius') {
+            stats.pickupRadius += Math.round(95 * val);
+          } else if (def.statKey === 'maxHp') {
+            stats.maxHp += Math.round(200 * val);
+          } else if (def.statKey === 'moveSpeed') {
+            stats.moveSpeed += Math.round(165 * val);
+          } else if (def.statKey === 'cooldownMul') {
+            stats.cooldownMul = Math.max(0.35, stats.cooldownMul - val);
+          } else if (def.statKey === 'bonusMinionCount') {
+            stats.bonusMinionCount += Math.floor(val);
+          } else {
+            (stats[def.statKey as keyof CombatStats] as number) += val;
+          }
         }
       }
-    }
-    for (const [id, lv] of Object.entries(save.talents)) {
-      const def = ALL_ALTAR_MAP.get(id);
-      if (!def || lv <= 0) continue;
-      const isMaster = save.masterSlotId === id;
-      const val = getAltarEffectiveValue(def, lv, isMaster);
-      if (def.statKey in stats) {
-        if (def.statKey === 'cooldownMul') {
-          stats.cooldownMul = Math.max(0.35, stats.cooldownMul - val);
-        } else if (def.statKey === 'bonusMinionCount') {
-          stats.bonusMinionCount += Math.floor(val);
-        } else {
-          (stats[def.statKey as keyof CombatStats] as number) += val;
-        }
-      }
-    }
+    };
+    applyAltarRecords(save.traits);
+    applyAltarRecords(save.talents);
 
     // 2. 인게임 패시브 스킬 8종 적용
     for (const [skillId, level] of this.passiveSkills.entries()) {
