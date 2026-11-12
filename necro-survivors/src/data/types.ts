@@ -18,6 +18,7 @@ export interface CombatStats {
   minionDamageMul: number;   // 소환수 공격력 배율 (기본 1.0)
   minionHpMul: number;       // 소환수 최대체력 배율 (기본 1.0)
   bonusMinionCount: number;  // 추가 해골 소환 개체수 (기본 0)
+  minionCountMul?: number;   // 소환수 수량 증폭 배율 (기본 1.0, +10%당 +0.1, 최대 2.0)
   expMul: number;            // 경험치 획득 배율 (기본 1.0)
   goldMul: number;           // 마력석(골드) 획득 배율 (기본 1.0)
   startLevel?: number;       // 초기 시작 레벨 보너스 (기본 0, 최대 2)

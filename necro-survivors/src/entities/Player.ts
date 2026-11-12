@@ -91,6 +91,7 @@ export class Player implements ISkillCaster {
       minionDamageMul: 1.0,
       minionHpMul: 1.0,
       bonusMinionCount: 0,
+      minionCountMul: 1.0,
       expMul: 1.0,
       goldMul: 1.0,
     };
@@ -111,6 +112,8 @@ export class Player implements ISkillCaster {
             stats.moveSpeed += Math.round(165 * val);
           } else if (def.statKey === 'cooldownMul') {
             stats.cooldownMul = Math.max(0.35, stats.cooldownMul - val);
+          } else if (def.statKey === 'minionCountMul') {
+            stats.minionCountMul = (stats.minionCountMul || 1.0) + val;
           } else if (def.statKey === 'bonusMinionCount') {
             stats.bonusMinionCount += Math.round(val);
           } else if (def.statKey === 'bonusProjectiles') {

@@ -364,54 +364,86 @@ export class BattleScene extends Phaser.Scene {
     const legionLv = this.player.activeSkills.get('necro_legion') ?? 0;
     const hasArthur = this.player.activeSkills.has('awakened_legion');
     const droneLv = (this.player.activeSkills.get('psi_drone') ?? 0) || (this.player.activeSkills.has('awakened_drone') ? 1 : 0);
+    const stats = this.player.getEffectiveStats();
 
-    let warriors = 0;
-    let archers = 0;
-    let mages = 0;
+    // 소환수 수량 각인 % 증폭 배율 (기본 1.0, 10레벨 시 2.0 = +100% 증가)
+    const countBonusRate = Math.max(0, (stats.minionCountMul ?? 1.0) - 1.0);
+    const flatBonus = stats.bonusMinionCount || 0; // 인게임 패시브(사령의 권능) 고정 증원분
+
+    let baseWarriors = 0;
+    let baseArchers = 0;
+    let baseMages = 0;
     const arthurs = hasArthur ? 1 : 0;
-    let drones = 0;
+    let baseDrones = 0;
+
     if (this.player.activeSkills.has('awakened_drone')) {
-      drones = 5;
+      baseDrones = 5;
     } else if (droneLv >= 5) {
-      drones = 3;
+      baseDrones = 3;
     } else if (droneLv >= 3) {
-      drones = 2;
+      baseDrones = 2;
     } else if (droneLv >= 1) {
-      drones = 1;
+      baseDrones = 1;
     }
 
     if (hasArthur) {
-      warriors = 3;
-      archers = 2;
-      mages = 1;
+      baseWarriors = 3;
+      baseArchers = 2;
+      baseMages = 1;
     } else if (legionLv > 0) {
       if (legionLv >= 5) {
-        warriors = 4;
-        archers = 1;
-        mages = 1;
+        baseWarriors = 4;
+        baseArchers = 1;
+        baseMages = 1;
       } else if (legionLv >= 4) {
-        warriors = 3;
-        archers = 1;
-        mages = 1;
+        baseWarriors = 3;
+        baseArchers = 1;
+        baseMages = 1;
       } else if (legionLv >= 3) {
-        warriors = 3;
-        archers = 1;
-        mages = 0;
+        baseWarriors = 3;
+        baseArchers = 1;
+        baseMages = 0;
       } else if (legionLv >= 2) {
-        warriors = 2;
-        archers = 1;
-        mages = 0;
+        baseWarriors = 2;
+        baseArchers = 1;
+        baseMages = 0;
       } else {
-        warriors = 2;
-        archers = 0;
-        mages = 0;
+        baseWarriors = 2;
+        baseArchers = 0;
+        baseMages = 0;
       }
     }
 
-    // 영구 특성(소환수 수량) 및 패시브(사령의 권능) 보너스 소환수
-    const bonus = this.player.getEffectiveStats().bonusMinionCount;
-    if (bonus > 0) {
-      warriors += bonus;
+    let warriors = baseWarriors;
+    let archers = baseArchers;
+    let mages = baseMages;
+    let drones = baseDrones;
+
+    // 1. 해골 군단 수량 % 증가 적용 (스킬 보유 시에만 활성화 & 궁수와 마법사도 함께 증가!)
+    if (legionLv > 0 || hasArthur) {
+      const baseTotal = baseWarriors + baseArchers + baseMages;
+      let extraCount = Math.round(baseTotal * countBonusRate) + flatBonus;
+
+      // 해골 궁수와 마법사도 함께 늘어나도록 활성화된 타입들에 순환 증원
+      const activeTypes: ('warrior' | 'archer' | 'mage')[] = ['warrior'];
+      if (baseArchers > 0) activeTypes.push('archer');
+      if (baseMages > 0) activeTypes.push('mage');
+
+      let typeIdx = 0;
+      while (extraCount > 0) {
+        const type = activeTypes[typeIdx % activeTypes.length];
+        if (type === 'warrior') warriors++;
+        else if (type === 'archer') archers++;
+        else if (type === 'mage') mages++;
+        extraCount--;
+        typeIdx++;
+      }
+    }
+
+    // 2. 외계 강습 드론 수량 % 증가 적용 (드론 스킬 보유 시에만 활성화)
+    if (baseDrones > 0) {
+      const extraDrones = Math.round(baseDrones * countBonusRate);
+      drones = baseDrones + extraDrones;
     }
 
     this.ensureMinionCount('skeleton_warrior', warriors);

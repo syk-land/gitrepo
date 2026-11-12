@@ -52,8 +52,8 @@ export class SkillExecutor {
     let baseDirX = caster.getFacingDirection().x || 1;
     let baseDirY = caster.getFacingDirection().y || 0;
 
-    if (skill.targeting === 'nearest') {
-      const candidates = grid.queryRadius(casterPos.x, casterPos.y, 450).filter(isValidTarget);
+    if (skill.targeting === 'nearest' || skill.id === 'sm_dragon') {
+      const candidates = grid.queryRadius(casterPos.x, casterPos.y, 520).filter(isValidTarget);
       let nearest: Enemy | null = null;
       let minD = Infinity;
       for (const e of candidates) {
