@@ -414,36 +414,25 @@ export class BattleScene extends Phaser.Scene {
       }
     }
 
-    let warriors = baseWarriors;
-    let archers = baseArchers;
-    let mages = baseMages;
-    let drones = baseDrones;
+    let warriors = 0;
+    let archers = 0;
+    let mages = 0;
+    let drones = 0;
 
-    // 1. 해골 군단 수량 % 증가 적용 (스킬 보유 시에만 활성화 & 궁수와 마법사도 함께 증가!)
+    // 1. 해골 군단: 각 타입별(전사, 궁수, 마법사)로 수량 % 직접 적용 (100% 증가 시 각각 정확히 2배)
     if (legionLv > 0 || hasArthur) {
-      const baseTotal = baseWarriors + baseArchers + baseMages;
-      let extraCount = Math.round(baseTotal * countBonusRate) + flatBonus;
-
-      // 해골 궁수와 마법사도 함께 늘어나도록 활성화된 타입들에 순환 증원
-      const activeTypes: ('warrior' | 'archer' | 'mage')[] = ['warrior'];
-      if (baseArchers > 0) activeTypes.push('archer');
-      if (baseMages > 0) activeTypes.push('mage');
-
-      let typeIdx = 0;
-      while (extraCount > 0) {
-        const type = activeTypes[typeIdx % activeTypes.length];
-        if (type === 'warrior') warriors++;
-        else if (type === 'archer') archers++;
-        else if (type === 'mage') mages++;
-        extraCount--;
-        typeIdx++;
+      warriors = Math.max(1, Math.round(baseWarriors * (1 + countBonusRate))) + flatBonus;
+      if (baseArchers > 0) {
+        archers = Math.max(1, Math.round(baseArchers * (1 + countBonusRate)));
+      }
+      if (baseMages > 0) {
+        mages = Math.max(1, Math.round(baseMages * (1 + countBonusRate)));
       }
     }
 
-    // 2. 외계 강습 드론 수량 % 증가 적용 (드론 스킬 보유 시에만 활성화)
+    // 2. 외계 강습 드론: 수량 % 직접 적용 (100% 증가 시 2배)
     if (baseDrones > 0) {
-      const extraDrones = Math.round(baseDrones * countBonusRate);
-      drones = baseDrones + extraDrones;
+      drones = Math.max(1, Math.round(baseDrones * (1 + countBonusRate)));
     }
 
     this.ensureMinionCount('skeleton_warrior', warriors);
