@@ -506,6 +506,16 @@ export class UIScene extends Phaser.Scene {
         this.battleScene.isPaused = false;
         SoundEngine.getInstance().playTone(520, 'sine', 0.2, 0.2);
         if (onSelect) onSelect(skill);
+
+        const startLevelBonus = this.battleScene.player.getEffectiveStats().startLevel || 0;
+        if (startLevelBonus > 0) {
+          this.battleScene.player.level += startLevelBonus;
+          this.battleScene.player.pendingLevelUps += startLevelBonus;
+          this.time.delayedCall(120, () => {
+            this.battleScene.isPaused = true;
+            this.showLevelUpModal();
+          });
+        }
       });
       this.modalContainer.add(hitArea);
     });

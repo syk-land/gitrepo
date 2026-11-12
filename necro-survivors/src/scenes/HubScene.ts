@@ -224,11 +224,11 @@ export class HubScene extends Phaser.Scene {
     const panel = this.add.graphics();
     panel.fillStyle(0x18120e, 0.98);
     panel.lineStyle(2, 0xd4a338, 1);
-    panel.fillRoundedRect(20, 50, width - 40, height - 100, 12);
-    panel.strokeRoundedRect(20, 50, width - 40, height - 100, 12);
+    panel.fillRoundedRect(20, 42, width - 40, height - 84, 12);
+    panel.strokeRoundedRect(20, 42, width - 40, height - 84, 12);
     this.altarModalContainer.add(panel);
 
-    const title = this.add.text(width / 2, 78, '⚱️ 영혼 각인의 제단 (영구 특성)', {
+    const title = this.add.text(width / 2, 68, '⚱️ 영혼 각인의 제단 (영구 특성)', {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '18px',
       color: '#ffd000',
@@ -236,7 +236,7 @@ export class HubScene extends Phaser.Scene {
     this.altarModalContainer.add(title);
 
     // 닫기 버튼
-    const closeBtn = this.add.text(width - 50, 78, '✖', {
+    const closeBtn = this.add.text(width - 48, 68, '✖', {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '22px',
       color: '#f5ede2',
@@ -252,9 +252,9 @@ export class HubScene extends Phaser.Scene {
     });
     this.altarModalContainer.add(closeBtn);
 
-    // 탭 버튼 [⚔️ 전투 특성 (8종)] / [🛡️ 생존 및 성장 (8종)]
+    // 탭 버튼 [⚔️ 전투 특성 (9종)] / [🛡️ 생존 및 성장 (9종)]
     const isCombat = this.currentAltarTab === 'combat';
-    const tabY = 104;
+    const tabY = 96;
     const tabW = 210;
     const tabH = 34;
 
@@ -266,7 +266,7 @@ export class HubScene extends Phaser.Scene {
     combatTab.strokeRoundedRect(35, tabY, tabW, tabH, 6);
     this.altarModalContainer.add(combatTab);
 
-    const combatText = this.add.text(35 + tabW / 2, tabY + tabH / 2, '⚔️ 전투 특성 (8종)', {
+    const combatText = this.add.text(35 + tabW / 2, tabY + tabH / 2, '⚔️ 전투 특성 (9종)', {
       fontFamily: 'NeoDunggeunmo, Pretendard, monospace',
       fontSize: '14px',
       color: isCombat ? '#ffd000' : '#887564',
@@ -290,7 +290,7 @@ export class HubScene extends Phaser.Scene {
     survivalTab.strokeRoundedRect(survivalX, tabY, tabW, tabH, 6);
     this.altarModalContainer.add(survivalTab);
 
-    const survivalText = this.add.text(survivalX + tabW / 2, tabY + tabH / 2, '🛡️ 생존 및 성장 (8종)', {
+    const survivalText = this.add.text(survivalX + tabW / 2, tabY + tabH / 2, '🛡️ 생존 및 성장 (9종)', {
       fontFamily: 'NeoDunggeunmo, Pretendard, monospace',
       fontSize: '14px',
       color: !isCombat ? '#ffd000' : '#887564',
@@ -309,33 +309,33 @@ export class HubScene extends Phaser.Scene {
     const save = SaveManager.getInstance().getData();
 
     items.forEach((item, idx) => {
-      const rowY = 148 + idx * 88;
+      const rowY = 138 + idx * 80;
       const curLv = item.category === 'talent' ? save.talents[item.id] || 0 : save.traits[item.id] || 0;
       const isMax = curLv >= item.maxLevel;
-      const cost = getAltarUpgradeCost(Math.max(1, curLv));
+      const cost = getAltarUpgradeCost(curLv, item);
 
       const rowBox = this.add.graphics();
       rowBox.fillStyle(0x231b15, 0.92);
       rowBox.lineStyle(1, 0x543b28, 1);
-      rowBox.fillRoundedRect(35, rowY, width - 70, 78, 6);
-      rowBox.strokeRoundedRect(35, rowY, width - 70, 78, 6);
+      rowBox.fillRoundedRect(35, rowY, width - 70, 72, 6);
+      rowBox.strokeRoundedRect(35, rowY, width - 70, 72, 6);
       this.altarModalContainer!.add(rowBox);
 
-      const nameText = this.add.text(48, rowY + 12, `${item.name} (Lv.${curLv}/${item.maxLevel})`, {
+      const nameText = this.add.text(48, rowY + 9, `${item.name} (Lv.${curLv}/${item.maxLevel})`, {
         fontFamily: 'NeoDunggeunmo, Pretendard, monospace',
         fontSize: '15px',
-        color: curLv >= 10 ? '#ffd000' : '#00ffaa',
+        color: isMax ? '#ffd000' : '#00ffaa',
       });
       this.altarModalContainer!.add(nameText);
 
-      const descText = this.add.text(48, rowY + 34, item.desc, {
+      const descText = this.add.text(48, rowY + 30, item.desc, {
         fontFamily: 'NeoDunggeunmo, Pretendard, monospace',
         fontSize: '12px',
         color: '#b8a692',
       });
       this.altarModalContainer!.add(descText);
 
-      const bonusText = this.add.text(48, rowY + 54, formatAltarBonus(item, curLv), {
+      const bonusText = this.add.text(48, rowY + 50, formatAltarBonus(item, curLv), {
         fontFamily: 'NeoDunggeunmo, Pretendard, monospace',
         fontSize: '12px',
         color: curLv > 0 ? '#ffd000' : '#66594d',
@@ -349,13 +349,13 @@ export class HubScene extends Phaser.Scene {
       if (canAfford) {
         upBtn.lineStyle(1.5, 0xffd000, 1);
       }
-      upBtn.fillRoundedRect(width - 150, rowY + 18, 100, 42, 6);
+      upBtn.fillRoundedRect(width - 150, rowY + 15, 100, 42, 6);
       if (canAfford) {
-        upBtn.strokeRoundedRect(width - 150, rowY + 18, 100, 42, 6);
+        upBtn.strokeRoundedRect(width - 150, rowY + 15, 100, 42, 6);
       }
       this.altarModalContainer!.add(upBtn);
 
-      const btnText = this.add.text(width - 100, rowY + 39, isMax ? '만렙 달성' : `${cost.toLocaleString()} G`, {
+      const btnText = this.add.text(width - 100, rowY + 36, isMax ? '만렙 달성' : `${cost.toLocaleString()} G`, {
         fontFamily: 'NeoDunggeunmo, Pretendard, monospace',
         fontSize: '13px',
         color: isMax ? '#ffd000' : canAfford ? '#0c0908' : '#888888',
@@ -363,7 +363,7 @@ export class HubScene extends Phaser.Scene {
       this.altarModalContainer!.add(btnText);
 
       if (canAfford) {
-        const hit = this.add.zone(width - 100, rowY + 39, 100, 42).setInteractive({ useHandCursor: true });
+        const hit = this.add.zone(width - 100, rowY + 36, 100, 42).setInteractive({ useHandCursor: true });
         hit.on('pointerdown', () => {
           if (SaveManager.getInstance().upgradeAltarItem(item.id, item.category === 'talent', cost)) {
             SoundEngine.getInstance().playTone(1046, 'square', 0.1, 0.15, 1318);

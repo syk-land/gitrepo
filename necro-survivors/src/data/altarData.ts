@@ -1,11 +1,12 @@
 import { TraitTalentDef } from './types';
 
 // =========================================================================
-// 1. 전투 특성 8종 (단일 스탯 분리 완료: 공격/쿨타임/치명/범위/소환공격 등)
+// 1. 전투 특성 9종 (공격/쿨타임/투사체개수/치명/범위/소환공격 등)
 // =========================================================================
 export const COMBAT_TRAITS: TraitTalentDef[] = [
   { id: 'trait_might', name: '⚔️ 공격력 증폭', category: 'trait', desc: '모든 스킬 피해량 +10% 증가', baseVal: 0.10, statKey: 'damageMul', maxLevel: 10 },
   { id: 'trait_cooldown', name: '⏱️ 쿨타임 단축', category: 'trait', desc: '모든 스킬 기본 쿨타임 -4% 단축', baseVal: 0.04, statKey: 'cooldownMul', maxLevel: 10 },
+  { id: 'trait_bonus_projectiles', name: '🔱 투사체 개수 증가', category: 'trait', desc: '모든 발사 스킬 투사체 +1발 추가 발사 (최대 +2발)', baseVal: 1, statKey: 'bonusProjectiles', maxLevel: 2 },
   { id: 'trait_hawk_eye', name: '🎯 치명타 확률', category: 'trait', desc: '치명타 발생 확률 +5% 증가', baseVal: 0.05, statKey: 'critRate', maxLevel: 10 },
   { id: 'trait_crit_damage', name: '💥 치명타 피해', category: 'trait', desc: '치명타 적중 시 피해 배율 +15% 증가', baseVal: 0.15, statKey: 'critDamage', maxLevel: 10 },
   { id: 'trait_area', name: '💎 스킬 범위', category: 'trait', desc: '모든 스킬 및 폭발 효과 범위 +8% 증가', baseVal: 0.08, statKey: 'areaMul', maxLevel: 10 },
@@ -15,9 +16,10 @@ export const COMBAT_TRAITS: TraitTalentDef[] = [
 ];
 
 // =========================================================================
-// 2. 생존 및 성장 특성 8종 (단일 스탯 분리 완료: 체력/방어/재생/이속/자석 등)
+// 2. 생존 및 성장 특성 9종 (초기레벨/체력/방어/재생/이속/자석 등)
 // =========================================================================
 export const SURVIVAL_TRAITS: TraitTalentDef[] = [
+  { id: 'trait_start_level', name: '🌟 초기 레벨 증가', category: 'talent', desc: '출정 시 추가 레벨 획득 후 시작 (최대 +2Lv)', baseVal: 1, statKey: 'startLevel', maxLevel: 2 },
   { id: 'trait_iron_body', name: '❤️ 최대 체력', category: 'talent', desc: '플레이어 최대 체력 +20 HP 증가', baseVal: 0.10, statKey: 'maxHp', maxLevel: 10 },
   { id: 'trait_armor', name: '🛡️ 방어력', category: 'talent', desc: '피격 시 고정 피해 감소 방어력 +3', baseVal: 3.0, statKey: 'armor', maxLevel: 10 },
   { id: 'trait_hp_regen', name: '🩸 체력 재생', category: 'talent', desc: '초당 체력 지속 회복량 +1.5 HP/초', baseVal: 1.5, statKey: 'hpRegenPerSec', maxLevel: 10 },
@@ -54,23 +56,32 @@ export const ALL_ALTAR_MAP: Map<string, TraitTalentDef> = new Map([
   ...LEGACY_ALTAR_ITEMS.map((t) => [t.id, t] as [string, TraitTalentDef]),
 ]);
 
-// 강화 비용 계산 공식: Cost(Lv) = 400 * Lv^1.8 (균형 재조정)
-export function getAltarUpgradeCost(currentLevel: number): number {
-  if (currentLevel <= 0) return 400;
-  return Math.round(400 * Math.pow(currentLevel, 1.8));
+// 강화 비용 계산 공식 (고가치 2단계 특성은 별도 고가 책정)
+export function getAltarUpgradeCost(currentLevel: number, def?: TraitTalentDef): number {
+  if (def?.id === 'trait_start_level') {
+    return currentLevel <= 0 ? 5000 : 18000;
+  }
+  if (def?.id === 'trait_bonus_projectiles') {
+    return currentLevel <= 0 ? 8000 : 25000;
+  }
+  const nextLevel = Math.max(1, currentLevel + 1);
+  return Math.round(300 * Math.pow(nextLevel, 1.7));
 }
 
-// 레벨별 효과 배율 계산: BaseVal * (1 + 0.5 * (Lv - 1))
+// 레벨별 효과 배율 계산
 export function getAltarEffectiveValue(
   def: TraitTalentDef,
   level: number,
   isMasterEquipped: boolean
 ): number {
   if (level <= 0) return 0;
+  if (def.id === 'trait_start_level' || def.id === 'trait_bonus_projectiles') {
+    return level;
+  }
   const mult = 1 + 0.5 * (level - 1);
   let val = def.baseVal * mult;
   if (isMasterEquipped) {
-    val *= 1.5; // 만렙 영혼 각인 슬롯 특전 1.5배 증폭
+    val *= 1.5;
   }
   return val;
 }
@@ -80,6 +91,10 @@ export function formatAltarBonus(def: TraitTalentDef, level: number): string {
   if (level <= 0) return '현재: 미각인 (Lv.0)';
   const val = getAltarEffectiveValue(def, level, false);
   switch (def.statKey) {
+    case 'bonusProjectiles':
+      return level >= 2 ? '현재 효과: 투사체 +2발 추가 (최대)' : level === 1 ? '현재 효과: 투사체 +1발 추가' : '현재: 미각인 (추가 없음)';
+    case 'startLevel':
+      return level >= 2 ? '현재 효과: +2레벨 시작 (Lv.3 출정)' : level === 1 ? '현재 효과: +1레벨 시작 (Lv.2 출정)' : '현재: 미각인 (Lv.1 시작)';
     case 'damageMul':
       return `현재 효과: +${Math.round(val * 100)}% 공격력`;
     case 'cooldownMul':

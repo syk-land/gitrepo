@@ -20,6 +20,7 @@ export interface CombatStats {
   bonusMinionCount: number;  // 추가 해골 소환 개체수 (기본 0)
   expMul: number;            // 경험치 획득 배율 (기본 1.0)
   goldMul: number;           // 마력석(골드) 획득 배율 (기본 1.0)
+  startLevel?: number;       // 초기 시작 레벨 보너스 (기본 0, 최대 2)
 }
 
 export type TargetingType =

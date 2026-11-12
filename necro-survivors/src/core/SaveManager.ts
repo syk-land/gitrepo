@@ -1,4 +1,5 @@
 import { SaveData } from '../data/types';
+import { ALL_ALTAR_MAP } from '../data/altarData';
 
 const SAVE_KEY = 'PROJECT_NECRO_SURVIVORS_SAVE_V1';
 
@@ -92,12 +93,13 @@ export class SaveManager {
   public upgradeAltarItem(id: string, isTalent: boolean, cost: number): boolean {
     if (!this.spendGold(cost)) return false;
 
+    const maxLv = ALL_ALTAR_MAP.get(id)?.maxLevel ?? 10;
     if (isTalent) {
       const cur = this.data.talents[id] || 0;
-      this.data.talents[id] = Math.min(10, cur + 1);
+      this.data.talents[id] = Math.min(maxLv, cur + 1);
     } else {
       const cur = this.data.traits[id] || 0;
-      this.data.traits[id] = Math.min(10, cur + 1);
+      this.data.traits[id] = Math.min(maxLv, cur + 1);
     }
     this.save();
     return true;
