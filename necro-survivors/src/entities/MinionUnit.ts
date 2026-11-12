@@ -19,6 +19,7 @@ export class MinionUnit implements ISkillCaster {
   public hpBar: Phaser.GameObjects.Graphics;
   private floatTimer: number = Math.random() * Math.PI * 2;
   private orbitAngle: number = 0;
+  private orbitIndex: number = 0;
   private facingDir: Vector2 = { x: 1, y: 0 };
   private ownerGetter: () => { x: number; y: number; stats: CombatStats; facing: Vector2 };
 
@@ -36,7 +37,8 @@ export class MinionUnit implements ISkillCaster {
     this.def = def;
     this.x = x;
     this.y = y;
-    this.orbitAngle = orbitIndex * (Math.PI / 3);
+    this.orbitIndex = orbitIndex;
+    this.orbitAngle = orbitIndex * 2.39996; // 황금비(Golden Angle) 각도로 겹침 완전 방지
     this.ownerGetter = ownerGetter;
 
     const stats = this.getEffectiveStats();
@@ -96,7 +98,12 @@ export class MinionUnit implements ISkillCaster {
     }, 60);
 
     if (this.hp <= 0) {
-      this.die(this.def.respawnSeconds);
+      const stats = this.getEffectiveStats();
+      let respawn = this.def.respawnSeconds || 3.5;
+      if (stats.cooldownMul < 1) {
+        respawn *= Math.max(0.4, stats.cooldownMul);
+      }
+      this.die(respawn);
       return true;
     }
     return false;
@@ -144,16 +151,20 @@ export class MinionUnit implements ISkillCaster {
       this.invulnTimer -= dt;
     }
 
-    // 사망 중이면 부활 카운트다운
+    // 사망 중이면 부활 카운트다운 (플레이어 근처를 반투명 영혼으로 부드럽게 추종)
     if (this.state === 'DEAD_RESPAWNING') {
       this.respawnTimer -= dt;
+      const owner = this.ownerGetter();
+      this.x = Phaser.Math.Linear(this.x, owner.x, 0.08);
+      this.y = Phaser.Math.Linear(this.y, owner.y, 0.08);
+      this.sprite.setPosition(this.x, this.y);
+
       if (this.respawnTimer <= 0) {
         this.state = 'ALIVE';
         this.hp = this.maxHp;
         this.sprite.setAlpha(1.0);
         this.sprite.clearTint();
         // 부활 연출: 플레이어 바로 옆으로 소환
-        const owner = this.ownerGetter();
         this.x = owner.x + (Math.random() * 40 - 20);
         this.y = owner.y + (Math.random() * 40 - 20);
         this.sprite.setPosition(this.x, this.y);
@@ -199,11 +210,12 @@ export class MinionUnit implements ISkillCaster {
           nearestEnemy.y += (dy / dist) * pushForce;
         }
       } else {
-        // 주변에 적이 없으면 플레이어 전방 반원 대형으로 복귀
+        // 주변에 적이 없으면 플레이어 전방 반원 대형으로 복귀 (방진 다층 분산)
         const forwardX = owner.facing.x || 1;
         const forwardY = owner.facing.y || 0;
-        const targetX = owner.x + forwardX * 60 + Math.cos(this.orbitAngle) * 35;
-        const targetY = owner.y + forwardY * 60 + Math.sin(this.orbitAngle) * 35;
+        const spreadRadius = 35 + (this.orbitIndex % 3) * 18;
+        const targetX = owner.x + forwardX * 60 + Math.cos(this.orbitAngle) * spreadRadius;
+        const targetY = owner.y + forwardY * 60 + Math.sin(this.orbitAngle) * spreadRadius;
 
         const fdx = targetX - this.x;
         const fdy = targetY - this.y;
@@ -216,10 +228,11 @@ export class MinionUnit implements ISkillCaster {
         }
       }
     } else {
-      // 2. 원거리 공전형 (해골 궁수, 마법사, 드론): 플레이어 주위 75px 공전
+      // 2. 원거리 공전형 (해골 궁수, 마법사, 드론): 플레이어 주위 다층 공전 (겹침 방지)
+      const orbitRadius = 65 + (this.orbitIndex % 3) * 22;
       this.orbitAngle += dt * 1.8;
-      const targetX = owner.x + Math.cos(this.orbitAngle) * 75;
-      const targetY = owner.y + Math.sin(this.orbitAngle) * 75;
+      const targetX = owner.x + Math.cos(this.orbitAngle) * orbitRadius;
+      const targetY = owner.y + Math.sin(this.orbitAngle) * orbitRadius;
 
       this.x = Phaser.Math.Linear(this.x, targetX, 0.15);
       this.y = Phaser.Math.Linear(this.y, targetY, 0.15);

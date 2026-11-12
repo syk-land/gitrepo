@@ -11,7 +11,7 @@ export const MINIONS_DATA: Record<string, MinionDef> = {
     attackInterval: 0.9,
     attackRange: 45,
     moveSpeed: 175,
-    respawnSeconds: 6,
+    respawnSeconds: 3.5,
     bodyRadius: 22,
   },
   skeleton_archer: {
@@ -24,7 +24,7 @@ export const MINIONS_DATA: Record<string, MinionDef> = {
     attackInterval: 1.1,
     attackRange: 240,
     moveSpeed: 160,
-    respawnSeconds: 6,
+    respawnSeconds: 3.5,
     bodyRadius: 18,
   },
   skeleton_mage: {
@@ -37,7 +37,7 @@ export const MINIONS_DATA: Record<string, MinionDef> = {
     attackInterval: 1.4,
     attackRange: 220,
     moveSpeed: 160,
-    respawnSeconds: 6,
+    respawnSeconds: 4.0,
     bodyRadius: 18,
   },
   arthur: {
@@ -50,7 +50,7 @@ export const MINIONS_DATA: Record<string, MinionDef> = {
     attackInterval: 0.8,
     attackRange: 65,
     moveSpeed: 190,
-    respawnSeconds: 8,
+    respawnSeconds: 5.0,
     bodyRadius: 32,
   },
   drone: {
@@ -63,7 +63,7 @@ export const MINIONS_DATA: Record<string, MinionDef> = {
     attackInterval: 0.75,
     attackRange: 250,
     moveSpeed: 210,
-    respawnSeconds: 5,
+    respawnSeconds: 3.0,
     bodyRadius: 20,
   },
 };

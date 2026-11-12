@@ -25,7 +25,7 @@ export const SURVIVAL_TRAITS: TraitTalentDef[] = [
   { id: 'trait_hp_regen', name: '🩸 체력 재생', category: 'talent', desc: '초당 체력 지속 회복량 +1.5 HP/초', baseVal: 1.5, statKey: 'hpRegenPerSec', maxLevel: 10 },
   { id: 'trait_shadow_step', name: '💨 이동 속도', category: 'talent', desc: '기본 이동 속도 +10px/s 증가', baseVal: 0.06, statKey: 'moveSpeed', maxLevel: 10 },
   { id: 'trait_mana_flow', name: '🌀 자석 반경', category: 'talent', desc: '경험치 보석 흡인 반경 +15px 증가', baseVal: 0.15, statKey: 'pickupRadius', maxLevel: 10 },
-  { id: 'trait_minion_count', name: '👥 소환수 수량', category: 'talent', desc: '해골 소환수 최대 유지 수 +1기 증원', baseVal: 0.2, statKey: 'bonusMinionCount', maxLevel: 10 },
+  { id: 'trait_minion_count', name: '👥 소환수 수량', category: 'talent', desc: '해골 소환수 최대 유지 수 +1기 증원', baseVal: 1, statKey: 'bonusMinionCount', maxLevel: 10 },
   { id: 'talent_merchant', name: '💰 골드 획득', category: 'talent', desc: '전투 중 마력석(골드) 획득량 +15% 증가', baseVal: 0.15, statKey: 'goldMul', maxLevel: 10 },
   { id: 'talent_exp_surge', name: '📖 경험치 획득', category: 'talent', desc: '몬스터 처치 경험치 획득량 +12% 증가', baseVal: 0.12, statKey: 'expMul', maxLevel: 10 },
 ];
@@ -46,7 +46,7 @@ export const LEGACY_ALTAR_ITEMS: TraitTalentDef[] = [
   { id: 'talent_relic_finder', name: '💎 심연의 직관', category: 'talent', desc: '스킬 효과 범위 증가', baseVal: 0.08, statKey: 'areaMul', maxLevel: 10 },
   { id: 'talent_double_cast', name: '⚡ 이중 영창', category: 'talent', desc: '투사체 1발 추가 확률', baseVal: 0.05, statKey: 'doubleCastChance', maxLevel: 10 },
   { id: 'talent_immortal_will', name: '🛡️ 불멸의 의지', category: 'talent', desc: '피해 감소', baseVal: 0.05, statKey: 'lowHpDamageReduction', maxLevel: 10 },
-  { id: 'talent_legion_surge', name: '🪖 망자의 군세', category: 'talent', desc: '해골 소환수 수량 증가', baseVal: 0.2, statKey: 'bonusMinionCount', maxLevel: 10 },
+  { id: 'talent_legion_surge', name: '🪖 망자의 군세', category: 'talent', desc: '해골 소환수 수량 증가', baseVal: 1, statKey: 'bonusMinionCount', maxLevel: 10 },
   { id: 'talent_overcharge', name: '🔮 마력 과충전', category: 'talent', desc: '필살기 쿨타임 감소', baseVal: 0.05, statKey: 'cooldownMul', maxLevel: 10 },
 ];
 
@@ -77,6 +77,11 @@ export function getAltarEffectiveValue(
   if (level <= 0) return 0;
   if (def.id === 'trait_start_level' || def.id === 'trait_bonus_projectiles') {
     return level;
+  }
+  if (def.statKey === 'bonusMinionCount') {
+    let count = level;
+    if (isMasterEquipped) count = Math.round(count * 1.5);
+    return count;
   }
   const mult = 1 + 0.5 * (level - 1);
   let val = def.baseVal * mult;
@@ -122,7 +127,7 @@ export function formatAltarBonus(def: TraitTalentDef, level: number): string {
     case 'minionHpMul':
       return `현재 효과: +${Math.round(val * 100)}% 소환수체력`;
     case 'bonusMinionCount':
-      return `현재 효과: +${Math.floor(val)}기 증원`;
+      return `현재 효과: +${Math.round(val)}기 증원`;
     case 'goldMul':
       return `현재 효과: +${Math.round(val * 100)}% 골드획득`;
     case 'expMul':

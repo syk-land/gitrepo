@@ -112,7 +112,7 @@ export class Player implements ISkillCaster {
           } else if (def.statKey === 'cooldownMul') {
             stats.cooldownMul = Math.max(0.35, stats.cooldownMul - val);
           } else if (def.statKey === 'bonusMinionCount') {
-            stats.bonusMinionCount += Math.floor(val);
+            stats.bonusMinionCount += Math.round(val);
           } else if (def.statKey === 'bonusProjectiles') {
             stats.bonusProjectiles += Math.min(2, Math.floor(val));
           } else if (def.statKey === 'startLevel') {

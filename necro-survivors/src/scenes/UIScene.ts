@@ -673,6 +673,9 @@ export class UIScene extends Phaser.Scene {
 
     player.pendingLevelUps--;
 
+    // 레벨업 시 소환수 군단 편성 즉시 동기화 (해골 군단/사령 권능 등 레벨업 즉시 반영)
+    this.battleScene.syncNecroArmy();
+
     if (player.pendingLevelUps > 0) {
       // 연속 레벨업 처리 (Section 6.2)
       this.showLevelUpModal();

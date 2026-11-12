@@ -406,9 +406,9 @@ export class BattleScene extends Phaser.Scene {
       }
     }
 
-    // 영구 재능(망자의 군세) 보너스 소환수 (해골 군단 보유 시에만 활성화)
-    if (legionLv > 0 || hasArthur) {
-      const bonus = this.player.getEffectiveStats().bonusMinionCount;
+    // 영구 특성(소환수 수량) 및 패시브(사령의 권능) 보너스 소환수
+    const bonus = this.player.getEffectiveStats().bonusMinionCount;
+    if (bonus > 0) {
       warriors += bonus;
     }
 
