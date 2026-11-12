@@ -19,8 +19,47 @@ export class LevelUpManager {
     const ownedActives = Array.from(player.activeSkills.keys());
     const ownedPassives = Array.from(player.passiveSkills.keys());
 
-    // 1단계: 획득 가능한 후보군 필터링 (일반 레벨업은 액티브 무기만 제시, 각성재료 패시브는 정예/보스 선택권에서 획득)
-    const allAvailableSkills = [...ACTIVE_SKILLS];
+    // 플레이어가 습득한 계열의 하위/상위 무기에 연계된 패시브 스킬 해금 집합 계산
+    const unlockedPassiveIds = new Set<string>();
+
+    for (const activeId of ownedActives) {
+      const active = ALL_SKILLS_MAP.get(activeId);
+      if (!active) continue;
+
+      // 1) 본인 스킬의 필요 각성 패시브 해금
+      if (active.requiredPassiveId) {
+        unlockedPassiveIds.add(active.requiredPassiveId);
+      }
+
+      // 2) 하위 스킬(Tier 1)을 보유한 경우: 해당 계열의 상위 스킬(Tier 2)에 필요한 패시브도 함께 해금
+      if (active.tier === 1) {
+        const tier2Skills = ACTIVE_SKILLS.filter((s) => s.prerequisiteSkillId === active.id);
+        for (const t2 of tier2Skills) {
+          if (t2.requiredPassiveId) {
+            unlockedPassiveIds.add(t2.requiredPassiveId);
+          }
+        }
+      }
+
+      // 3) 상위 스킬(Tier 2)을 보유한 경우: 선행 하위 스킬의 필요 패시브도 함께 해금
+      if (active.tier === 2 && active.prerequisiteSkillId) {
+        const t1 = ALL_SKILLS_MAP.get(active.prerequisiteSkillId);
+        if (t1 && t1.requiredPassiveId) {
+          unlockedPassiveIds.add(t1.requiredPassiveId);
+        }
+      }
+    }
+
+    // 이미 보유 중인 패시브 스킬(이전에 배웠거나 상자에서 획득한 패시브)도 후보군에 포함
+    for (const passiveId of ownedPassives) {
+      unlockedPassiveIds.add(passiveId);
+    }
+
+    // 해금된 패시브 스킬 목록
+    const unlockedPassives = PASSIVE_SKILLS.filter((p) => unlockedPassiveIds.has(p.id));
+
+    // 1단계: 획득 가능한 후보군 필터링 (액티브 스킬 + 계열 스킬로 해금된 패시브 스킬)
+    const allAvailableSkills = [...ACTIVE_SKILLS, ...unlockedPassives];
 
     const candidates = allAvailableSkills.filter((skill) => {
       // 이미 이 스킬에서 진화한 각성 스킬을 보유하고 있다면 원본 스킬은 재등장하지 않음
@@ -106,6 +145,17 @@ export class LevelUpManager {
             break;
           }
         }
+        if (!synergyHint) {
+          for (const activeId of ownedActives) {
+            const upperSkill = ACTIVE_SKILLS.find(
+              (s) => s.prerequisiteSkillId === activeId && s.requiredPassiveId === skill.id
+            );
+            if (upperSkill) {
+              synergyHint = `🌟 [${upperSkill.name} 계열 연계 패시브]`;
+              break;
+            }
+          }
+        }
       } else if (isActive && skill.requiredPassiveId && !synergyHint) {
         // 액티브 카드인 경우: 각성에 필요한 재료 패시브 안내
         const hasPartner = (player.passiveSkills.get(skill.requiredPassiveId) ?? 0) > 0;
@@ -184,6 +234,9 @@ export class LevelUpManager {
         } else if (skill.tier === 2 && skill.prerequisiteSkillId) {
           // 선행 스킬 3레벨 달성으로 해금된 상위 스킬은 높은 출현 가중치 부여
           w = 350;
+        } else if (skill.category === 'passive') {
+          // 계열 스킬로 해금된 신규 패시브 출현 가중치 우대
+          w = 140;
         }
         return w;
       });
