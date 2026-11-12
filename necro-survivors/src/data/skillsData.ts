@@ -1,5 +1,13 @@
 import { SkillData } from './types';
 
+// 스킬의 필요 짝꿍 패시브 목록 조회 헬퍼 (단일 및 복수 짝꿍 패시브 호환)
+export function getRequiredPassiveIds(skill: SkillData): string[] {
+  if (skill.requiredPassiveIds && skill.requiredPassiveIds.length > 0) {
+    return skill.requiredPassiveIds;
+  }
+  return skill.requiredPassiveId ? [skill.requiredPassiveId] : [];
+}
+
 // =========================================================================
 // 1. 액티브 스킬 12종 (Lv.1 ~ 5)
 // =========================================================================
@@ -408,11 +416,11 @@ export const PASSIVE_SKILLS: SkillData[] = [
     behavior: 'straight',
     maxLevel: 5,
     levels: [
-      { level: 1, description: '모든 투사체 발사 수 +1개', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'bonusProjectiles', op: 'add', value: 1 }] },
-      { level: 2, description: '투사체 비행 속도 +20%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'bonusProjectiles', op: 'add', value: 1 }, { stat: 'projectileSpeedMul', op: 'add', value: 0.20 }] },
-      { level: 3, description: '모든 투사체 발사 수 +2개', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'bonusProjectiles', op: 'add', value: 2 }, { stat: 'projectileSpeedMul', op: 'add', value: 0.20 }] },
-      { level: 4, description: '투사체 비행 속도 +40%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'bonusProjectiles', op: 'add', value: 2 }, { stat: 'projectileSpeedMul', op: 'add', value: 0.40 }] },
-      { level: 5, description: '모든 투사체 발사 수 +3개 & 투사체 속도 +50%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'bonusProjectiles', op: 'add', value: 3 }, { stat: 'projectileSpeedMul', op: 'add', value: 0.50 }] },
+      { level: 1, description: '치명타 확률 +6%, 치명타 피해 +15%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'critRate', op: 'add', value: 0.06 }, { stat: 'critDamage', op: 'add', value: 0.15 }] },
+      { level: 2, description: '치명타 확률 +12%, 치명타 피해 +30%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'critRate', op: 'add', value: 0.12 }, { stat: 'critDamage', op: 'add', value: 0.30 }] },
+      { level: 3, description: '치명타 확률 +18%, 치명타 피해 +45%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'critRate', op: 'add', value: 0.18 }, { stat: 'critDamage', op: 'add', value: 0.45 }] },
+      { level: 4, description: '치명타 확률 +24%, 치명타 피해 +60%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'critRate', op: 'add', value: 0.24 }, { stat: 'critDamage', op: 'add', value: 0.60 }] },
+      { level: 5, description: '치명타 확률 +30%, 치명타 피해 +75%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'critRate', op: 'add', value: 0.30 }, { stat: 'critDamage', op: 'add', value: 0.75 }] },
     ],
   },
   {
@@ -425,11 +433,11 @@ export const PASSIVE_SKILLS: SkillData[] = [
     behavior: 'straight',
     maxLevel: 5,
     levels: [
-      { level: 1, description: '치명타 확률 +6%, 치명타 피해 +15%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'critRate', op: 'add', value: 0.06 }, { stat: 'critDamage', op: 'add', value: 0.15 }] },
-      { level: 2, description: '치명타 확률 +12%, 치명타 피해 +30%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'critRate', op: 'add', value: 0.12 }, { stat: 'critDamage', op: 'add', value: 0.30 }] },
-      { level: 3, description: '치명타 확률 +18%, 치명타 피해 +45%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'critRate', op: 'add', value: 0.18 }, { stat: 'critDamage', op: 'add', value: 0.45 }] },
-      { level: 4, description: '치명타 확률 +24%, 치명타 피해 +60%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'critRate', op: 'add', value: 0.24 }, { stat: 'critDamage', op: 'add', value: 0.60 }] },
-      { level: 5, description: '치명타 확률 +30%, 치명타 피해 +75%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'critRate', op: 'add', value: 0.30 }, { stat: 'critDamage', op: 'add', value: 0.75 }] },
+      { level: 1, description: '모든 투사체 발사 수 +1개', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'bonusProjectiles', op: 'add', value: 1 }] },
+      { level: 2, description: '투사체 비행 속도 +20%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'bonusProjectiles', op: 'add', value: 1 }, { stat: 'projectileSpeedMul', op: 'add', value: 0.20 }] },
+      { level: 3, description: '모든 투사체 발사 수 +2개', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'bonusProjectiles', op: 'add', value: 2 }, { stat: 'projectileSpeedMul', op: 'add', value: 0.20 }] },
+      { level: 4, description: '투사체 비행 속도 +40%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'bonusProjectiles', op: 'add', value: 2 }, { stat: 'projectileSpeedMul', op: 'add', value: 0.40 }] },
+      { level: 5, description: '모든 투사체 발사 수 +3개 & 투사체 속도 +50%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'bonusProjectiles', op: 'add', value: 3 }, { stat: 'projectileSpeedMul', op: 'add', value: 0.50 }] },
     ],
   },
   {
