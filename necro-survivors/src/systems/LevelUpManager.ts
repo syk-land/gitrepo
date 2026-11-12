@@ -11,6 +11,16 @@ export interface LevelUpChoice {
   isFallback?: boolean;
 }
 
+export function getActiveBranchId(skillId: string): string {
+  const skill = ALL_SKILLS_MAP.get(skillId);
+  if (!skill) return skillId;
+  if (skill.evolvesFrom) {
+    const base = ALL_SKILLS_MAP.get(skill.evolvesFrom);
+    if (base) return getActiveBranchId(base.id);
+  }
+  return skill.prerequisiteSkillId || skill.id;
+}
+
 export class LevelUpManager {
   private static maxActiveSlots = 6;
   private static maxPassiveSlots = 6;
@@ -18,6 +28,12 @@ export class LevelUpManager {
   public static getChoices(player: Player, count: number = 3): LevelUpChoice[] {
     const ownedActives = Array.from(player.activeSkills.keys());
     const ownedPassives = Array.from(player.passiveSkills.keys());
+
+    // 현재 플레이어가 선택한 액티브 스킬 계열 목록 (최대 3계열)
+    const ownedActiveBranches = new Set<string>();
+    for (const aId of ownedActives) {
+      ownedActiveBranches.add(getActiveBranchId(aId));
+    }
 
     // 플레이어가 습득한 계열의 하위/상위 무기에 연계된 패시브 스킬 해금 집합 계산
     const unlockedPassiveIds = new Set<string>();
@@ -88,8 +104,17 @@ export class LevelUpManager {
 
       // 미보유 스킬인데 슬롯이 꽉 찼으면 제외
       if (curLv === 0) {
-        if (isActive && ownedActives.length >= this.maxActiveSlots) return false;
-        if (!isActive && ownedPassives.length >= this.maxPassiveSlots) return false;
+        if (isActive) {
+          if (ownedActives.length >= this.maxActiveSlots) return false;
+
+          // ⭐ 액티브 스킬은 최대 3가지 계열만 선택 가능!
+          const branchId = getActiveBranchId(skill.id);
+          if (!ownedActiveBranches.has(branchId) && ownedActiveBranches.size >= 3) {
+            return false; // 이미 3계열을 골랐다면 새로운 4번째 계열의 액티브 무기는 출현 불가
+          }
+        } else {
+          if (ownedPassives.length >= this.maxPassiveSlots) return false;
+        }
       }
 
       return true;
@@ -125,8 +150,10 @@ export class LevelUpManager {
 
       let synergyHint: string | undefined;
 
-      // 상위 스킬 배지 및 해금 안내
-      if (skill.tier === 2 && skill.prerequisiteSkillId) {
+      // 상위 스킬 배지 및 해금 안내 / 신규 계열 배지
+      if (curLv === 0 && isActive && !ownedActiveBranches.has(getActiveBranchId(skill.id))) {
+        synergyHint = `🆕 [새 무기 계열 (${ownedActiveBranches.size + 1}/3)]`;
+      } else if (skill.tier === 2 && skill.prerequisiteSkillId) {
         const prereqSkill = ALL_SKILLS_MAP.get(skill.prerequisiteSkillId);
         synergyHint = `🌟 [상위 무기! ${prereqSkill ? prereqSkill.name : ''} 연계 심화]`;
       } else if (skill.tier === 1 && curLv < 3) {

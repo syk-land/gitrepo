@@ -67,7 +67,7 @@ export const ACTIVE_SKILLS: SkillData[] = [
     behavior: 'straight',
     summonMinionId: 'skeleton_warrior',
     evolvesFrom: undefined,
-    requiredPassiveId: 'pas_undead_cmd',
+    requiredPassiveId: 'pas_speed',
     maxLevel: 5,
     levels: [
       { level: 1, description: '해골 전사 2기 소환 (전방 배치 & 길막 바리케이드)', damageCoeff: 1.0, cooldown: 3.0, projectileCount: 2, areaRadius: 30, pierceCount: 0, duration: 9999, knockbackForce: 6 },
@@ -90,7 +90,7 @@ export const ACTIVE_SKILLS: SkillData[] = [
     targeting: 'highest_hp',
     behavior: 'homing',
     evolvesFrom: undefined,
-    requiredPassiveId: 'pas_undead_cmd',
+    requiredPassiveId: 'pas_speed',
     maxLevel: 5,
     levels: [
       { level: 1, description: '강력한 적을 추적하는 사령 저주구체 1발 발사 (명중 시 30% 둔화 폭발)', damageCoeff: 1.8, cooldown: 2.6, projectileCount: 1, areaRadius: 60, pierceCount: 2, duration: 3.0, knockbackForce: 10, statusEffect: { type: 'slow', chance: 0.8, duration: 2.0, value: 0.3 } },
@@ -138,7 +138,7 @@ export const ACTIVE_SKILLS: SkillData[] = [
     targeting: 'self_aoe',
     behavior: 'ground_zone',
     evolvesFrom: undefined,
-    requiredPassiveId: 'pas_frost_heart',
+    requiredPassiveId: 'pas_iron_body',
     maxLevel: 5,
     levels: [
       { level: 1, description: '발밑에 황금빛 성역 생성 (내부 아군 지속 치유 & 적 35% 둔화, 넉백 없음)', damageCoeff: 0.9, cooldown: 4.5, projectileCount: 1, areaRadius: 95, pierceCount: 999, duration: 3.0, knockbackForce: 0, statusEffect: { type: 'slow', chance: 1.0, duration: 1.5, value: 0.35 } },
@@ -186,7 +186,7 @@ export const ACTIVE_SKILLS: SkillData[] = [
     targeting: 'random',
     behavior: 'ground_zone',
     evolvesFrom: undefined,
-    requiredPassiveId: 'pas_area',
+    requiredPassiveId: 'pas_blood_vamp',
     maxLevel: 5,
     levels: [
       { level: 1, description: '원거리 지점에 적들을 빨아들이는 특이점 블랙홀 생성 (둔화 50%)', damageCoeff: 0.8, cooldown: 4.5, projectileCount: 1, areaRadius: 90, pierceCount: 999, duration: 2.5, knockbackForce: -16, statusEffect: { type: 'pull', chance: 1.0, duration: 2.5 } },
@@ -234,7 +234,7 @@ export const ACTIVE_SKILLS: SkillData[] = [
     targeting: 'circular_orbit',
     behavior: 'orbit',
     evolvesFrom: undefined,
-    requiredPassiveId: 'pas_iron_body',
+    requiredPassiveId: 'pas_amount',
     maxLevel: 5,
     levels: [
       { level: 1, description: '주변을 영구 회전하는 전투 도끼 1기 소환 (상시 유지, 피격 적 20% 둔화)', damageCoeff: 0.85, cooldown: 3.0, projectileCount: 1, areaRadius: 80, pierceCount: 999, duration: 9999, knockbackForce: 6, statusEffect: { type: 'slow', chance: 1.0, duration: 0.8, value: 0.20 } },
@@ -283,7 +283,7 @@ export const ACTIVE_SKILLS: SkillData[] = [
     behavior: 'straight',
     summonMinionId: 'drone',
     evolvesFrom: undefined,
-    requiredPassiveId: 'pas_cooldown',
+    requiredPassiveId: 'pas_hawk_eye',
     maxLevel: 5,
     levels: [
       { level: 1, description: '상공을 공전하며 레이저를 쏘는 강습 드론 1기 소환', damageCoeff: 1.0, cooldown: 5.0, projectileCount: 1, areaRadius: 25, pierceCount: 0, duration: 9999, knockbackForce: 4 },
@@ -331,7 +331,7 @@ export const ACTIVE_SKILLS: SkillData[] = [
     targeting: 'self_aoe',
     behavior: 'instant_strike',
     evolvesFrom: undefined,
-    requiredPassiveId: 'pas_speed',
+    requiredPassiveId: 'pas_cooldown',
     maxLevel: 5,
     levels: [
       { level: 1, description: '주변 원형 범위에 혹한의 냉기 폭발 (적 60% 확률 1.5초 완전 빙결, 40% 둔화)', damageCoeff: 1.3, cooldown: 3.0, projectileCount: 1, areaRadius: 110, pierceCount: 999, duration: 0.4, knockbackForce: 0, statusEffect: { type: 'freeze', chance: 0.6, duration: 1.5 } },
@@ -344,7 +344,7 @@ export const ACTIVE_SKILLS: SkillData[] = [
 ];
 
 // =========================================================================
-// 2. 패시브 스킬 8종 (Lv.1 ~ 5)
+// 2. 패시브 스킬 7종 (Lv.1 ~ 5)
 // =========================================================================
 export const PASSIVE_SKILLS: SkillData[] = [
   {
@@ -365,20 +365,20 @@ export const PASSIVE_SKILLS: SkillData[] = [
     ],
   },
   {
-    id: 'pas_undead_cmd',
-    name: '사령의 권능',
-    icon: 'assets/skills/skill_pas_undead_cmd.png',
+    id: 'pas_speed',
+    name: '포식자의 본능 & 잔상 보법',
+    icon: 'assets/skills/skill_pas_speed.png',
     category: 'passive',
     isNecroSignature: true,
     targeting: 'self_aoe',
     behavior: 'straight',
     maxLevel: 5,
     levels: [
-      { level: 1, description: '소환수 공체 +20%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'minionDamageMul', op: 'add', value: 0.20 }, { stat: 'minionHpMul', op: 'add', value: 0.20 }] },
-      { level: 2, description: '소환수 공체 +40%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'minionDamageMul', op: 'add', value: 0.40 }, { stat: 'minionHpMul', op: 'add', value: 0.40 }] },
-      { level: 3, description: '소환수 공체 +60% & 최대 소환수 +1기', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'minionDamageMul', op: 'add', value: 0.60 }, { stat: 'minionHpMul', op: 'add', value: 0.60 }, { stat: 'bonusMinionCount', op: 'add', value: 1 }] },
-      { level: 4, description: '소환수 공체 +80%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'minionDamageMul', op: 'add', value: 0.80 }, { stat: 'minionHpMul', op: 'add', value: 0.80 }, { stat: 'bonusMinionCount', op: 'add', value: 1 }] },
-      { level: 5, description: '소환수 공체 +100% & 최대 소환수 +2기', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'minionDamageMul', op: 'add', value: 1.00 }, { stat: 'minionHpMul', op: 'add', value: 1.00 }, { stat: 'bonusMinionCount', op: 'add', value: 2 }] },
+      { level: 1, description: '이동속도 +8%, 자석 반경 +25%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'moveSpeed', op: 'mul', value: 1.08 }, { stat: 'pickupRadius', op: 'mul', value: 1.25 }] },
+      { level: 2, description: '이동속도 +16%, 자석 반경 +50%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'moveSpeed', op: 'mul', value: 1.16 }, { stat: 'pickupRadius', op: 'mul', value: 1.50 }] },
+      { level: 3, description: '이동속도 +24%, 자석 반경 +75%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'moveSpeed', op: 'mul', value: 1.24 }, { stat: 'pickupRadius', op: 'mul', value: 1.75 }] },
+      { level: 4, description: '이동속도 +32%, 자석 반경 +100%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'moveSpeed', op: 'mul', value: 1.32 }, { stat: 'pickupRadius', op: 'mul', value: 2.00 }] },
+      { level: 5, description: '이동속도 +40%, 자석 반경 +150%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'moveSpeed', op: 'mul', value: 1.40 }, { stat: 'pickupRadius', op: 'mul', value: 2.50 }] },
     ],
   },
   {
@@ -396,23 +396,6 @@ export const PASSIVE_SKILLS: SkillData[] = [
       { level: 3, description: '모든 쿨타임 -21%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'cooldownMul', op: 'add', value: -0.21 }] },
       { level: 4, description: '모든 쿨타임 -28%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'cooldownMul', op: 'add', value: -0.28 }] },
       { level: 5, description: '모든 쿨타임 -35%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'cooldownMul', op: 'add', value: -0.35 }] },
-    ],
-  },
-  {
-    id: 'pas_area',
-    name: '마력 동조망',
-    icon: 'assets/skills/skill_pas_area.png',
-    category: 'passive',
-    isNecroSignature: false,
-    targeting: 'self_aoe',
-    behavior: 'straight',
-    maxLevel: 5,
-    levels: [
-      { level: 1, description: '스킬 및 투사체 범위 +12%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'areaMul', op: 'add', value: 0.12 }] },
-      { level: 2, description: '스킬 및 투사체 범위 +24%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'areaMul', op: 'add', value: 0.24 }] },
-      { level: 3, description: '스킬 및 투사체 범위 +36%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'areaMul', op: 'add', value: 0.36 }] },
-      { level: 4, description: '스킬 및 투사체 범위 +48%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'areaMul', op: 'add', value: 0.48 }] },
-      { level: 5, description: '스킬 및 투사체 범위 +60%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'areaMul', op: 'add', value: 0.60 }] },
     ],
   },
   {
@@ -464,23 +447,6 @@ export const PASSIVE_SKILLS: SkillData[] = [
       { level: 3, description: '최대 체력 +60%, 방어력 +15, 초당 체력 재생 +3%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'maxHp', op: 'mul', value: 1.60 }, { stat: 'armor', op: 'add', value: 15 }, { stat: 'hpRegenPerSec', op: 'add', value: 6 }] },
       { level: 4, description: '최대 체력 +80%, 방어력 +20, 초당 체력 재생 +4%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'maxHp', op: 'mul', value: 1.80 }, { stat: 'armor', op: 'add', value: 20 }, { stat: 'hpRegenPerSec', op: 'add', value: 8 }] },
       { level: 5, description: '최대 체력 +100%, 방어력 +30, 초당 체력 재생 +5%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'maxHp', op: 'mul', value: 2.00 }, { stat: 'armor', op: 'add', value: 30 }, { stat: 'hpRegenPerSec', op: 'add', value: 12 }] },
-    ],
-  },
-  {
-    id: 'pas_speed',
-    name: '포식자의 본능 & 잔상 보법',
-    icon: 'assets/skills/skill_pas_speed.png',
-    category: 'passive',
-    isNecroSignature: false,
-    targeting: 'self_aoe',
-    behavior: 'straight',
-    maxLevel: 5,
-    levels: [
-      { level: 1, description: '이동속도 +8%, 자석 반경 +25%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'moveSpeed', op: 'mul', value: 1.08 }, { stat: 'pickupRadius', op: 'mul', value: 1.25 }] },
-      { level: 2, description: '이동속도 +16%, 자석 반경 +50%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'moveSpeed', op: 'mul', value: 1.16 }, { stat: 'pickupRadius', op: 'mul', value: 1.50 }] },
-      { level: 3, description: '이동속도 +24%, 자석 반경 +75%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'moveSpeed', op: 'mul', value: 1.24 }, { stat: 'pickupRadius', op: 'mul', value: 1.75 }] },
-      { level: 4, description: '이동속도 +32%, 자석 반경 +100%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'moveSpeed', op: 'mul', value: 1.32 }, { stat: 'pickupRadius', op: 'mul', value: 2.00 }] },
-      { level: 5, description: '이동속도 +40%, 자석 반경 +150%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'moveSpeed', op: 'mul', value: 1.40 }, { stat: 'pickupRadius', op: 'mul', value: 2.50 }] },
     ],
   },
   {
@@ -542,7 +508,7 @@ export const AWAKENED_SKILLS: SkillData[] = [
     behavior: 'straight',
     summonMinionId: 'arthur',
     evolvesFrom: 'necro_legion',
-    requiredPassiveId: 'pas_undead_cmd',
+    requiredPassiveId: 'pas_speed',
     maxLevel: 1,
     levels: [
       {
@@ -669,7 +635,7 @@ export const AWAKENED_SKILLS: SkillData[] = [
     targeting: 'random',
     behavior: 'ground_zone',
     evolvesFrom: 'psi_blackhole',
-    requiredPassiveId: 'pas_area',
+    requiredPassiveId: 'pas_blood_vamp',
     maxLevel: 1,
     levels: [
       {
@@ -695,7 +661,7 @@ export const AWAKENED_SKILLS: SkillData[] = [
     targeting: 'self_aoe',
     behavior: 'instant_strike',
     evolvesFrom: 'cryo_nova',
-    requiredPassiveId: 'pas_speed',
+    requiredPassiveId: 'pas_cooldown',
     maxLevel: 1,
     levels: [
       {
@@ -721,7 +687,7 @@ export const AWAKENED_SKILLS: SkillData[] = [
     targeting: 'circular_orbit',
     behavior: 'orbit',
     evolvesFrom: 'ber_whirlwind',
-    requiredPassiveId: 'pas_iron_body',
+    requiredPassiveId: 'pas_amount',
     maxLevel: 1,
     levels: [
       {
@@ -773,7 +739,7 @@ export const AWAKENED_SKILLS: SkillData[] = [
     behavior: 'straight',
     summonMinionId: 'drone',
     evolvesFrom: 'psi_drone',
-    requiredPassiveId: 'pas_cooldown',
+    requiredPassiveId: 'pas_hawk_eye',
     maxLevel: 1,
     levels: [
       {
@@ -798,7 +764,7 @@ export const AWAKENED_SKILLS: SkillData[] = [
     targeting: 'self_aoe',
     behavior: 'ground_zone',
     evolvesFrom: 'priest_sanctuary',
-    requiredPassiveId: 'pas_frost_heart',
+    requiredPassiveId: 'pas_iron_body',
     maxLevel: 1,
     levels: [
       {
