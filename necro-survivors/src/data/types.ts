@@ -42,10 +42,10 @@ export type ProjectileBehavior =
   | 'orbit';         // 시전자 주위 회전
 
 export interface StatusEffect {
-  type: 'slow' | 'freeze' | 'stun' | 'bleed' | 'pull';
+  type: 'slow' | 'freeze' | 'stun' | 'bleed' | 'pull' | 'shock';
   chance: number;          // 0.0 ~ 1.0
   duration: number;        // 초
-  value?: number;          // 둔화율(0.4) 또는 초당 도트 계수
+  value?: number;          // 둔화율(0.4), 도트 계수, 또는 감전 받는피해 증가율(0.3)
 }
 
 export interface SkillLevelData {

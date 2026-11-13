@@ -13,7 +13,7 @@ export function getRequiredPassiveIds(skill: SkillData): string[] {
 // =========================================================================
 export const ACTIVE_SKILLS: SkillData[] = [
   // =========================================================================
-  // [계열 1: 사령 뼈/창 계열]
+  // [계열 1: 무속성 계열]
   // =========================================================================
   // 1-1. 하위 스킬 (기초)
   {
@@ -303,9 +303,9 @@ export const ACTIVE_SKILLS: SkillData[] = [
   },
 
   // =========================================================================
-  // [계열 7: 자연 원소 계열]
+  // [계열 7: 번개속성 계열]
   // =========================================================================
-  // 7-1. 하위 스킬 (기초: 뇌전 감전)
+  // 7-1. 하위 스킬 (기초: 체인 라이트닝)
   {
     id: 'storm_chain',
     name: '체인 라이트닝',
@@ -316,17 +316,65 @@ export const ACTIVE_SKILLS: SkillData[] = [
     targeting: 'nearest',
     behavior: 'chain',
     evolvesFrom: undefined,
-    requiredPassiveId: 'pas_cooldown',
+    requiredPassiveId: 'pas_thunder_wrath',
     maxLevel: 5,
     levels: [
       { level: 1, description: '적 4기에게 연쇄 낙뢰를 튕기며 감전 피해 (20% 확률 0.7초 기절)', damageCoeff: 1.1, cooldown: 2.2, projectileCount: 1, areaRadius: 200, pierceCount: 4, duration: 0.4, knockbackForce: 0, statusEffect: { type: 'stun', chance: 0.2, duration: 0.7 } },
       { level: 2, description: '연쇄 횟수 +2기 (총 6기), 25% 확률 0.8초 기절', damageCoeff: 1.35, cooldown: 2.0, projectileCount: 1, areaRadius: 220, pierceCount: 6, duration: 0.4, knockbackForce: 0, statusEffect: { type: 'stun', chance: 0.25, duration: 0.8 } },
-      { level: 3, description: '연쇄 횟수 +2기 (총 8기), 쿨타임 -10%, 30% 확률 0.9초 기절 (상위 스킬 [프로스트 노바] 해금!)', damageCoeff: 1.6, cooldown: 1.8, projectileCount: 1, areaRadius: 240, pierceCount: 8, duration: 0.5, knockbackForce: 0, statusEffect: { type: 'stun', chance: 0.3, duration: 0.9 } },
+      { level: 3, description: '연쇄 횟수 +2기 (총 8기), 쿨타임 -10%, 30% 확률 0.9초 기절 (상위 스킬 [번개] 해금!)', damageCoeff: 1.6, cooldown: 1.8, projectileCount: 1, areaRadius: 240, pierceCount: 8, duration: 0.5, knockbackForce: 0, statusEffect: { type: 'stun', chance: 0.3, duration: 0.9 } },
       { level: 4, description: '동시 2갈래 연쇄 벼락 방출, 35% 확률 1.0초 기절', damageCoeff: 1.9, cooldown: 1.6, projectileCount: 2, areaRadius: 260, pierceCount: 10, duration: 0.5, knockbackForce: 0, statusEffect: { type: 'stun', chance: 0.35, duration: 1.0 } },
       { level: 5, description: '3갈래 연쇄 벼락, 12기 연쇄 및 50% 확률 1.2초 강력 감전 기절', damageCoeff: 2.4, cooldown: 1.4, projectileCount: 3, areaRadius: 300, pierceCount: 12, duration: 0.6, knockbackForce: 0, statusEffect: { type: 'stun', chance: 0.5, duration: 1.2 } },
     ],
   },
   // 7-2. 상위 스킬 (심화: 체인 라이트닝 Lv.3 이상 필요)
+  {
+    id: 'storm_thunder',
+    name: '번개',
+    icon: 'assets/pixel_vfx/skills/vfx_storm_3.png',
+    category: 'weapon',
+    isNecroSignature: false,
+    tier: 2,
+    prerequisiteSkillId: 'storm_chain',
+    prerequisiteLevel: 3,
+    targeting: 'nearest',
+    behavior: 'instant_strike',
+    evolvesFrom: undefined,
+    requiredPassiveId: 'pas_thunder_wrath',
+    maxLevel: 5,
+    levels: [
+      { level: 1, description: '가장 가까운 적 머리 위에 거대한 번개 낙뢰 직격 (강력한 감전 및 기절)', damageCoeff: 2.1, cooldown: 2.6, projectileCount: 1, areaRadius: 95, pierceCount: 999, duration: 0.4, knockbackForce: 0, statusEffect: { type: 'shock', chance: 0.8, duration: 2.5, value: 0.25 } },
+      { level: 2, description: '번개 2연타 낙뢰, 낙뢰 반경 +20%', damageCoeff: 2.5, cooldown: 2.4, projectileCount: 2, areaRadius: 115, pierceCount: 999, duration: 0.4, knockbackForce: 0, statusEffect: { type: 'shock', chance: 0.85, duration: 2.5, value: 0.30 } },
+      { level: 3, description: '번개 3연타 낙뢰, 쿨타임 -12% 및 35% 확률 기절', damageCoeff: 3.0, cooldown: 2.1, projectileCount: 3, areaRadius: 130, pierceCount: 999, duration: 0.5, knockbackForce: 0, statusEffect: { type: 'stun', chance: 0.35, duration: 1.0 } },
+      { level: 4, description: '낙뢰 범위 극대화, 확정 감전(받는 피해 +40%)', damageCoeff: 3.6, cooldown: 1.9, projectileCount: 3, areaRadius: 155, pierceCount: 999, duration: 0.5, knockbackForce: 0, statusEffect: { type: 'shock', chance: 1.0, duration: 3.0, value: 0.40 } },
+      { level: 5, description: '천벌의 낙뢰: 화면 내 다수 적에게 연속 낙뢰 폭격 및 감전 부여', damageCoeff: 4.5, cooldown: 1.6, projectileCount: 4, areaRadius: 180, pierceCount: 999, duration: 0.6, knockbackForce: 0, statusEffect: { type: 'shock', chance: 1.0, duration: 3.5, value: 0.50 } },
+    ],
+  },
+
+  // =========================================================================
+  // [계열 8: 빙결속성 계열]
+  // =========================================================================
+  // 8-1. 하위 스킬 (기초: 스노우볼)
+  {
+    id: 'cryo_snowball',
+    name: '스노우볼',
+    icon: 'assets/pixel_vfx/skills/vfx_cryo_1.png',
+    category: 'weapon',
+    isNecroSignature: false,
+    tier: 1,
+    targeting: 'nearest',
+    behavior: 'straight',
+    evolvesFrom: undefined,
+    requiredPassiveId: 'pas_cooldown',
+    maxLevel: 5,
+    levels: [
+      { level: 1, description: '가장 가까운 적에게 차가운 스노우볼 1발 발사 (35% 확률 빙결)', damageCoeff: 1.2, cooldown: 1.4, projectileCount: 1, areaRadius: 24, pierceCount: 1, duration: 2.0, knockbackForce: 8, statusEffect: { type: 'freeze', chance: 0.35, duration: 1.2 } },
+      { level: 2, description: '스노우볼 +1발, 관통 +1, 빙결 확률 45%', damageCoeff: 1.45, cooldown: 1.3, projectileCount: 2, areaRadius: 26, pierceCount: 2, duration: 2.0, knockbackForce: 10, statusEffect: { type: 'freeze', chance: 0.45, duration: 1.4 } },
+      { level: 3, description: '스노우볼 +1발, 크기 +20% (상위 스킬 [프로스트 노바] 해금!)', damageCoeff: 1.75, cooldown: 1.2, projectileCount: 3, areaRadius: 30, pierceCount: 3, duration: 2.2, knockbackForce: 12, statusEffect: { type: 'freeze', chance: 0.55, duration: 1.6 } },
+      { level: 4, description: '스노우볼 4발 동시 발사, 빙결 지속시간 증가', damageCoeff: 2.1, cooldown: 1.05, projectileCount: 4, areaRadius: 34, pierceCount: 4, duration: 2.4, knockbackForce: 14, statusEffect: { type: 'freeze', chance: 0.70, duration: 1.8 } },
+      { level: 5, description: '거대 눈덩이 5연사! 적 관통 시 100% 확률 2초 빙결', damageCoeff: 2.6, cooldown: 0.9, projectileCount: 5, areaRadius: 38, pierceCount: 6, duration: 2.6, knockbackForce: 16, statusEffect: { type: 'freeze', chance: 1.0, duration: 2.0 } },
+    ],
+  },
+  // 8-2. 상위 스킬 (심화: 스노우볼 Lv.3 이상 필요)
   {
     id: 'cryo_nova',
     name: '프로스트 노바',
@@ -334,7 +382,7 @@ export const ACTIVE_SKILLS: SkillData[] = [
     category: 'weapon',
     isNecroSignature: false,
     tier: 2,
-    prerequisiteSkillId: 'storm_chain',
+    prerequisiteSkillId: 'cryo_snowball',
     prerequisiteLevel: 3,
     targeting: 'self_aoe',
     behavior: 'instant_strike',
@@ -349,10 +397,106 @@ export const ACTIVE_SKILLS: SkillData[] = [
       { level: 5, description: '초광역 절대영도 노바, 화면 내 모든 적 100% 3.5초 절대 빙결', damageCoeff: 3.0, cooldown: 2.0, projectileCount: 2, areaRadius: 210, pierceCount: 999, duration: 0.8, knockbackForce: 0, statusEffect: { type: 'freeze', chance: 1.0, duration: 3.5 } },
     ],
   },
+
+  // =========================================================================
+  // [계열 9: 화염속성 계열]
+  // =========================================================================
+  // 9-1. 하위 스킬 (기초: 파이어볼)
+  {
+    id: 'fire_ball',
+    name: '파이어볼',
+    icon: 'assets/pixel_vfx/skills/vfx_mk_2.png',
+    category: 'weapon',
+    isNecroSignature: false,
+    tier: 1,
+    targeting: 'nearest',
+    behavior: 'straight',
+    evolvesFrom: undefined,
+    requiredPassiveId: 'pas_fire_staff',
+    maxLevel: 5,
+    levels: [
+      { level: 1, description: '가장 가까운 적에게 폭발하는 화염구 1발 발사 (명중 시 화염 폭발)', damageCoeff: 1.4, cooldown: 1.7, projectileCount: 1, areaRadius: 55, pierceCount: 1, duration: 2.0, knockbackForce: 12 },
+      { level: 2, description: '화염구 +1발, 폭발 반경 +20%', damageCoeff: 1.7, cooldown: 1.6, projectileCount: 2, areaRadius: 68, pierceCount: 1, duration: 2.0, knockbackForce: 14 },
+      { level: 3, description: '관통 폭발 +1회, 화상 출혈 부여 (상위 스킬 [파이어스톰] 해금!)', damageCoeff: 2.0, cooldown: 1.45, projectileCount: 2, areaRadius: 80, pierceCount: 2, duration: 2.2, knockbackForce: 16, statusEffect: { type: 'bleed', chance: 0.7, duration: 2.0, value: 0.35 } },
+      { level: 4, description: '화염구 3발 연사, 폭발 반경 대폭 증가', damageCoeff: 2.5, cooldown: 1.3, projectileCount: 3, areaRadius: 95, pierceCount: 2, duration: 2.4, knockbackForce: 18, statusEffect: { type: 'bleed', chance: 0.85, duration: 2.5, value: 0.45 } },
+      { level: 5, description: '초열 파이어볼 4연사! 적 명중 시 거대 폭염 폭발 연쇄', damageCoeff: 3.2, cooldown: 1.1, projectileCount: 4, areaRadius: 115, pierceCount: 3, duration: 2.6, knockbackForce: 22, statusEffect: { type: 'bleed', chance: 1.0, duration: 3.0, value: 0.6 } },
+    ],
+  },
+  // 9-2. 상위 스킬 (심화: 파이어볼 Lv.3 이상 필요)
+  {
+    id: 'fire_storm',
+    name: '파이어스톰',
+    icon: 'assets/pixel_vfx/skills/vfx_mk_ult.png',
+    category: 'weapon',
+    isNecroSignature: false,
+    tier: 2,
+    prerequisiteSkillId: 'fire_ball',
+    prerequisiteLevel: 3,
+    targeting: 'random',
+    behavior: 'ground_zone',
+    evolvesFrom: undefined,
+    requiredPassiveId: 'pas_fire_staff',
+    maxLevel: 5,
+    levels: [
+      { level: 1, description: '전장에 불타는 화염 폭풍 지대를 생성하여 내부 적에게 지속 화염 피해', damageCoeff: 1.0, cooldown: 3.8, projectileCount: 1, areaRadius: 105, pierceCount: 999, duration: 2.8, knockbackForce: 0, statusEffect: { type: 'bleed', chance: 0.5, duration: 2.0, value: 0.3 } },
+      { level: 2, description: '화염 폭풍 동시 2개 생성, 반경 +20%', damageCoeff: 1.25, cooldown: 3.5, projectileCount: 2, areaRadius: 125, pierceCount: 999, duration: 3.0, knockbackForce: 0, statusEffect: { type: 'bleed', chance: 0.6, duration: 2.2, value: 0.35 } },
+      { level: 3, description: '화염 폭풍 지속시간 +0.8초, 틱 데미지 증가', damageCoeff: 1.55, cooldown: 3.2, projectileCount: 2, areaRadius: 145, pierceCount: 999, duration: 3.8, knockbackForce: 0, statusEffect: { type: 'bleed', chance: 0.75, duration: 2.5, value: 0.45 } },
+      { level: 4, description: '화염 폭풍 3개 동시 전개, 전장 광역 초토화', damageCoeff: 1.9, cooldown: 2.9, projectileCount: 3, areaRadius: 165, pierceCount: 999, duration: 4.2, knockbackForce: 0, statusEffect: { type: 'bleed', chance: 0.9, duration: 2.8, value: 0.55 } },
+      { level: 5, description: '지옥불 파이어스톰: 초거대 화염 소용돌이 3개 상시 유지급 연쇄 전개', damageCoeff: 2.4, cooldown: 2.5, projectileCount: 3, areaRadius: 195, pierceCount: 999, duration: 4.8, knockbackForce: 0, statusEffect: { type: 'bleed', chance: 1.0, duration: 3.0, value: 0.7 } },
+    ],
+  },
+
+  // =========================================================================
+  // [계열 10: 창술속성 계열]
+  // =========================================================================
+  // 10-1. 하위 스킬 (기초: 적호창 - 찌르기 공격)
+  {
+    id: 'spear_crimson',
+    name: '적호창',
+    icon: 'assets/pixel_vfx/skills/vfx_guard_2.png',
+    category: 'weapon',
+    isNecroSignature: false,
+    tier: 1,
+    targeting: 'nearest',
+    behavior: 'straight',
+    evolvesFrom: undefined,
+    requiredPassiveId: 'pas_spear_spirit',
+    maxLevel: 5,
+    levels: [
+      { level: 1, description: '가장 가까운 적을 향해 붉은 창기로 맹렬히 찌르기 관통 공격', damageCoeff: 1.55, cooldown: 1.35, projectileCount: 1, areaRadius: 24, pierceCount: 4, duration: 1.5, knockbackForce: 14 },
+      { level: 2, description: '연속 2회 찌르기, 관통 횟수 +2', damageCoeff: 1.85, cooldown: 1.25, projectileCount: 2, areaRadius: 26, pierceCount: 6, duration: 1.5, knockbackForce: 16 },
+      { level: 3, description: '창기 3연격, 적 출혈 부여 (상위 스킬 [파천적호창] 해금!)', damageCoeff: 2.2, cooldown: 1.15, projectileCount: 3, areaRadius: 30, pierceCount: 8, duration: 1.6, knockbackForce: 18, statusEffect: { type: 'bleed', chance: 0.5, duration: 2.0, value: 0.35 } },
+      { level: 4, description: '창기 4연격, 관통 횟수 대폭 증가 및 쿨타임 감소', damageCoeff: 2.65, cooldown: 1.0, projectileCount: 4, areaRadius: 34, pierceCount: 12, duration: 1.8, knockbackForce: 20, statusEffect: { type: 'bleed', chance: 0.7, duration: 2.5, value: 0.45 } },
+      { level: 5, description: '적호무쌍 연격: 5갈래 고속 관통 창기 난무, 무한 관통', damageCoeff: 3.3, cooldown: 0.85, projectileCount: 5, areaRadius: 38, pierceCount: 999, duration: 2.0, knockbackForce: 24, statusEffect: { type: 'bleed', chance: 1.0, duration: 3.0, value: 0.6 } },
+    ],
+  },
+  // 10-2. 상위 스킬 (심화: 적호창 Lv.3 이상 필요 - 범위 찌르기 날리기)
+  {
+    id: 'spear_heaven',
+    name: '파천적호창',
+    icon: 'assets/pixel_vfx/skills/vfx_guard_ult.png',
+    category: 'weapon',
+    isNecroSignature: false,
+    tier: 2,
+    prerequisiteSkillId: 'spear_crimson',
+    prerequisiteLevel: 3,
+    targeting: 'nearest',
+    behavior: 'cone_slash',
+    evolvesFrom: undefined,
+    requiredPassiveId: 'pas_spear_spirit',
+    maxLevel: 5,
+    levels: [
+      { level: 1, description: '전방 부채꼴 광역 범위로 거대한 적호 창기를 일제히 날려 적진을 궤멸', damageCoeff: 1.9, cooldown: 2.2, projectileCount: 3, areaRadius: 65, pierceCount: 10, duration: 1.6, knockbackForce: 22 },
+      { level: 2, description: '창기 4갈래 확장, 범위 +20% 및 피해량 증가', damageCoeff: 2.3, cooldown: 2.0, projectileCount: 4, areaRadius: 78, pierceCount: 14, duration: 1.7, knockbackForce: 25 },
+      { level: 3, description: '창기 5갈래, 적 방어 붕괴 및 0.8초 기절 충격파', damageCoeff: 2.8, cooldown: 1.8, projectileCount: 5, areaRadius: 90, pierceCount: 999, duration: 1.8, knockbackForce: 28, statusEffect: { type: 'stun', chance: 0.4, duration: 0.8 } },
+      { level: 4, description: '창기 6갈래 광역 사출, 쿨타임 -15%', damageCoeff: 3.4, cooldown: 1.55, projectileCount: 6, areaRadius: 105, pierceCount: 999, duration: 2.0, knockbackForce: 32, statusEffect: { type: 'stun', chance: 0.6, duration: 1.0 } },
+      { level: 5, description: '파천일섬: 7갈래 초거대 붉은 창기 폭풍 발사, 전방 모든 적 일격 분쇄', damageCoeff: 4.2, cooldown: 1.3, projectileCount: 7, areaRadius: 125, pierceCount: 999, duration: 2.2, knockbackForce: 36, statusEffect: { type: 'stun', chance: 0.8, duration: 1.2 } },
+    ],
+  },
 ];
 
 // =========================================================================
-// 2. 패시브 스킬 7종 (Lv.1 ~ 5)
+// 2. 패시브 스킬 10종 (Lv.1 ~ 5)
 // =========================================================================
 export const PASSIVE_SKILLS: SkillData[] = [
   {
@@ -474,10 +618,61 @@ export const PASSIVE_SKILLS: SkillData[] = [
       { level: 5, description: '선혈 각성: 적 처치 시 체력 6 회복, 공격력 +60%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'damageMul', op: 'add', value: 0.60 }, { stat: 'hpRegenPerSec', op: 'add', value: 6 }] },
     ],
   },
+  {
+    id: 'pas_thunder_wrath',
+    name: '뇌신의 분노',
+    icon: 'assets/pixel_vfx/skills/vfx_storm_4.png',
+    category: 'passive',
+    isNecroSignature: false,
+    targeting: 'self_aoe',
+    behavior: 'straight',
+    maxLevel: 5,
+    levels: [
+      { level: 1, description: '공격력 +5% & 적 피격 시 32% 확률 2.5초 감전(받는 피해 +25%, 이속 -30%)', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'damageMul', op: 'add', value: 0.05 }] },
+      { level: 2, description: '공격력 +10% & 적 피격 시 44% 확률 2.5초 감전(받는 피해 +35%, 이속 -30%)', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'damageMul', op: 'add', value: 0.10 }] },
+      { level: 3, description: '공격력 +15% & 적 피격 시 56% 확률 2.5초 감전(받는 피해 +45%, 이속 -30%)', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'damageMul', op: 'add', value: 0.15 }] },
+      { level: 4, description: '공격력 +20% & 적 피격 시 68% 확률 2.5초 감전(받는 피해 +55%, 이속 -30%)', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'damageMul', op: 'add', value: 0.20 }] },
+      { level: 5, description: '공격력 +25% & 적 피격 시 80% 확률 2.5초 감전(받는 피해 +65%, 이속 -30%)', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'damageMul', op: 'add', value: 0.25 }] },
+    ],
+  },
+  {
+    id: 'pas_fire_staff',
+    name: '폭염의 지팡이',
+    icon: 'assets/skills/skill_pas_area.png',
+    category: 'passive',
+    isNecroSignature: false,
+    targeting: 'self_aoe',
+    behavior: 'straight',
+    maxLevel: 5,
+    levels: [
+      { level: 1, description: '모든 스킬 범위 +12%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'areaMul', op: 'add', value: 0.12 }] },
+      { level: 2, description: '모든 스킬 범위 +24%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'areaMul', op: 'add', value: 0.24 }] },
+      { level: 3, description: '모든 스킬 범위 +36%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'areaMul', op: 'add', value: 0.36 }] },
+      { level: 4, description: '모든 스킬 범위 +48%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'areaMul', op: 'add', value: 0.48 }] },
+      { level: 5, description: '모든 스킬 범위 +60%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'areaMul', op: 'add', value: 0.60 }] },
+    ],
+  },
+  {
+    id: 'pas_spear_spirit',
+    name: '무신의 투지',
+    icon: 'assets/pixel_vfx/skills/vfx_guard_4.png',
+    category: 'passive',
+    isNecroSignature: false,
+    targeting: 'self_aoe',
+    behavior: 'straight',
+    maxLevel: 5,
+    levels: [
+      { level: 1, description: '공격력 +10%, 투사체 속도 +10%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'damageMul', op: 'add', value: 0.10 }, { stat: 'projectileSpeedMul', op: 'add', value: 0.10 }] },
+      { level: 2, description: '공격력 +20%, 투사체 속도 +20%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'damageMul', op: 'add', value: 0.20 }, { stat: 'projectileSpeedMul', op: 'add', value: 0.20 }] },
+      { level: 3, description: '공격력 +30%, 투사체 속도 +30%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'damageMul', op: 'add', value: 0.30 }, { stat: 'projectileSpeedMul', op: 'add', value: 0.30 }] },
+      { level: 4, description: '공격력 +40%, 투사체 속도 +40%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'damageMul', op: 'add', value: 0.40 }, { stat: 'projectileSpeedMul', op: 'add', value: 0.40 }] },
+      { level: 5, description: '무신 강림: 공격력 +50%, 투사체 속도 +50%', damageCoeff: 0, cooldown: 0, projectileCount: 0, areaRadius: 0, pierceCount: 0, duration: 0, knockbackForce: 0, statModifiers: [{ stat: 'damageMul', op: 'add', value: 0.50 }, { stat: 'projectileSpeedMul', op: 'add', value: 0.50 }] },
+    ],
+  },
 ];
 
 // =========================================================================
-// 3. 🌟 각성(진화) 스킬 12종 (만렙 Lv.5 + 짝꿍 패시브 보유 시 상자 획득)
+// 3. 🌟 각성(진화) 스킬 18종 (만렙 Lv.5 + 짝꿍 패시브 보유 시 상자 획득)
 // =========================================================================
 export const AWAKENED_SKILLS: SkillData[] = [
   {
@@ -592,7 +787,7 @@ export const AWAKENED_SKILLS: SkillData[] = [
     targeting: 'nearest',
     behavior: 'chain',
     evolvesFrom: 'storm_chain',
-    requiredPassiveId: 'pas_cooldown',
+    requiredPassiveId: 'pas_thunder_wrath',
     maxLevel: 1,
     levels: [
       {
@@ -785,6 +980,162 @@ export const AWAKENED_SKILLS: SkillData[] = [
         pierceCount: 999,
         duration: 7.0,
         knockbackForce: 0,
+      },
+    ],
+  },
+  {
+    id: 'awakened_thunder',
+    name: '⚡ 천벌: 뇌제 강림',
+    icon: 'assets/pixel_vfx/skills/vfx_storm_ult.png',
+    category: 'awakened',
+    isNecroSignature: false,
+    targeting: 'random',
+    behavior: 'instant_strike',
+    evolvesFrom: 'storm_thunder',
+    requiredPassiveId: 'pas_thunder_wrath',
+    maxLevel: 1,
+    levels: [
+      {
+        level: 1,
+        description: '초거대 신벌의 낙뢰 6연발이 전장을 강타! 100% 감전 및 1.5초 기절',
+        damageCoeff: 6.8,
+        cooldown: 1.4,
+        projectileCount: 6,
+        areaRadius: 150,
+        pierceCount: 999,
+        duration: 0.7,
+        knockbackForce: 15,
+        statusEffect: { type: 'stun', chance: 1.0, duration: 1.5 },
+      },
+    ],
+  },
+  {
+    id: 'awakened_snowball',
+    name: '❄️ 영겁의 빙하탄',
+    icon: 'assets/pixel_vfx/skills/vfx_cryo_5.png',
+    category: 'awakened',
+    isNecroSignature: false,
+    targeting: 'nearest',
+    behavior: 'straight',
+    evolvesFrom: 'cryo_snowball',
+    requiredPassiveId: 'pas_cooldown',
+    maxLevel: 1,
+    levels: [
+      {
+        level: 1,
+        description: '8갈래 무한 관통 극한 빙하탄 난사! 피격 시 2.5초 완전 빙결',
+        damageCoeff: 4.5,
+        cooldown: 0.75,
+        projectileCount: 8,
+        areaRadius: 42,
+        pierceCount: 999,
+        duration: 2.5,
+        knockbackForce: 18,
+        statusEffect: { type: 'freeze', chance: 1.0, duration: 2.5 },
+      },
+    ],
+  },
+  {
+    id: 'awakened_fireball',
+    name: '☄️ 메테오 스트라이크',
+    icon: 'assets/pixel_vfx/skills/vfx_mk_5.png',
+    category: 'awakened',
+    isNecroSignature: false,
+    targeting: 'nearest',
+    behavior: 'straight',
+    evolvesFrom: 'fire_ball',
+    requiredPassiveId: 'pas_fire_staff',
+    maxLevel: 1,
+    levels: [
+      {
+        level: 1,
+        description: '거대 운석 화염구 5연발! 적중 시 초대형 연쇄 폭발 및 4초 화상 지옥',
+        damageCoeff: 5.5,
+        cooldown: 1.0,
+        projectileCount: 5,
+        areaRadius: 120,
+        pierceCount: 6,
+        duration: 2.2,
+        knockbackForce: 22,
+        statusEffect: { type: 'bleed', chance: 1.0, duration: 4.0, value: 0.6 },
+      },
+    ],
+  },
+  {
+    id: 'awakened_firestorm',
+    name: '🔥 인페르노 헬파이어',
+    icon: 'assets/pixel_vfx/skills/vfx_mk_ult.png',
+    category: 'awakened',
+    isNecroSignature: false,
+    targeting: 'self_aoe',
+    behavior: 'ground_zone',
+    evolvesFrom: 'fire_storm',
+    requiredPassiveId: 'pas_fire_staff',
+    maxLevel: 1,
+    levels: [
+      {
+        level: 1,
+        description: '화면을 뒤덮는 초거대 지옥불 폭풍 상시 전개! 모든 적 초고속 소각 및 맹렬한 화상',
+        damageCoeff: 5.2,
+        cooldown: 2.0,
+        projectileCount: 1,
+        areaRadius: 240,
+        pierceCount: 999,
+        duration: 6.5,
+        knockbackForce: 0,
+        statusEffect: { type: 'bleed', chance: 1.0, duration: 4.0, value: 0.7 },
+      },
+    ],
+  },
+  {
+    id: 'awakened_spear_crimson',
+    name: '🔱 적호멸살창',
+    icon: 'assets/pixel_vfx/skills/vfx_guard_5.png',
+    category: 'awakened',
+    isNecroSignature: false,
+    targeting: 'nearest',
+    behavior: 'straight',
+    evolvesFrom: 'spear_crimson',
+    requiredPassiveId: 'pas_spear_spirit',
+    maxLevel: 1,
+    levels: [
+      {
+        level: 1,
+        description: '초고속 무한 관통 적호 창기 7연격! 적중 시 치명적 출혈 폭발',
+        damageCoeff: 5.2,
+        cooldown: 0.7,
+        projectileCount: 7,
+        areaRadius: 42,
+        pierceCount: 999,
+        duration: 2.2,
+        knockbackForce: 26,
+        statusEffect: { type: 'bleed', chance: 1.0, duration: 3.5, value: 0.8 },
+      },
+    ],
+  },
+  {
+    id: 'awakened_spear_heaven',
+    name: '🐉 패왕: 파천만리창',
+    icon: 'assets/pixel_vfx/skills/vfx_guard_ult.png',
+    category: 'awakened',
+    isNecroSignature: false,
+    targeting: 'nearest',
+    behavior: 'cone_slash',
+    evolvesFrom: 'spear_heaven',
+    requiredPassiveId: 'pas_spear_spirit',
+    maxLevel: 1,
+    levels: [
+      {
+        level: 1,
+        description: '전방 부채꼴로 9갈래 초거대 패왕 창기 폭풍 방출! 전방위 모든 적 1.5초 기절 및 일격 궤멸',
+        damageCoeff: 6.4,
+        cooldown: 1.05,
+        projectileCount: 9,
+        areaRadius: 150,
+        pierceCount: 999,
+        duration: 2.5,
+        knockbackForce: 38,
+        statusEffect: { type: 'stun', chance: 1.0, duration: 1.5 },
       },
     ],
   },

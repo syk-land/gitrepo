@@ -17,7 +17,7 @@ export class Projectile {
   public hitboxRadius: number = 20;
   public knockback: number;
   public behavior: ProjectileBehavior;
-  public statusEffect?: { type: 'slow' | 'freeze' | 'stun' | 'bleed' | 'pull'; chance: number; duration: number; value?: number };
+  public statusEffect?: { type: 'slow' | 'freeze' | 'stun' | 'bleed' | 'pull' | 'shock'; chance: number; duration: number; value?: number };
   public critRate: number = 0;
   public critDamage: number = 1.5;
   private hasStruck: boolean = false;
@@ -47,7 +47,7 @@ export class Projectile {
     dirX: number = 1,
     dirY: number = 0,
     speed: number = 340,
-    statusEffect?: { type: 'slow' | 'freeze' | 'stun' | 'bleed' | 'pull'; chance: number; duration: number; value?: number },
+    statusEffect?: { type: 'slow' | 'freeze' | 'stun' | 'bleed' | 'pull' | 'shock'; chance: number; duration: number; value?: number },
     orbitCaster?: ISkillCaster,
     orbitOffset: number = 0,
     skillId: string = '',
@@ -264,6 +264,7 @@ export class Projectile {
       }
 
       // [극한의 심장] 패시브 효과: 서리 동결 오라 (레벨당 20%~70% 확률로 적 1.2~2.0초 완전 빙결)
+      // [뇌신의 분노] 패시브 효과: 감전 (받는 데미지 증가 + 30% 슬로우)
       const battlePlayer = (this.scene as any)?.player;
       if (battlePlayer && battlePlayer.passiveSkills) {
         const frostHeartLv = battlePlayer.passiveSkills.get('pas_frost_heart') ?? 0;
@@ -273,6 +274,39 @@ export class Projectile {
             enemy.applyStatus('freeze', 1.0 + frostHeartLv * 0.2);
           }
         }
+        const thunderWrathLv = battlePlayer.passiveSkills.get('pas_thunder_wrath') ?? 0;
+        if (thunderWrathLv > 0) {
+          const shockChance = 0.20 + thunderWrathLv * 0.12; // Lv.1: 32% ~ Lv.5: 80%
+          if (Math.random() <= shockChance) {
+            enemy.applyStatus('shock', 2.5, 0.15 + thunderWrathLv * 0.10);
+          }
+        }
+      }
+
+      // [파이어볼 / 메테오 스트라이크] 명중 시 화염 폭발 광역 피해
+      if ((this.skillId === 'fire_ball' || this.skillId === 'awakened_fireball') && this.scene) {
+        const expRadius = Math.max(45, this.areaRadius);
+        const splashDmg = Math.round(hitDmg * 0.75);
+        const splashTargets = grid.queryRadius(enemy.x, enemy.y, expRadius);
+        for (const st of splashTargets) {
+          if (!st.active || st === enemy) continue;
+          const sdx = st.x - enemy.x;
+          const sdy = st.y - enemy.y;
+          if (sdx * sdx + sdy * sdy <= (expRadius + st.radius) ** 2) {
+            st.takeDamage(splashDmg, 0, 0);
+            if (typeof (this.scene as any).showDamageText === 'function') {
+              (this.scene as any).showDamageText(st.x, st.y - 10, `${splashDmg}`, 0xff7722);
+            }
+          }
+        }
+        const fireRing = this.scene.add.circle(enemy.x, enemy.y, expRadius * 0.55, 0xff5500, 0.55).setDepth(24);
+        this.scene.tweens.add({
+          targets: fireRing,
+          scale: 1.9,
+          alpha: 0,
+          duration: 220,
+          onComplete: () => fireRing.destroy(),
+        });
       }
 
       this.pierceLeft--;
@@ -361,6 +395,13 @@ export class Projectile {
           const freezeChance = 0.08 + frostHeartLv * 0.12;
           if (Math.random() <= freezeChance) {
             nextTarget.applyStatus('freeze', 1.0 + frostHeartLv * 0.2);
+          }
+        }
+        const thunderWrathLv = battlePlayer.passiveSkills.get('pas_thunder_wrath') ?? 0;
+        if (thunderWrathLv > 0) {
+          const shockChance = 0.20 + thunderWrathLv * 0.12;
+          if (Math.random() <= shockChance) {
+            nextTarget.applyStatus('shock', 2.5, 0.15 + thunderWrathLv * 0.10);
           }
         }
       }

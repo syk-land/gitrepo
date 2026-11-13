@@ -28,6 +28,8 @@ export class Enemy implements SpatialEntity {
   public bleedTimer: number = 0;
   public bleedDps: number = 0;
   public bleedTickTimer: number = 0;
+  public shockTimer: number = 0;
+  public shockAmp: number = 0;
 
   public iceGraphics?: Phaser.GameObjects.Graphics;
   public onKilled?: (enemy: Enemy) => void;
@@ -103,7 +105,8 @@ export class Enemy implements SpatialEntity {
       }
     }
 
-    this.hp -= amount;
+    const effectiveAmount = this.shockTimer > 0 ? Math.round(amount * (1 + this.shockAmp)) : amount;
+    this.hp -= effectiveAmount;
 
     // 빙결 상태에서는 넉백 면제! (얼어붙은 얼음 조각상처럼 제자리에 완전 고정)
     if (this.freezeTimer <= 0 && (knockbackDx !== 0 || knockbackDy !== 0)) {
@@ -145,7 +148,7 @@ export class Enemy implements SpatialEntity {
     return false;
   }
 
-  public applyStatus(type: 'slow' | 'freeze' | 'stun' | 'bleed' | 'pull', duration: number, value: number = 0.4): void {
+  public applyStatus(type: 'slow' | 'freeze' | 'stun' | 'bleed' | 'pull' | 'shock', duration: number, value: number = 0.4): void {
     if (!this.active) return;
     if (type === 'freeze') {
       const wasFrozen = this.freezeTimer > 0;
@@ -183,6 +186,18 @@ export class Enemy implements SpatialEntity {
       // 흡인 영역 내부: 이동속도 50% 둔화 적용
       this.slowTimer = Math.max(this.slowTimer, duration);
       this.slowRatio = Math.max(this.slowRatio, 0.5);
+    } else if (type === 'shock') {
+      const wasShocked = this.shockTimer > 0;
+      this.shockTimer = Math.max(this.shockTimer, duration);
+      this.shockAmp = Math.max(this.shockAmp, value);
+      this.slowTimer = Math.max(this.slowTimer, duration);
+      this.slowRatio = Math.max(this.slowRatio, 0.30);
+      if (this.freezeTimer <= 0 && this.stunTimer <= 0) {
+        this.sprite.setTint(0xaa88ff);
+      }
+      if (!wasShocked && typeof (this.scene as any).showDamageText === 'function') {
+        (this.scene as any).showDamageText(this.x, this.y - 20, '⚡ 감전!', 0xbb88ff, true);
+      }
     }
   }
 
@@ -285,6 +300,14 @@ export class Enemy implements SpatialEntity {
           this.onKilled(this);
         }
         return;
+      }
+    }
+
+    // 감전 타이머 갱신
+    if (this.shockTimer > 0) {
+      this.shockTimer -= dt;
+      if (this.shockTimer <= 0) {
+        this.shockAmp = 0;
       }
     }
 
