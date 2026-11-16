@@ -11,7 +11,8 @@
 | **라이브 게임 (Firebase)** | https://project-necro-54deb.web.app/ | 메인 게임 (Phaser 3) |
 | **에셋 비교 & 도감 갤러리** | https://project-necro-54deb.web.app/gallery/ | 구버전 vs 신규 에셋 비교 · 10개 계열 · 14지역 |
 | **Firebase Console** | https://console.firebase.google.com/project/project-necro-54deb/overview | 호스팅 및 프로젝트 관리 |
-| **GitHub 저장소** | https://github.com/syk-genon/gitrepo | 기본 브랜치: `main` |
+| **GitHub 업스트림 (`origin`)** | https://github.com/syk-genon/gitrepo | 기본 브랜치: `main` (원본 저장소) |
+| **GitHub 푸시 저장소 (`syk-land`)** | https://github.com/syk-land/gitrepo | 기본 브랜치: `main` (현재 세션 푸시용 포크) |
 
 ---
 
@@ -31,7 +32,9 @@
 | 항목 | 경로 / 명령어 |
 | :--- | :--- |
 | **프로젝트 루트** | `/home/antigravity/syk-genon/gitrepo/necro-survivors` |
-| **Git 원격 저장소** | `origin` ➔ `https://github.com/syk-genon/gitrepo.git` |
+| **Git 원격 (`origin` / 업스트림)** | `https://github.com/syk-genon/gitrepo.git` |
+| **Git 원격 (`syk-land` / 푸시용)** | `https://github.com/syk-land/gitrepo.git` |
+| **Git 푸시 명령어** | `git push syk-land main` |
 | **Firebase CLI** | `/home/antigravity/.local/bin/firebase` |
 | **개발 서버 실행** | `npm run dev` |
 | **프로덕션 빌드** | `npm run build` (`dist/` 생성) |
