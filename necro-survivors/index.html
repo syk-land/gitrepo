@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>목적을 잃지 않는 사령군주 : 서바이버즈 (2D 뱀서류 RPG)</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/NeoDunggeunmo.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+      }
+      html, body {
+        width: 100%;
+        height: 100%;
+        background-color: #0c0908;
+        background-image: radial-gradient(circle at 50% 20%, #201712 0%, #0c0908 100%);
+        color: #f5ede2;
+        font-family: 'NeoDunggeunmo', 'Pretendard', monospace, sans-serif;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      #app {
+        width: 100%;
+        height: 100%;
+        max-width: 540px;
+        max-height: 960px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        box-shadow: 0 0 35px rgba(0, 0, 0, 0.85);
+      }
+      canvas {
+        display: block;
+        /* 화면 축소 시 텍스트 및 UI가 픽셀 누락으로 깨지는 현상을 방지 (부드러운 축소 보간) */
+        image-rendering: auto !important;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
