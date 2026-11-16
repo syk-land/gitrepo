@@ -432,11 +432,62 @@
         </div>
       `).join('');
 
+      const heroHtml = `
+        <div class="compare-card">
+          <div class="compare-title">
+            <span>사령군주 최미남 (Hero)</span>
+            <span class="compare-sub">16비트 정통 도트 리마스터</span>
+          </div>
+          <div class="compare-boxes">
+            <div class="compare-side old">
+              <span class="badge-old">구버전 (벡터)</span>
+              <img class="compare-img" src="legacy/agents/agent_male_nemesis.png" alt="구버전 영웅" />
+            </div>
+            <div class="compare-arrow">➔</div>
+            <div class="compare-side new">
+              <span class="badge-new">16비트 도트 (운영중)</span>
+              <img class="compare-img" src="../assets/agents/agent_male_nemesis.png" alt="신규 영웅" />
+            </div>
+          </div>
+        </div>
+      `;
+
+      const bgHtml = (D.regions || []).slice(0, 14).map((r, i) => {
+        const idx = i + 1;
+        return `
+          <div class="compare-card">
+            <div class="compare-title">
+              <span>${idx}지역 · ${r.name}</span>
+              <span class="compare-sub">전투 &amp; 거점 배경</span>
+            </div>
+            <div class="compare-boxes">
+              <div class="compare-side old">
+                <span class="badge-old">구버전</span>
+                <div class="vfx-row">
+                  <img style="width:78px;height:44px;" src="legacy/ui/regions/battle_bg_${idx}.png" alt="구 전투배경" />
+                  <img style="width:78px;height:44px;" src="legacy/ui/regions/town_bg_${idx}.png" alt="구 거점배경" />
+                </div>
+              </div>
+              <div class="compare-arrow">➔</div>
+              <div class="compare-side new">
+                <span class="badge-new">16비트 리마스터</span>
+                <div class="vfx-row">
+                  <img style="width:78px;height:44px;" src="../assets/ui/regions/battle_bg_${idx}.png" alt="신 전투배경" />
+                  <img style="width:78px;height:44px;" src="../assets/ui/regions/town_bg_${idx}.png" alt="신 거점배경" />
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
       return `
-        <div class="section-title"><span>💀 소환수 군단: 구버전 vs 신규 제작본 비교</span></div>
-        <div class="compare-grid">${minionHtml}</div>
+        <div class="section-title"><span>🧙‍♂️ 영웅 &amp; 💀 소환수 군단: 구버전 vs 신규 16비트 도트 비교</span></div>
+        <div class="compare-grid">${heroHtml}${minionHtml}</div>
         <div class="section-title"><span>⚔️ 스킬 아이콘 &amp; 인게임 VFX: 구버전 vs 신규 제작본 비교</span></div>
         <div class="compare-grid">${skillHtml}</div>
+        <div class="section-title"><span>🗺️ 1~14지역 전투 · 거점 배경: 구버전 vs 16비트 리마스터 비교</span></div>
+        <div class="compare-grid">${bgHtml}</div>
       `;
     }
 
