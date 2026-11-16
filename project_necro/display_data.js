@@ -8,7 +8,7 @@ const CLASSES_DATA = {
         id: "necro",
         name: "💀 네크로맨서",
         model: "최미남 (사령군주)",
-        sprite: "assets/agents/agent_male_nemesis.png?v=2",
+        sprite: "assets/agents/hero_choiminam_combat.png?v=3",
         mainStat: "INT (마력)",
         color: "#00ffaa",
         desc: "적 처치 시 해골 군단 자동 소환 및 시체 폭발. 빙결 마법과 사령술의 결합.",
