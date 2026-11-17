@@ -1,23 +1,23 @@
 import Phaser from 'phaser';
 
 export interface HanokFrameOptions {
-  /** 내부 한지-다크 배경 색상 (기본: 0x1a130e) */
+  /** 내부 한지-다크 배경 색상 (기본: 0x1b140f) */
   bgColor?: number;
   /** 내부 배경 투명도 (기본: 0.94) */
   bgAlpha?: number;
-  /** 외곽 나무 테두리 강조색 (기본: 0x7c4f2b) */
+  /** 목재 문틀 기본 색상 (기본: 0x633a1e) */
   woodColor?: number;
-  /** 모서리 장석/내부 포인트 테두리색 (기본: 0xd4a338) */
+  /** 놋쇠 장석/강조 색상 (기본: 0xd4a338) */
   accentColor?: number;
-  /** 모서리 라운딩 반경 (기본: 6) */
+  /** 모서리 라운딩 반경 (기본: 3) */
   radius?: number;
   /** 창살(격자) 장식 표시 여부 (기본: true) */
   showLattice?: boolean;
 }
 
 /**
- * 한옥 나무 창호(창살 + 한지 + 장석) 스타일의 UI 프레임 Graphics를 생성해 반환합니다.
- * 어떠한 크기의 메뉴/모달/카드에도 픽셀 깨짐 없이 깔끔한 전통 창호 느낌을 입힙니다.
+ * 실제 한옥 나무 문틀(문설주·상하인방 사개맞춤·띠살 창살·놋쇠 감잡이 장석) 스타일의
+ * UI 프레임 Graphics를 생성해 반환합니다.
  */
 export function drawHanokFrame(
   scene: Phaser.Scene,
@@ -28,80 +28,124 @@ export function drawHanokFrame(
   options: HanokFrameOptions = {}
 ): Phaser.GameObjects.Graphics {
   const {
-    bgColor = 0x1a130e,
+    bgColor = 0x1b140f,
     bgAlpha = 0.94,
-    woodColor = 0x7a4b2a,
+    woodColor = 0x633a1e,
     accentColor = 0xd4a338,
-    radius = 6,
+    radius = 3,
     showLattice = true,
   } = options;
 
   const g = scene.add.graphics();
+  const frameT = Math.min(11, Math.max(7, Math.floor(Math.min(w, h) * 0.06)));
+  const ext = 4; // 사개맞춤(상하인방이 문설주 바깥으로 살짝 돌출되는 한옥 문틀 결구)
 
-  // 1. 어두운 바깥 나무 그림자/외곽선
-  g.fillStyle(0x0c0806, 0.9);
-  g.fillRoundedRect(x - 3, y - 3, w + 6, h + 6, radius + 2);
+  // 1. 문틀 전체 드롭 섀도우
+  g.fillStyle(0x090503, 0.85);
+  g.fillRoundedRect(x - ext - 2, y - 2, w + ext * 2 + 4, h + 6, radius + 2);
 
-  // 2. 따뜻한 한지-다크 배경 채우기
+  // 2. 내부 한지-다크 배경
   g.fillStyle(bgColor, bgAlpha);
-  g.fillRoundedRect(x, y, w, h, radius);
+  g.fillRect(x + frameT - 2, y + frameT - 2, w - (frameT - 2) * 2, h - (frameT - 2) * 2);
 
-  // 3. 은은한 창살 격자 무늬 (내용을 가리지 않도록 낮은 투명도)
+  // 3. 한옥 창호 창살(띠살 + 은은한 격자)
   if (showLattice && w >= 120 && h >= 80) {
-    const pad = 12;
-    const innerX = x + pad;
-    const innerY = y + pad;
-    const innerW = w - pad * 2;
-    const innerH = h - pad * 2;
+    const innerX = x + frameT;
+    const innerY = y + frameT;
+    const innerW = w - frameT * 2;
+    const innerH = h - frameT * 2;
 
-    // 얇은 한옥 창살 세로/가로선
-    g.lineStyle(1, woodColor, 0.22);
-    const cols = Math.max(2, Math.min(6, Math.floor(innerW / 90)));
-    const rows = Math.max(2, Math.min(5, Math.floor(innerH / 90)));
-
+    // 중앙 은은한 창살 격자 (텍스트 가독성을 위해 낮은 투명도 유지)
+    g.lineStyle(1.5, woodColor, 0.18);
+    const cols = Math.max(3, Math.min(8, Math.floor(innerW / 76)));
+    const rows = Math.max(2, Math.min(6, Math.floor(innerH / 76)));
     for (let i = 1; i < cols; i++) {
       const lx = innerX + (innerW * i) / cols;
-      g.lineBetween(lx, y + 6, lx, y + h - 6);
+      g.lineBetween(lx, innerY, lx, innerY + innerH);
     }
     for (let j = 1; j < rows; j++) {
       const ly = innerY + (innerH * j) / rows;
-      g.lineBetween(x + 6, ly, x + w - 6, ly);
+      g.lineBetween(innerX, ly, innerX + innerW, ly);
     }
 
-    // 상/하단 전통 띠살(완자창) 포인트 라인
-    g.lineStyle(1.5, woodColor, 0.55);
-    g.strokeRect(x + 8, y + 8, w - 16, h - 16);
+    // 상/하단 띠살 창호 장식대 (선명한 문틀 디테일)
+    const bandH = Math.min(12, Math.floor(innerH * 0.09));
+    if (bandH >= 6) {
+      g.lineStyle(1.5, woodColor, 0.55);
+      // 상단 띠살 가로줄 & 세로살
+      g.lineBetween(innerX, innerY + bandH, innerX + innerW, innerY + bandH);
+      // 하단 띠살 가로줄 & 세로살
+      g.lineBetween(innerX, innerY + innerH - bandH, innerX + innerW, innerY + innerH - bandH);
+
+      const subCols = Math.max(6, Math.floor(innerW / 32));
+      for (let i = 1; i < subCols; i++) {
+        const sx = innerX + (innerW * i) / subCols;
+        g.lineBetween(sx, innerY, sx, innerY + bandH);
+        g.lineBetween(sx, innerY + innerH - bandH, sx, innerY + innerH);
+      }
+    }
   }
 
-  // 4. 한옥 나무 외곽 프레임 (이중 목재 테두리)
-  g.lineStyle(4, 0x3b2212, 1);
-  g.strokeRoundedRect(x, y, w, h, radius);
+  // 4. 한옥 나무 문틀 본체 (좌/우 문설주 + 상/하 인방)
+  const woodDark = 0x2a160a;
+  const woodHighlight = 0x8f5a34;
 
-  g.lineStyle(2, woodColor, 1);
-  g.strokeRoundedRect(x + 1, y + 1, w - 2, h - 2, Math.max(2, radius - 1));
+  // 좌·우 세로 문설주
+  g.fillStyle(woodColor, 1);
+  g.fillRect(x, y, frameT, h);
+  g.fillRect(x + w - frameT, y, frameT, h);
 
-  // 5. 네 모서리 전통 놋쇠(금속) 장석 ㄱ자 장식
-  const bracket = Math.min(14, Math.floor(Math.min(w, h) * 0.16));
-  g.lineStyle(2, accentColor, 0.9);
+  // 상·하 가로 인방 (양끝 사개맞춤 돌출)
+  g.fillStyle(woodColor, 1);
+  g.fillRoundedRect(x - ext, y, w + ext * 2, frameT, 2);
+  g.fillRoundedRect(x - ext, y + h - frameT, w + ext * 2, frameT, 2);
 
-  // 좌상
-  g.lineBetween(x + 4, y + 4 + bracket, x + 4, y + 4);
-  g.lineBetween(x + 4, y + 4, x + 4 + bracket, y + 4);
-  // 우상
-  g.lineBetween(x + w - 4 - bracket, y + 4, x + w - 4, y + 4);
-  g.lineBetween(x + w - 4, y + 4, x + w - 4, y + 4 + bracket);
-  // 좌하
-  g.lineBetween(x + 4, y + h - 4 - bracket, x + 4, y + h - 4);
-  g.lineBetween(x + 4, y + h - 4, x + 4 + bracket, y + h - 4);
-  // 우하
-  g.lineBetween(x + w - 4 - bracket, y + h - 4, x + w - 4, y + h - 4);
-  g.lineBetween(x + w - 4, y + h - 4 - bracket, x + w - 4, y + h - 4);
+  // 목재 입체감 (바깥 짙은 먹선 + 안쪽 밝은 나뭇결 하이라이트 + 안쪽 깊은 그림자)
+  g.lineStyle(2, woodDark, 1);
+  g.strokeRect(x, y, w, h);
+  g.strokeRect(x + frameT, y + frameT, w - frameT * 2, h - frameT * 2);
+
+  // 상단·좌측 햇빛 하이라이트 라인
+  g.lineStyle(1.5, woodHighlight, 0.85);
+  g.lineBetween(x - ext + 2, y + 2, x + w + ext - 2, y + 2);
+  g.lineBetween(x + 2, y + frameT, x + 2, y + h - frameT);
+  // 하단·안쪽 턱 하이라이트
+  g.lineBetween(x + frameT, y + h - frameT + 2, x + w - frameT, y + h - frameT + 2);
+  g.lineBetween(x + w - frameT + 2, y + frameT, x + w - frameT + 2, y + h - frameT);
+
+  // 나뭇결 장식선
+  g.lineStyle(1, woodDark, 0.45);
+  g.lineBetween(x + 4, y + Math.floor(frameT * 0.55), x + w - 4, y + Math.floor(frameT * 0.55));
+  g.lineBetween(x + 4, y + h - Math.floor(frameT * 0.45), x + w - 4, y + h - Math.floor(frameT * 0.45));
+
+  // 5. 사방 모서리 놋쇠 감잡이 장석 + 광두정(못)
+  const plate = Math.min(18, Math.max(11, frameT + 6));
+  g.fillStyle(accentColor, 0.88);
+  // 좌상 / 우상 / 좌하 / 우하 L자 장석
+  const corners = [
+    [x, y, 1, 1],
+    [x + w, y, -1, 1],
+    [x, y + h, 1, -1],
+    [x + w, y + h, -1, -1],
+  ];
+  for (const [cx, cy, dx, dy] of corners) {
+    // 가로 장석편
+    g.fillRect(dx > 0 ? cx : cx - plate, dy > 0 ? cy : cy - frameT, plate, frameT);
+    // 세로 장석편
+    g.fillRect(dx > 0 ? cx : cx - frameT, dy > 0 ? cy : cy - plate, frameT, plate);
+    // 장석 테두리 & 놋쇠 못
+    g.lineStyle(1, woodDark, 0.9);
+    g.strokeRect(dx > 0 ? cx : cx - plate, dy > 0 ? cy : cy - frameT, plate, frameT);
+    g.fillStyle(0xfff0b3, 0.95);
+    g.fillCircle(cx + dx * (frameT * 0.5), cy + dy * (frameT * 0.5), 1.6);
+    g.fillStyle(accentColor, 0.88);
+  }
 
   return g;
 }
 
 /**
- * 카드/버튼용 컴팩트한 한옥 나무 창호 프레임 Graphics를 생성해 반환합니다.
+ * 카드/버튼용 컴팩트한 한옥 나무 문틀 프레임 Graphics를 생성해 반환합니다.
  */
 export function drawHanokCard(
   scene: Phaser.Scene,
@@ -115,9 +159,9 @@ export function drawHanokCard(
   return drawHanokFrame(scene, x, y, w, h, {
     bgColor,
     bgAlpha: 0.95,
-    woodColor: 0x6e4324,
+    woodColor: 0x633a1e,
     accentColor,
-    radius: 5,
+    radius: 3,
     showLattice: h >= 100,
   });
 }
