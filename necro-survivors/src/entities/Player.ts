@@ -31,6 +31,7 @@ export class Player implements ISkillCaster {
   public hpBarGraphics: Phaser.GameObjects.Graphics;
   public facingDir: Vector2 = { x: 1, y: 0 };
   private moveTimer: number = 0;
+  private currentBounceY: number = 0;
 
   // 피격 넉백 물리 가속도
   public knockbackVx: number = 0;
@@ -235,20 +236,23 @@ export class Player implements ISkillCaster {
 
       this.sprite.setFlipX(nx < 0);
 
-      // 이동 중 상하 바운스 및 좌우 기울기 모션 연출
-      this.moveTimer += dt;
-      const bounceY = Math.sin(this.moveTimer * 14) * 3;
-      this.sprite.setPosition(this.x, this.y + bounceY);
-      this.sprite.setRotation(Math.sin(this.moveTimer * 14) * 0.045);
+      // 이동 중 상하 바운스 및 좌우 기울기 모션 연출 (Enemy.ts와 동일한 경쾌한 호핑 바운스)
+      this.moveTimer += dt * 12;
+      this.currentBounceY = Math.abs(Math.sin(this.moveTimer)) * -4.0;
+      this.sprite.setPosition(this.x, this.y + this.currentBounceY);
+      this.sprite.setRotation(Math.sin(this.moveTimer) * 0.055);
       this.footShadow.setPosition(this.x, this.y + 28);
       this.necroAuraRing.setPosition(this.x, this.y + 28);
-      this.renderHpBar(bounceY);
+      this.renderHpBar(this.currentBounceY);
     } else {
-      this.sprite.setPosition(this.x, this.y);
+      // 대기 중에도 다른 캐릭터처럼 부드러운 숨쉬기/바운스 모션 유지
+      this.moveTimer += dt * 4.5;
+      this.currentBounceY = Math.abs(Math.sin(this.moveTimer)) * -2.2;
+      this.sprite.setPosition(this.x, this.y + this.currentBounceY);
       this.sprite.setRotation(0);
       this.footShadow.setPosition(this.x, this.y + 28);
       this.necroAuraRing.setPosition(this.x, this.y + 28);
-      this.renderHpBar(0);
+      this.renderHpBar(this.currentBounceY);
     }
   }
 
@@ -290,7 +294,7 @@ export class Player implements ISkillCaster {
       this.ultCooldown = Math.max(0, this.ultCooldown - dt);
     }
 
-    this.renderHpBar(0);
+    this.renderHpBar(this.currentBounceY);
   }
 
   public renderHpBar(bounceY: number = 0): void {
