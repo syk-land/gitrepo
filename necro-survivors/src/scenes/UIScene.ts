@@ -453,10 +453,11 @@ export class UIScene extends Phaser.Scene {
       const cardBox = drawHanokCard(this, width / 2 - 210, cardY - 65, 420, 140, 0x00ffaa, 0x18120e);
       this.modalContainer.add(cardBox);
 
-      // 스킬 아이콘
+      // 스킬 아이콘 (1티어는 작게 44x44, 2티어는 크게 64x64)
       if (this.textures.exists(skill.id)) {
+        const iconSz = skill.tier === 2 ? 64 : 44;
         const icon = this.add.image(width / 2 - 160, cardY + 5, skill.id);
-        icon.setDisplaySize(54, 54);
+        icon.setDisplaySize(iconSz, iconSz);
         this.modalContainer.add(icon);
       }
 
@@ -572,10 +573,11 @@ export class UIScene extends Phaser.Scene {
       const cardBox = drawHanokCard(this, width / 2 - 210, cardY - 65, 420, 140, choice.isNew ? 0x00ffaa : 0xd4a338, 0x18120e);
       this.modalContainer.add(cardBox);
 
-      // 스킬 아이콘
+      // 스킬 아이콘 (1티어는 작게 44x44, 2티어는 크게 64x64)
       if (!choice.isFallback) {
+        const iconSz = choice.skill.tier === 2 ? 64 : 44;
         const icon = this.add.image(width / 2 - 160, cardY + 5, choice.skill.id);
-        icon.setDisplaySize(54, 54);
+        icon.setDisplaySize(iconSz, iconSz);
         this.modalContainer.add(icon);
       }
 

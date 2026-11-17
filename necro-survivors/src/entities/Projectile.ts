@@ -89,24 +89,37 @@ export class Projectile {
       this.sprite.setDisplaySize(radius * 2, radius * 2);
       this.sprite.setRotation(Math.atan2(dirY, dirX));
     } else if (behavior === 'orbit') {
-      // 궤도 공전체는 회전도끼/뼈방패 스프라이트(48x48)에 맞춰 피격 반경 24px 부여
-      this.hitboxRadius = 24;
-      this.sprite.setDisplaySize(50, 50);
+      // 궤도 공전체: 1티어(홀리 아머 등)는 작게(42), 2티어(휠윈드 등)는 크게(58)
+      const isTier2Orbit = textureKey.includes('ber_whirlwind');
+      this.hitboxRadius = isTier2Orbit ? 28 : 21;
+      const orbitSz = isTier2Orbit ? 58 : 42;
+      this.sprite.setDisplaySize(orbitSz, orbitSz);
     } else if (behavior === 'instant_strike') {
       this.hitboxRadius = radius;
       this.sprite.setDisplaySize(radius * 2, radius * 2);
     } else {
-      // 직선 / 유도 / 투사체 형태별 비율 유지 (정사각 1:1 스프라이트 왜곡 방지)
-      this.hitboxRadius = 18;
+      // 직선 / 유도 / 투사체 형태별 비율 유지 (1티어는 작게, 2티어는 크게)
+      const isTier2Proj =
+        textureKey.includes('bone_storm') ||
+        textureKey.includes('lich_curse') ||
+        textureKey.includes('spear_heaven') ||
+        textureKey.includes('drone') ||
+        textureKey.includes('cryo_nova') ||
+        textureKey.includes('fire_storm');
+      this.hitboxRadius = isTier2Proj ? 22 : 16;
       const frame = this.sprite.frame;
       const isSquare = !frame || Math.abs(frame.width - frame.height) <= 4;
       if (isSquare) {
-        if (textureKey.includes('spear') || textureKey.includes('sniper')) {
-          this.sprite.setDisplaySize(44, 44);
-        } else if (textureKey.includes('arrow') || textureKey.includes('drone')) {
-          this.sprite.setDisplaySize(38, 38);
-        } else {
+        if (textureKey.includes('spear_heaven')) {
+          this.sprite.setDisplaySize(54, 54);
+        } else if (textureKey.includes('spear') || textureKey.includes('sniper')) {
           this.sprite.setDisplaySize(40, 40);
+        } else if (isTier2Proj) {
+          this.sprite.setDisplaySize(48, 48);
+        } else if (textureKey.includes('arrow')) {
+          this.sprite.setDisplaySize(34, 34);
+        } else {
+          this.sprite.setDisplaySize(36, 36);
         }
       } else if (textureKey.includes('spear')) {
         this.sprite.setDisplaySize(54, 27);
