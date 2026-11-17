@@ -28,16 +28,16 @@ export class ExpGem {
   }
 
   private getTextureForExp(exp: number): string {
-    if (exp >= 100) return 'gem_ruby';
-    if (exp >= 40) return 'gem_gold';
-    if (exp >= 20) return 'gem_jade';
-    return 'gem_cyan';
+    if (exp >= 25) return 'gem_ruby';  // 수문장/보스 (30+ EXP)
+    if (exp >= 10) return 'gem_gold';  // 정예 괴수 (15 EXP)
+    if (exp >= 3) return 'gem_jade';   // 3~6웨이브 일반 (3~4 EXP)
+    return 'gem_cyan';                 // 1~2웨이브 일반 (1~2 EXP)
   }
 
   private getColorForExp(exp: number): number {
-    if (exp >= 100) return 0xff2a6d; // 붉은 루비
-    if (exp >= 40) return 0xffd000;  // 황금 보석
-    if (exp >= 20) return 0x00ffaa;  // 비취색 보석
+    if (exp >= 25) return 0xff2a6d; // 붉은 루비
+    if (exp >= 10) return 0xffd000; // 황금 보석
+    if (exp >= 3) return 0x00ffaa;  // 비취색 보석
     return 0x00f0ff;                // 시안 청옥
   }
 
