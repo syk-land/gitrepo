@@ -289,7 +289,8 @@
     </div>
 
     <div class="tabs">
-      <button class="tab-btn active" data-tab="compare">🔄 구버전 vs 신규 에셋 비교</button>
+      <button class="tab-btn active" data-tab="chibi">🎀 치비×몽환 시안 (신규)</button>
+      <button class="tab-btn" data-tab="compare">🔄 구버전 vs 신규 에셋 비교</button>
       <button class="tab-btn" data-tab="branches">⚔️ 10개 스킬 계열 트리</button>
       <button class="tab-btn" data-tab="passives">💎 패시브 &amp; 각성 전체</button>
       <button class="tab-btn" data-tab="regions">🗺️ 14개 지역 &amp; 84종 괴수</button>
@@ -400,6 +401,77 @@
     document.getElementById('skillModal').onclick = (e) => {
       if (e.target.id === 'skillModal') document.getElementById('skillModal').classList.remove('open');
     };
+
+    function renderChibiPreview() {
+      const items = [
+        { name: '주인공: 사령군주 최미남', oldImg: '../assets/agents/agent_male_nemesis.png', newImg: 'chibi_preview/1_hero_chibi.png', note: '7등신 실사 ➔ 2등신 SD 치비' },
+        { name: '소환수: 해골 전사', oldImg: '../assets/summons/minion_skeleton_warrior.png', newImg: 'chibi_preview/2_minion_warrior_chibi.png', note: '5등신 해골 ➔ 2등신 꼬마 해골 기사' },
+        { name: '1지역 일반: 감염 쥐', oldImg: '../assets/monsters/m_1_1.png', newImg: 'chibi_preview/3_monster_rat_chibi.png', note: '리얼 괴수 ➔ 동글동글 귀여운 쥐' },
+        { name: '1지역 보스: 여왕 아라크네', oldImg: '../assets/monsters/m_1_boss.png', newImg: 'chibi_preview/4_boss_arachne_chibi.png', note: '무서운 거미 ➔ 왕관 쓴 꼬마 거미 여왕' },
+        { name: '스킬 시안: 파이어볼 (보완 예정)', oldImg: '../assets/skills/vfx/vfx_fire_ball.png', newImg: 'chibi_preview/5_skill_fireball_cute.png', note: '호박 모양 개선해 별빛/보석풍으로 수정 예정' },
+      ];
+      const spriteCards = items.map(it => `
+        <div class="compare-card">
+          <div class="compare-title">
+            <span>${it.name}</span>
+            <span class="compare-sub">${it.note}</span>
+          </div>
+          <div class="compare-boxes">
+            <div class="compare-side old">
+              <span class="badge-old">현재 운영중</span>
+              <img class="compare-img" src="${it.oldImg}" alt="현재" />
+            </div>
+            <div class="compare-arrow">➔</div>
+            <div class="compare-side new">
+              <span class="badge-new">🎀 SD 치비 시안</span>
+              <img class="compare-img" src="${it.newImg}" alt="치비 시안" />
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      const bgCards = `
+        <div class="compare-card">
+          <div class="compare-title">
+            <span>전투 무한 바닥 타일 (1지역)</span>
+            <span class="compare-sub">심플한 질감 + 몽환적 라벤더/인디고 톤</span>
+          </div>
+          <div class="compare-boxes">
+            <div class="compare-side old">
+              <span class="badge-old">현재 바닥 타일</span>
+              <img class="compare-img" style="width:96px;height:96px;" src="../assets/ui/tiles/battle_tile_1.png" alt="현재 타일" />
+            </div>
+            <div class="compare-arrow">➔</div>
+            <div class="compare-side new">
+              <span class="badge-new">🌙 심플 몽환 바닥</span>
+              <img class="compare-img" style="width:96px;height:96px;" src="chibi_preview/6_dreamy_battle_tile_1.png" alt="몽환 타일" />
+            </div>
+          </div>
+        </div>
+        <div class="compare-card">
+          <div class="compare-title">
+            <span>거점 배경 (1지역)</span>
+            <span class="compare-sub">복잡함 없이 은은한 별빛·달빛 야영지</span>
+          </div>
+          <div class="compare-boxes">
+            <div class="compare-side old">
+              <span class="badge-old">현재 거점 배경</span>
+              <img style="width:128px;height:72px;object-fit:cover;image-rendering:pixelated;" src="../assets/ui/regions/town_bg_1.png" alt="현재 거점" />
+            </div>
+            <div class="compare-arrow">➔</div>
+            <div class="compare-side new">
+              <span class="badge-new">🌙 심플 몽환 거점</span>
+              <img style="width:128px;height:72px;object-fit:cover;image-rendering:pixelated;" src="chibi_preview/7_dreamy_town_bg_1.png" alt="몽환 거점" />
+            </div>
+          </div>
+        </div>
+      `;
+
+      return `
+        <div class="section-title"><span>🎀 SD 치비(Chibi) × 🌙 심플 몽환 배경 시안 (7종 프리뷰)</span></div>
+        <div class="compare-grid">${spriteCards}${bgCards}</div>
+      `;
+    }
 
     function renderCompare() {
       const minionHtml = MINION_COMPARES.map(m => `
@@ -719,7 +791,7 @@
     }
 
     const panel = document.getElementById('contentPanel');
-    const renderers = { compare: renderCompare, branches: renderBranches, passives: renderPassives, regions: renderRegions, altar: renderAltar };
+    const renderers = { chibi: renderChibiPreview, compare: renderCompare, branches: renderBranches, passives: renderPassives, regions: renderRegions, altar: renderAltar };
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.onclick = () => {
@@ -729,7 +801,7 @@
       };
     });
 
-    panel.innerHTML = renderCompare();
+    panel.innerHTML = renderChibiPreview();
   </script>
 </body>
 </html>
