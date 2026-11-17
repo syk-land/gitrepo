@@ -6,6 +6,7 @@ import { SaveManager } from '../core/SaveManager';
 import { AdBillingAdapter } from '../systems/AdBillingAdapter';
 import { SkillData } from '../data/types';
 import { ACTIVE_SKILLS, PASSIVE_SKILLS, ALL_SKILLS_MAP } from '../data/skillsData';
+import { drawHanokFrame, drawHanokCard } from '../utils/HanokFrameBuilder';
 
 export class UIScene extends Phaser.Scene {
   private battleScene!: BattleScene;
@@ -449,11 +450,7 @@ export class UIScene extends Phaser.Scene {
 
     choices.forEach((skill, idx) => {
       const cardY = 220 + idx * 165;
-      const cardBox = this.add.graphics();
-      cardBox.fillStyle(0x18120e, 0.96);
-      cardBox.lineStyle(2, 0x00ffaa, 1);
-      cardBox.fillRoundedRect(width / 2 - 210, cardY - 65, 420, 140, 10);
-      cardBox.strokeRoundedRect(width / 2 - 210, cardY - 65, 420, 140, 10);
+      const cardBox = drawHanokCard(this, width / 2 - 210, cardY - 65, 420, 140, 0x00ffaa, 0x18120e);
       this.modalContainer.add(cardBox);
 
       // 스킬 아이콘
@@ -572,11 +569,7 @@ export class UIScene extends Phaser.Scene {
 
     choices.forEach((choice, idx) => {
       const cardY = 220 + idx * 165;
-      const cardBox = this.add.graphics();
-      cardBox.fillStyle(0x18120e, 0.95);
-      cardBox.lineStyle(2, choice.isNew ? 0x00ffaa : 0xd4a338, 1);
-      cardBox.fillRoundedRect(width / 2 - 210, cardY - 65, 420, 140, 10);
-      cardBox.strokeRoundedRect(width / 2 - 210, cardY - 65, 420, 140, 10);
+      const cardBox = drawHanokCard(this, width / 2 - 210, cardY - 65, 420, 140, choice.isNew ? 0x00ffaa : 0xd4a338, 0x18120e);
       this.modalContainer.add(cardBox);
 
       // 스킬 아이콘
@@ -698,11 +691,12 @@ export class UIScene extends Phaser.Scene {
     const dim = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.85).setInteractive();
     this.modalContainer.add(dim);
 
-    const box = this.add.graphics();
-    box.fillStyle(0x18120e, 0.98);
-    box.lineStyle(3, 0xffd000, 1);
-    box.fillRoundedRect(width / 2 - 200, height / 2 - 170, 400, 340, 12);
-    box.strokeRoundedRect(width / 2 - 200, height / 2 - 170, 400, 340, 12);
+    const box = drawHanokFrame(this, width / 2 - 200, height / 2 - 170, 400, 340, {
+      bgColor: 0x18120e,
+      bgAlpha: 0.97,
+      accentColor: 0xffd000,
+      radius: 8,
+    });
     this.modalContainer.add(box);
 
     const title = this.add.text(width / 2, height / 2 - 120, '🌟 수문장 보물상자 개봉!', {
@@ -834,11 +828,12 @@ export class UIScene extends Phaser.Scene {
 
     if (choices.length === 0) {
       // 모든 패시브 각성재료가 이미 만렙이거나 꽉 찬 경우의 대체 보상
-      const emptyBox = this.add.graphics();
-      emptyBox.fillStyle(0x231b15, 0.95);
-      emptyBox.lineStyle(2, 0xffd000, 1);
-      emptyBox.fillRoundedRect(width / 2 - 200, height / 2 - 80, 400, 160, 10);
-      emptyBox.strokeRoundedRect(width / 2 - 200, height / 2 - 80, 400, 160, 10);
+      const emptyBox = drawHanokFrame(this, width / 2 - 200, height / 2 - 80, 400, 160, {
+        bgColor: 0x231b15,
+        bgAlpha: 0.96,
+        accentColor: 0xffd000,
+        radius: 8,
+      });
       this.modalContainer.add(emptyBox);
 
       const emptyText = this.add.text(width / 2, height / 2 - 30, '✨ 모든 각성재료가 최대치에 도달했습니다!\n\n💰 보상: +3,000 마력석 & 체력 완전 회복', {
@@ -894,12 +889,7 @@ export class UIScene extends Phaser.Scene {
         .map((aId) => ALL_SKILLS_MAP.get(aId))
         .find((a) => a && a.requiredPassiveId === skill.id);
 
-      const cardBox = this.add.graphics();
-      // 양피지 고서 느낌의 스타일
-      cardBox.fillStyle(0x1e1712, 0.96);
-      cardBox.lineStyle(2, matchingActive ? 0xffd000 : 0x00f0ff, 1);
-      cardBox.fillRoundedRect(width / 2 - 215, cardY - cardHeight / 2, 430, cardHeight, 8);
-      cardBox.strokeRoundedRect(width / 2 - 215, cardY - cardHeight / 2, 430, cardHeight, 8);
+      const cardBox = drawHanokCard(this, width / 2 - 215, cardY - cardHeight / 2, 430, cardHeight, matchingActive ? 0xffd000 : 0x00f0ff, 0x1e1712);
       this.modalContainer.add(cardBox);
 
       // 패시브 아이콘
@@ -1004,11 +994,12 @@ export class UIScene extends Phaser.Scene {
     const dim = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.88).setInteractive();
     this.modalContainer.add(dim);
 
-    const box = this.add.graphics();
-    box.fillStyle(0x18120e, 0.98);
-    box.lineStyle(3, isVictory ? 0x00ffaa : 0xff3344, 1);
-    box.fillRoundedRect(width / 2 - 200, height / 2 - 210, 400, 420, 12);
-    box.strokeRoundedRect(width / 2 - 200, height / 2 - 210, 400, 420, 12);
+    const box = drawHanokFrame(this, width / 2 - 200, height / 2 - 210, 400, 420, {
+      bgColor: 0x18120e,
+      bgAlpha: 0.97,
+      accentColor: isVictory ? 0x00ffaa : 0xff3344,
+      radius: 8,
+    });
     this.modalContainer.add(box);
 
     const title = this.add.text(width / 2, height / 2 - 160, isVictory ? '🏆 차원문 평정 완료!' : '💀 사령군주 쓰러짐...', {

@@ -3,6 +3,7 @@ import { REGIONS_DATA } from '../data/regionsData';
 import { SaveManager } from '../core/SaveManager';
 import { SoundEngine } from '../core/SoundEngine';
 import { COMBAT_TRAITS, SURVIVAL_TRAITS, getAltarUpgradeCost, formatAltarBonus } from '../data/altarData';
+import { drawHanokFrame } from '../utils/HanokFrameBuilder';
 
 export class HubScene extends Phaser.Scene {
   private selectedRegionId: number = 1;
@@ -77,12 +78,13 @@ export class HubScene extends Phaser.Scene {
 
     const cardY = height / 2 - 40;
 
-    // 게이트 프레임 카드
-    const box = this.add.graphics();
-    box.fillStyle(0x18120e, 0.92);
-    box.lineStyle(3, isUnlocked ? 0xd4a338 : 0x555555, 1);
-    box.fillRoundedRect(width / 2 - 220, cardY - 180, 440, 360, 12);
-    box.strokeRoundedRect(width / 2 - 220, cardY - 180, 440, 360, 12);
+    // 게이트 프레임 카드 (한옥 나무 창호 프레임)
+    const box = drawHanokFrame(this, width / 2 - 220, cardY - 180, 440, 360, {
+      bgColor: 0x18120e,
+      bgAlpha: 0.92,
+      accentColor: isUnlocked ? 0xd4a338 : 0x666666,
+      radius: 8,
+    });
     this.regionCardContainer.add(box);
 
     // 게이트 아이콘
@@ -225,12 +227,13 @@ export class HubScene extends Phaser.Scene {
     const dim = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.75).setInteractive();
     this.altarModalContainer.add(dim);
 
-    // 제단 패널
-    const panel = this.add.graphics();
-    panel.fillStyle(0x18120e, 0.98);
-    panel.lineStyle(2, 0xd4a338, 1);
-    panel.fillRoundedRect(20, 42, width - 40, height - 84, 12);
-    panel.strokeRoundedRect(20, 42, width - 40, height - 84, 12);
+    // 제단 패널 (한옥 나무 창호 프레임)
+    const panel = drawHanokFrame(this, 20, 42, width - 40, height - 84, {
+      bgColor: 0x18120e,
+      bgAlpha: 0.96,
+      accentColor: 0xd4a338,
+      radius: 8,
+    });
     this.altarModalContainer.add(panel);
 
     const title = this.add.text(width / 2, 68, '⚱️ 영혼 각인의 제단 (영구 특성)', {
@@ -398,11 +401,12 @@ export class HubScene extends Phaser.Scene {
     const dim = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.75).setInteractive();
     popup.add(dim);
 
-    const box = this.add.graphics();
-    box.fillStyle(0x18120e, 0.98);
-    box.lineStyle(2, 0x00ffaa, 1);
-    box.fillRoundedRect(width / 2 - 180, height / 2 - 120, 360, 240, 10);
-    box.strokeRoundedRect(width / 2 - 180, height / 2 - 120, 360, 240, 10);
+    const box = drawHanokFrame(this, width / 2 - 180, height / 2 - 120, 360, 240, {
+      bgColor: 0x18120e,
+      bgAlpha: 0.97,
+      accentColor: 0x00ffaa,
+      radius: 8,
+    });
     popup.add(box);
 
     popup.add(this.add.text(width / 2, height / 2 - 80, '💀 사령 군단 원정 완료!', {

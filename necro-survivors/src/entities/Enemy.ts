@@ -68,21 +68,21 @@ export class Enemy implements SpatialEntity {
     this.isElite = isElite;
     this.onKilled = onKilled;
 
-    const shadowW = isBoss ? 68 : isNamed ? 44 : isElite ? 38 : 30;
-    const shadowH = isBoss ? 22 : isNamed ? 14 : isElite ? 12 : 10;
-    this.shadowArc = scene.add.ellipse(x, y + (isBoss ? 44 : isNamed ? 28 : 20), shadowW, shadowH, 0x000000, 0.42).setDepth(13);
+    const shadowW = isBoss ? 60 : isNamed ? 40 : isElite ? 34 : 26;
+    const shadowH = isBoss ? 20 : isNamed ? 13 : isElite ? 11 : 9;
+    this.shadowArc = scene.add.ellipse(x, y + (isBoss ? 38 : isNamed ? 25 : isElite ? 20 : 16), shadowW, shadowH, 0x000000, 0.42).setDepth(13);
 
     this.sprite = scene.add.sprite(x, y, textureKey);
-    // 표시 크기 조정
+    // 표시 크기 조정 (2등신 SD 치비 비율)
     if (isBoss) {
-      this.sprite.setDisplaySize(110, 110);
+      this.sprite.setDisplaySize(96, 96);
     } else if (isNamed) {
-      this.sprite.setDisplaySize(72, 72);
+      this.sprite.setDisplaySize(64, 64);
     } else if (isElite) {
-      this.sprite.setDisplaySize(62, 62);
+      this.sprite.setDisplaySize(52, 52);
       this.sprite.setTint(0xffd700);
     } else {
-      this.sprite.setDisplaySize(48, 48);
+      this.sprite.setDisplaySize(40, 40);
     }
     this.sprite.setDepth(15);
 
@@ -370,7 +370,7 @@ export class Enemy implements SpatialEntity {
 
     this.sprite.setPosition(this.x, this.y + bounceY);
     this.sprite.setRotation(wobbleRot);
-    this.shadowArc.setPosition(this.x, this.y + (this.isBoss ? 44 : this.isNamed ? 28 : 20));
+    this.shadowArc.setPosition(this.x, this.y + (this.isBoss ? 38 : this.isNamed ? 25 : this.isElite ? 20 : 16));
     this.renderHpBar();
   }
 
@@ -378,10 +378,10 @@ export class Enemy implements SpatialEntity {
     // 정예 / 수문장 / 보스 머리 위 체력바 실시간 렌더링
     if (this.hpBarGraphics && this.active) {
       const ratio = Math.max(0, this.hp / this.maxHp);
-      const barW = this.isBoss ? 70 : this.isNamed ? 52 : 42;
+      const barW = this.isBoss ? 64 : this.isNamed ? 46 : 36;
       const barH = 5;
       const barX = this.x - barW / 2;
-      const barY = this.y - (this.isBoss ? 55 : this.isNamed ? 40 : 34);
+      const barY = this.y - (this.isBoss ? 50 : this.isNamed ? 36 : 30);
 
       this.hpBarGraphics.clear();
       this.hpBarGraphics.fillStyle(0x0a0a0a, 0.75);

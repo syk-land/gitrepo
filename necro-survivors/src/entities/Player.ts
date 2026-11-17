@@ -48,11 +48,11 @@ export class Player implements ISkillCaster {
     this.maxHp = initialStats.maxHp;
     this.hp = this.maxHp;
 
-    this.footShadow = scene.add.ellipse(x, y + 28, 36, 12, 0x000000, 0.5).setDepth(23);
-    this.necroAuraRing = scene.add.ellipse(x, y + 28, 52, 18, 0x00ffaa, 0.14).setStrokeStyle(1.5, 0x00ffaa, 0.45).setDepth(24);
+    this.footShadow = scene.add.ellipse(x, y + 24, 30, 10, 0x000000, 0.5).setDepth(23);
+    this.necroAuraRing = scene.add.ellipse(x, y + 24, 44, 15, 0x00ffaa, 0.14).setStrokeStyle(1.5, 0x00ffaa, 0.45).setDepth(24);
 
     this.sprite = scene.add.sprite(x, y, 'hero_nemesis');
-    this.sprite.setDisplaySize(64, 64);
+    this.sprite.setDisplaySize(54, 54);
     this.sprite.setDepth(25);
 
     this.hpBarGraphics = scene.add.graphics();
@@ -241,8 +241,8 @@ export class Player implements ISkillCaster {
       this.currentBounceY = Math.abs(Math.sin(this.moveTimer)) * -4.0;
       this.sprite.setPosition(this.x, this.y + this.currentBounceY);
       this.sprite.setRotation(Math.sin(this.moveTimer) * 0.055);
-      this.footShadow.setPosition(this.x, this.y + 28);
-      this.necroAuraRing.setPosition(this.x, this.y + 28);
+      this.footShadow.setPosition(this.x, this.y + 24);
+      this.necroAuraRing.setPosition(this.x, this.y + 24);
       this.renderHpBar(this.currentBounceY);
     } else {
       // 대기 중에도 다른 캐릭터처럼 부드러운 숨쉬기/바운스 모션 유지
@@ -250,8 +250,8 @@ export class Player implements ISkillCaster {
       this.currentBounceY = Math.abs(Math.sin(this.moveTimer)) * -2.2;
       this.sprite.setPosition(this.x, this.y + this.currentBounceY);
       this.sprite.setRotation(0);
-      this.footShadow.setPosition(this.x, this.y + 28);
-      this.necroAuraRing.setPosition(this.x, this.y + 28);
+      this.footShadow.setPosition(this.x, this.y + 24);
+      this.necroAuraRing.setPosition(this.x, this.y + 24);
       this.renderHpBar(this.currentBounceY);
     }
   }
@@ -301,10 +301,10 @@ export class Player implements ISkillCaster {
     if (!this.hpBarGraphics || !this.sprite.active) return;
     this.hpBarGraphics.clear();
 
-    const barW = 46;
-    const barH = 6;
+    const barW = 42;
+    const barH = 5;
     const barX = this.x - barW / 2;
-    const barY = this.y + bounceY - 38;
+    const barY = this.y + bounceY - 34;
 
     // 바깥 어두운 배경 및 테두리
     this.hpBarGraphics.fillStyle(0x0c0908, 0.85);

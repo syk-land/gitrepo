@@ -47,9 +47,9 @@ export class MinionUnit implements ISkillCaster {
 
     this.sprite = scene.add.sprite(x, y, def.id);
     if (def.id === 'arthur') {
-      this.sprite.setDisplaySize(60, 60);
+      this.sprite.setDisplaySize(48, 48);
     } else {
-      this.sprite.setDisplaySize(44, 44);
+      this.sprite.setDisplaySize(36, 36);
     }
     this.sprite.setDepth(18);
 
