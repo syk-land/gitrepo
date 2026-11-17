@@ -66,6 +66,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.setGameSpeed(1.0);
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
 
@@ -235,11 +236,14 @@ export class BattleScene extends Phaser.Scene {
           knockback = 30;
         } else if (caster.def.id === 'drone') {
           texKey = 'vfx_minion_drone';
-          projSpeed = 520;
+          const isAwakenedDrone = this.player.activeSkills.has('awakened_drone');
           const droneSkillLv = this.player.activeSkills.get('psi_drone') ?? 1;
-          const droneCoeff = droneSkillLv >= 5 ? 2.6 : droneSkillLv >= 4 ? 2.0 : droneSkillLv >= 3 ? 1.6 : droneSkillLv >= 2 ? 1.3 : 1.0;
+          const droneCoeff = isAwakenedDrone
+            ? 4.5
+            : droneSkillLv >= 5 ? 2.6 : droneSkillLv >= 4 ? 2.0 : droneSkillLv >= 3 ? 1.6 : droneSkillLv >= 2 ? 1.3 : 1.0;
+          projSpeed = isAwakenedDrone ? 600 : 520;
           projDmg = Math.round(stats.damageMul * 36 * droneCoeff);
-          pierce = droneSkillLv >= 5 ? 5 : droneSkillLv >= 4 ? 3 : 1;
+          pierce = isAwakenedDrone ? 8 : droneSkillLv >= 5 ? 5 : droneSkillLv >= 4 ? 3 : 1;
           knockback = 20;
         }
 
@@ -271,10 +275,13 @@ export class BattleScene extends Phaser.Scene {
         continue;
       }
       p.update(dt, this.spatialGrid);
+      if (this.isPaused) return;
     }
 
     // 8. 경험치 보석 업데이트 & 수집
-    const pickupRad = this.player.getEffectiveStats().pickupRadius;
+    const effectiveStats = this.player.getEffectiveStats();
+    const pickupRad = effectiveStats.pickupRadius;
+    const goldMul = effectiveStats.goldMul;
     for (let i = this.expGems.length - 1; i >= 0; i--) {
       const gem = this.expGems[i];
       if (!gem.active) {
@@ -286,10 +293,11 @@ export class BattleScene extends Phaser.Scene {
       const collected = gem.update(dt, this.player.x, this.player.y, pickupRad);
       if (collected) {
         SoundEngine.getInstance().gemPickup();
-        this.earnedGold += gem.goldValue;
+        this.earnedGold += Math.round(gem.goldValue * goldMul);
         const leveledUp = this.player.addExp(gem.expValue);
         if (leveledUp) {
           this.triggerLevelUp();
+          return;
         }
       }
     }
@@ -303,6 +311,7 @@ export class BattleScene extends Phaser.Scene {
       const cdy = this.evolutionChest.y - this.player.y;
       if (cdx * cdx + cdy * cdy <= 36 * 36) {
         this.triggerChestReward();
+        if (this.isPaused) return;
       }
     }
 
@@ -323,7 +332,7 @@ export class BattleScene extends Phaser.Scene {
         drop.label.destroy();
         this.awakeningDrops.splice(i, 1);
         this.triggerAwakeningSelectorReward();
-        break;
+        return;
       }
     }
   }
@@ -571,8 +580,9 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private spawnEvolutionChest(x: number, y: number): void {
-    this.evolutionChest = this.add.sprite(x, y, 'gate_gold');
-    this.evolutionChest.setDisplaySize(42, 42);
+    const chestKey = this.textures.exists('item_evolution_chest') ? 'item_evolution_chest' : 'gate_gold';
+    this.evolutionChest = this.add.sprite(x, y, chestKey);
+    this.evolutionChest.setDisplaySize(44, 44);
     this.evolutionChest.setDepth(22);
 
     // 보물상자 황금빛 펄스 애니메이션
@@ -594,28 +604,35 @@ export class BattleScene extends Phaser.Scene {
 
     // 각성 가능한 액티브 스킬 탐색 (Lv.5 만렙 + 짝꿍 패시브 보유)
     let candidateAwakened: SkillData | null = null;
+    let evolvedBaseId: string | null = null;
     for (const awakened of AWAKENED_SKILLS) {
       if (!awakened.evolvesFrom || !awakened.requiredPassiveId) continue;
       const baseLv = this.player.activeSkills.get(awakened.evolvesFrom) ?? 0;
+      const boneStormLv = awakened.id === 'awakened_spear' ? (this.player.activeSkills.get('necro_bone_storm') ?? 0) : 0;
       const hasPartnerPassive = (this.player.passiveSkills.get(awakened.requiredPassiveId) ?? 0) > 0;
 
-      if (baseLv >= 5 && hasPartnerPassive) {
+      if (hasPartnerPassive && (baseLv >= 5 || boneStormLv >= 5)) {
         candidateAwakened = awakened;
+        evolvedBaseId = baseLv >= 5 ? awakened.evolvesFrom : 'necro_bone_storm';
         break;
       }
     }
 
     // 각성 조건이 맞으면 진화 스킬 지급, 아니면 대량 마력석(+2000 G) 및 치킨
     const uiScene = this.scene.get('UIScene') as UIScene;
-    if (candidateAwakened) {
+    if (candidateAwakened && evolvedBaseId) {
       // 액티브 스킬 교체
-      this.player.activeSkills.delete(candidateAwakened.evolvesFrom!);
+      this.player.activeSkills.delete(evolvedBaseId);
       this.player.activeSkills.set(candidateAwakened.id, 1);
       this.player.skillCooldowns.set(candidateAwakened.id, 0);
+      this.syncNecroArmy();
       uiScene.showChestModal(candidateAwakened);
     } else {
-      this.earnedGold += 2000;
-      this.player.hp = this.player.maxHp;
+      const chestStats = this.player.getEffectiveStats();
+      this.earnedGold += Math.round(2000 * chestStats.goldMul);
+      const maxHp = chestStats.maxHp;
+      this.player.maxHp = maxHp;
+      this.player.hp = maxHp;
       uiScene.showChestModal(null);
     }
   }

@@ -21,8 +21,7 @@ export class BootScene extends Phaser.Scene {
       color: '#00ffaa',
     }).setOrigin(0.5);
 
-    const subText = this.add.text(width / 2, height / 2 - 40, '1,950개 도트 에셋 및 차원문 동기화 중...', {
-      fontFamily: 'NeoDunggeunmo, monospace',
+    const subText = this.add.text(width / 2, height / 2 - 40, '200종 정통 도트 에셋 및 차원문 동기화 중...', {
       fontSize: '14px',
       color: '#ffd000',
     }).setOrigin(0.5);
@@ -81,14 +80,17 @@ export class BootScene extends Phaser.Scene {
       this.load.image(skill.id, skill.icon);
     }
 
-    // 인게임 전용 전투 투사체/공격 VFX (전방 방향성 및 전장 스케일 최적화)
+    // 인게임 전용 전투 투사체/공격 VFX (전방 방향성 및 전장 스케일 최적화, 35종 전체 분리 완료)
     const inGameVfxList = [
       'necro_spear', 'necro_bone_storm', 'necro_lich_curse', 'necro_armor', 'dk_grip', 'storm_chain',
       'sniper_shot', 'psi_blackhole', 'cryo_nova', 'ber_whirlwind',
       'sm_dragon', 'psi_drone', 'priest_sanctuary',
       'awakened_spear', 'awakened_armor', 'awakened_grip', 'awakened_chain',
       'awakened_sniper', 'awakened_blackhole', 'awakened_cryo', 'awakened_whirlwind',
-      'awakened_dragon', 'awakened_sanctuary'
+      'awakened_dragon', 'awakened_sanctuary',
+      'storm_thunder', 'cryo_snowball', 'fire_ball', 'fire_storm', 'spear_crimson', 'spear_heaven',
+      'awakened_thunder', 'awakened_snowball', 'awakened_fireball', 'awakened_firestorm',
+      'awakened_spear_crimson', 'awakened_spear_heaven',
     ];
     for (const id of inGameVfxList) {
       this.load.image(`vfx_${id}`, `assets/skills/vfx/vfx_${id}.png`);
@@ -97,8 +99,14 @@ export class BootScene extends Phaser.Scene {
     this.load.image('vfx_minion_mage', 'assets/skills/vfx/vfx_minion_mage.png');
     this.load.image('vfx_minion_drone', 'assets/skills/vfx/vfx_minion_drone.png');
 
-    // 5. 게이트 및 UI 프레임, 드랍 아이템
+    // 5. 게이트 및 UI 프레임, 드랍 아이템 (비급서, 진화 보물상자, 4단계 마력석 보석)
     this.load.image('item_parchment', 'assets/ui/item_parchment.png');
+    this.load.image('item_evolution_chest', 'assets/ui/item_evolution_chest.png');
+    this.load.image('gem_cyan', 'assets/ui/gems/gem_cyan.png');
+    this.load.image('gem_jade', 'assets/ui/gems/gem_jade.png');
+    this.load.image('gem_gold', 'assets/ui/gems/gem_gold.png');
+    this.load.image('gem_ruby', 'assets/ui/gems/gem_ruby.png');
+    this.load.image('battle_tile_1', 'assets/ui/tiles/battle_tile_1.png');
 
     const gateTypes = ['iron', 'bronze', 'silver', 'gold', 'platinum', 'diamond'];
     for (const g of gateTypes) {

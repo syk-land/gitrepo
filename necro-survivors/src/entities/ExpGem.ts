@@ -6,7 +6,7 @@ export class ExpGem {
   public expValue: number;
   public goldValue: number;
   public active: boolean = true;
-  private sprite: Phaser.GameObjects.Arc;
+  private sprite: Phaser.GameObjects.Sprite;
   private glowSprite: Phaser.GameObjects.Arc;
   private isAttracted: boolean = false;
   private attractSpeed: number = 0;
@@ -19,11 +19,19 @@ export class ExpGem {
     this.expValue = exp;
     this.goldValue = gold;
 
-    // 색상 결정: 10 미만 청록, 50 미만 황금, 50 이상 보라/루비
+    // 색상 및 16비트 보석 텍스처 결정
     const color = this.getColorForExp(exp);
+    const texKey = this.getTextureForExp(exp);
 
-    this.glowSprite = scene.add.circle(x, y, 10, color, 0.4).setDepth(11);
-    this.sprite = scene.add.circle(x, y, 5, color, 1.0).setDepth(12);
+    this.glowSprite = scene.add.circle(x, y, 11, color, 0.28).setDepth(11);
+    this.sprite = scene.add.sprite(x, y, texKey).setDisplaySize(20, 20).setDepth(12);
+  }
+
+  private getTextureForExp(exp: number): string {
+    if (exp >= 100) return 'gem_ruby';
+    if (exp >= 40) return 'gem_gold';
+    if (exp >= 20) return 'gem_jade';
+    return 'gem_cyan';
   }
 
   private getColorForExp(exp: number): number {
@@ -45,8 +53,9 @@ export class ExpGem {
     this.lifeTimer = 40.0;
 
     const color = this.getColorForExp(exp);
-    this.sprite.setPosition(x, y).setFillStyle(color, 1.0).setVisible(true).setAlpha(1.0);
-    this.glowSprite.setPosition(x, y).setFillStyle(color, 0.35).setVisible(true).setAlpha(0.35);
+    const texKey = this.getTextureForExp(exp);
+    this.sprite.setTexture(texKey).setPosition(x, y).setDisplaySize(20, 20).setVisible(true).setAlpha(1.0);
+    this.glowSprite.setPosition(x, y).setFillStyle(color, 0.28).setVisible(true).setAlpha(0.28);
   }
 
   public merge(otherExp: number, otherGold: number): void {
@@ -54,9 +63,11 @@ export class ExpGem {
     this.goldValue += otherGold;
     this.lifeTimer = 40.0; // 병합 시 수명 연장
     const color = this.getColorForExp(this.expValue);
-    this.sprite.setFillStyle(color, 1.0);
-    this.glowSprite.setFillStyle(color, 0.35);
-    this.sprite.setScale(Math.min(2.0, 1.0 + this.expValue * 0.005));
+    const texKey = this.getTextureForExp(this.expValue);
+    this.sprite.setTexture(texKey);
+    this.glowSprite.setFillStyle(color, 0.28);
+    const sz = Math.min(30, 20 + this.expValue * 0.06);
+    this.sprite.setDisplaySize(sz, sz);
   }
 
   public update(dt: number, playerX: number, playerY: number, pickupRadius: number): boolean {
