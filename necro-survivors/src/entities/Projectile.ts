@@ -96,9 +96,19 @@ export class Projectile {
       this.hitboxRadius = radius;
       this.sprite.setDisplaySize(radius * 2, radius * 2);
     } else {
-      // 직선 / 유도 / 투사체 형태별 황금 비율 유지
+      // 직선 / 유도 / 투사체 형태별 비율 유지 (정사각 1:1 스프라이트 왜곡 방지)
       this.hitboxRadius = 18;
-      if (textureKey.includes('spear')) {
+      const frame = this.sprite.frame;
+      const isSquare = !frame || Math.abs(frame.width - frame.height) <= 4;
+      if (isSquare) {
+        if (textureKey.includes('spear') || textureKey.includes('sniper')) {
+          this.sprite.setDisplaySize(44, 44);
+        } else if (textureKey.includes('arrow') || textureKey.includes('drone')) {
+          this.sprite.setDisplaySize(38, 38);
+        } else {
+          this.sprite.setDisplaySize(40, 40);
+        }
+      } else if (textureKey.includes('spear')) {
         this.sprite.setDisplaySize(54, 27);
       } else if (textureKey.includes('sniper')) {
         this.sprite.setDisplaySize(68, 22);
@@ -228,12 +238,23 @@ export class Projectile {
       this.hitEnemies.add(enemy);
       const dist = Math.sqrt(distSq) || 1;
 
-      // 치명타 판정
+      // 치명타 판정 (대구경 저격 Lv.5 / 공간 굴절 저격은 보스·엘리트 확정 치명타)
+      const battlePlayer = (this.scene as any)?.player;
+      const isSniperGuaranteedCrit =
+        (enemy.isBoss || enemy.isNamed || enemy.isElite) &&
+        (this.skillId === 'awakened_sniper' ||
+          (this.skillId === 'sniper_shot' && (battlePlayer?.activeSkills?.get('sniper_shot') ?? 0) >= 5));
+
       let isCrit = false;
       let hitDmg = this.damage;
-      if (this.critRate > 0 && Math.random() < this.critRate) {
+      if (isSniperGuaranteedCrit || (this.critRate > 0 && Math.random() < this.critRate)) {
         isCrit = true;
         hitDmg = Math.round(this.damage * this.critDamage);
+      }
+
+      // [아발론의 흑염 단두대] 체력 35% 이하 적 처형
+      if (this.skillId === 'awakened_grip' && enemy.hp > 0 && enemy.hp / enemy.maxHp <= 0.35) {
+        hitDmg = (enemy.isBoss || enemy.isNamed) ? Math.round(hitDmg * 2.0) : Math.max(hitDmg, enemy.hp + 999);
       }
 
       let effKnockback = this.knockback;
@@ -265,7 +286,6 @@ export class Projectile {
 
       // [극한의 심장] 패시브 효과: 서리 동결 오라 (레벨당 20%~70% 확률로 적 1.2~2.0초 완전 빙결)
       // [뇌신의 분노] 패시브 효과: 감전 (받는 데미지 증가 + 30% 슬로우)
-      const battlePlayer = (this.scene as any)?.player;
       if (battlePlayer && battlePlayer.passiveSkills) {
         const frostHeartLv = battlePlayer.passiveSkills.get('pas_frost_heart') ?? 0;
         if (frostHeartLv > 0) {
@@ -281,6 +301,38 @@ export class Projectile {
             enemy.applyStatus('shock', 2.5, 0.15 + thunderWrathLv * 0.10);
           }
         }
+      }
+
+      // [발키리 부대] 타격 시 최대 체력 3% 흡혈
+      if (this.skillId === 'awakened_armor' && battlePlayer && battlePlayer.hp < battlePlayer.maxHp) {
+        const vampHeal = Math.max(1, Math.round(battlePlayer.maxHp * 0.03));
+        battlePlayer.hp = Math.min(battlePlayer.maxHp, battlePlayer.hp + vampHeal);
+      }
+
+      // [리치 군주의 저주구체] 명중 시 주변 적 광역 폭발 및 둔화/기절 적용
+      if (this.skillId === 'necro_lich_curse' && this.scene) {
+        const curseRadius = Math.max(55, this.areaRadius);
+        const splashDmg = Math.round(hitDmg * 0.70);
+        const curseTargets = grid.queryRadius(enemy.x, enemy.y, curseRadius);
+        for (const ct of curseTargets) {
+          if (!ct.active || ct === enemy) continue;
+          const cdx = ct.x - enemy.x;
+          const cdy = ct.y - enemy.y;
+          if (cdx * cdx + cdy * cdy <= (curseRadius + ct.radius) ** 2) {
+            ct.takeDamage(splashDmg, 0, 0);
+            if (this.statusEffect && Math.random() <= this.statusEffect.chance) {
+              ct.applyStatus(this.statusEffect.type, this.statusEffect.duration, this.statusEffect.value);
+            }
+          }
+        }
+        const curseRing = this.scene.add.circle(enemy.x, enemy.y, curseRadius * 0.55, 0x9b30ff, 0.45).setDepth(24);
+        this.scene.tweens.add({
+          targets: curseRing,
+          scale: 1.8,
+          alpha: 0,
+          duration: 240,
+          onComplete: () => curseRing.destroy(),
+        });
       }
 
       // [파이어볼 / 메테오 스트라이크] 명중 시 화염 폭발 광역 피해

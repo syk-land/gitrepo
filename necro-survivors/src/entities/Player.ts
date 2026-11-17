@@ -26,6 +26,8 @@ export class Player implements ISkillCaster {
   public readonly ultMaxCooldown: number = 12.0;
 
   public sprite: Phaser.GameObjects.Sprite;
+  private footShadow: Phaser.GameObjects.Ellipse;
+  private necroAuraRing: Phaser.GameObjects.Ellipse;
   public hpBarGraphics: Phaser.GameObjects.Graphics;
   public facingDir: Vector2 = { x: 1, y: 0 };
   private moveTimer: number = 0;
@@ -44,6 +46,9 @@ export class Player implements ISkillCaster {
     const initialStats = this.getEffectiveStats();
     this.maxHp = initialStats.maxHp;
     this.hp = this.maxHp;
+
+    this.footShadow = scene.add.ellipse(x, y + 28, 36, 12, 0x000000, 0.5).setDepth(23);
+    this.necroAuraRing = scene.add.ellipse(x, y + 28, 52, 18, 0x00ffaa, 0.14).setStrokeStyle(1.5, 0x00ffaa, 0.45).setDepth(24);
 
     this.sprite = scene.add.sprite(x, y, 'hero_nemesis');
     this.sprite.setDisplaySize(64, 64);
@@ -230,13 +235,19 @@ export class Player implements ISkillCaster {
 
       this.sprite.setFlipX(nx < 0);
 
-      // 이동 중 상하 바운스 모션 연출
+      // 이동 중 상하 바운스 및 좌우 기울기 모션 연출
       this.moveTimer += dt;
       const bounceY = Math.sin(this.moveTimer * 14) * 3;
       this.sprite.setPosition(this.x, this.y + bounceY);
+      this.sprite.setRotation(Math.sin(this.moveTimer * 14) * 0.045);
+      this.footShadow.setPosition(this.x, this.y + 28);
+      this.necroAuraRing.setPosition(this.x, this.y + 28);
       this.renderHpBar(bounceY);
     } else {
       this.sprite.setPosition(this.x, this.y);
+      this.sprite.setRotation(0);
+      this.footShadow.setPosition(this.x, this.y + 28);
+      this.necroAuraRing.setPosition(this.x, this.y + 28);
       this.renderHpBar(0);
     }
   }
@@ -247,6 +258,8 @@ export class Player implements ISkillCaster {
       this.x += this.knockbackVx * dt;
       this.y += this.knockbackVy * dt;
       this.sprite.setPosition(this.x, this.y);
+      this.footShadow.setPosition(this.x, this.y + 28);
+      this.necroAuraRing.setPosition(this.x, this.y + 28);
       this.renderHpBar(0);
 
       const decay = Math.exp(-dt * 14);
@@ -306,6 +319,8 @@ export class Player implements ISkillCaster {
   }
 
   public destroy(): void {
+    this.footShadow.destroy();
+    this.necroAuraRing.destroy();
     this.sprite.destroy();
     this.hpBarGraphics.destroy();
   }

@@ -6,6 +6,7 @@ import { COMBAT_TRAITS, SURVIVAL_TRAITS, getAltarUpgradeCost, formatAltarBonus }
 
 export class HubScene extends Phaser.Scene {
   private selectedRegionId: number = 1;
+  private townBg!: Phaser.GameObjects.Image;
   private goldText!: Phaser.GameObjects.Text;
   private regionCardContainer!: Phaser.GameObjects.Container;
   private altarModalContainer?: Phaser.GameObjects.Container;
@@ -25,9 +26,9 @@ export class HubScene extends Phaser.Scene {
     const height = this.cameras.main.height;
 
     // 1. 거점 마을 배경 (선택된 지역의 마을 풍경)
-    const bg = this.add.image(width / 2, height / 2, `town_bg_${this.selectedRegionId}`);
-    bg.setDisplaySize(width, height);
-    bg.setAlpha(0.65);
+    this.townBg = this.add.image(width / 2, height / 2, `town_bg_${this.selectedRegionId}`);
+    this.townBg.setDisplaySize(width, height);
+    this.townBg.setAlpha(0.65);
 
     // 반투명 어두운 오버레이
     this.add.rectangle(width / 2, height / 2, width, height, 0x0c0908, 0.45);
@@ -133,6 +134,8 @@ export class HubScene extends Phaser.Scene {
         SoundEngine.getInstance().click();
         this.selectedRegionId--;
         SaveManager.getInstance().setSelectedRegion(this.selectedRegionId);
+        this.townBg.setTexture(`town_bg_${this.selectedRegionId}`);
+        this.townBg.setDisplaySize(width, height);
         this.renderRegionCard(width, height);
       }
     });
@@ -149,6 +152,8 @@ export class HubScene extends Phaser.Scene {
         SoundEngine.getInstance().click();
         this.selectedRegionId++;
         SaveManager.getInstance().setSelectedRegion(this.selectedRegionId);
+        this.townBg.setTexture(`town_bg_${this.selectedRegionId}`);
+        this.townBg.setDisplaySize(width, height);
         this.renderRegionCard(width, height);
       }
     });

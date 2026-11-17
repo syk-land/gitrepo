@@ -45,6 +45,9 @@ export class LevelUpManager {
           return false;
         }
       }
+      if (skill.id === 'necro_bone_storm' && player.activeSkills.has('awakened_spear')) {
+        return false;
+      }
 
       // 1-1. 상위 스킬(Tier 2) 규칙: 선행 하위 스킬을 3레벨 이상 달성해야만 후보군에 등장!
       if (skill.tier === 2 && skill.prerequisiteSkillId) {

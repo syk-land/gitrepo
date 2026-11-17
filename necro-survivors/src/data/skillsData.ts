@@ -426,7 +426,7 @@ export const ACTIVE_SKILLS: SkillData[] = [
   {
     id: 'fire_storm',
     name: '파이어스톰',
-    icon: 'assets/pixel_vfx/skills/vfx_mk_ult.png',
+    icon: 'assets/skills/skill_fire_storm.png',
     category: 'weapon',
     isNecroSignature: false,
     tier: 2,
@@ -474,7 +474,7 @@ export const ACTIVE_SKILLS: SkillData[] = [
   {
     id: 'spear_heaven',
     name: '파천적호창',
-    icon: 'assets/pixel_vfx/skills/vfx_guard_ult.png',
+    icon: 'assets/skills/skill_spear_heaven.png',
     category: 'weapon',
     isNecroSignature: false,
     tier: 2,
@@ -986,7 +986,7 @@ export const AWAKENED_SKILLS: SkillData[] = [
   {
     id: 'awakened_thunder',
     name: '⚡ 천벌: 뇌제 강림',
-    icon: 'assets/pixel_vfx/skills/vfx_storm_ult.png',
+    icon: 'assets/skills/skill_awakened_thunder.png',
     category: 'awakened',
     isNecroSignature: false,
     targeting: 'random',

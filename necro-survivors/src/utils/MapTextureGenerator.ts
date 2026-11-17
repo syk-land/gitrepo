@@ -151,24 +151,148 @@ export class MapTextureGenerator {
         ctx.stroke();
         break;
 
-      case 6: // 부산 광안리 마도 결계 백사장: 보랏빛 황혼 모래사장 + 파도 룬 결계
-        ctx.fillStyle = '#2d2238';
+      case 6: // 교토 대나무 숲 & 고택 다다미방: 대나무 돗자리 다다미 격자 + 흩날린 푸른 대나무 잎
+        ctx.fillStyle = '#141f18';
         ctx.fillRect(0, 0, W, H);
-        // 모래 결 무늬
-        ctx.fillStyle = '#3a2d47';
-        for (let y = 0; y < H; y += 16) {
-          ctx.fillRect(0, y, W, 8);
+        // 고택 다다미 & 목재 마루 격자
+        ctx.strokeStyle = '#293d2e';
+        ctx.lineWidth = 3;
+        for (let y = 0; y < H; y += 64) {
+          for (let x = 0; x < W; x += 128) {
+            ctx.strokeRect(x + 2, y + 2, 124, 60);
+          }
         }
-        // 마도 결계 룬 서클
-        ctx.strokeStyle = '#d66eff';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.arc(128, 128, 45, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.strokeRect(108, 108, 40, 40);
+        // 금빛 테두리 & 대나무 잎 악센트
+        ctx.strokeStyle = '#5c4b2a';
+        ctx.lineWidth = 1;
+        for (let y = 0; y < H; y += 64) {
+          ctx.beginPath();
+          ctx.moveTo(0, y); ctx.lineTo(W, y);
+          ctx.stroke();
+        }
+        ctx.fillStyle = '#388e4c';
+        for (let i = 0; i < 28; i++) {
+          const px = (i * 53 + 16) % W;
+          const py = (i * 89 + 12) % H;
+          ctx.beginPath();
+          ctx.ellipse(px, py, 7, 2.5, (i % 4) * 0.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
         break;
 
-      case 7: // 백두산 천지 칼데라 화산 용암지대: 검게 그을린 현무암 + 붉은 용암 균열
+      case 7: // 상하이 마천루 옥상 & 네온 야경: 어두운 아스팔트 옥상 격자 + 사이버 네온 시안/마젠타 스트립
+        ctx.fillStyle = '#12131c';
+        ctx.fillRect(0, 0, W, H);
+        // 옥상 콘크리트 패널 그리드
+        ctx.strokeStyle = '#242738';
+        ctx.lineWidth = 2;
+        for (let x = 0; x < W; x += 64) {
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+        }
+        for (let y = 0; y < H; y += 64) {
+          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+        }
+        // 네온 시안 / 마젠타 라인 스트립
+        ctx.fillStyle = 'rgba(0, 240, 255, 0.35)';
+        ctx.fillRect(0, 62, W, 3);
+        ctx.fillStyle = 'rgba(255, 42, 109, 0.35)';
+        ctx.fillRect(0, 190, W, 3);
+        ctx.fillStyle = '#1d2130';
+        ctx.fillRect(48, 96, 40, 40);
+        ctx.strokeStyle = '#00f0ff';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(48, 96, 40, 40);
+        break;
+
+      case 8: // 시베리아 툰드라 동토 설원: 영구동토 백설 지대 + 얼어붙은 서리 균열
+        ctx.fillStyle = '#1b2633';
+        ctx.fillRect(0, 0, W, H);
+        // 툰드라 설원 음영 패치
+        ctx.fillStyle = '#233345';
+        for (let i = 0; i < 16; i++) {
+          const px = (i * 61) % W;
+          const py = (i * 97) % H;
+          ctx.fillRect(px, py, 36, 18);
+        }
+        // 서리 빙결 균열
+        ctx.strokeStyle = '#4e7596';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(0, 64); ctx.lineTo(70, 82); ctx.lineTo(150, 56); ctx.lineTo(W, 64);
+        ctx.moveTo(128, 0); ctx.lineTo(116, 90); ctx.lineTo(142, 170); ctx.lineTo(128, H);
+        ctx.stroke();
+        ctx.fillStyle = '#a8e2ff';
+        for (let i = 0; i < 32; i++) {
+          ctx.fillRect((i * 43) % W, (i * 71) % H, 3, 3);
+        }
+        break;
+
+      case 9: // 마리아나 해구 심해 열수구: 심해 암흑 해저 + 청록빛 발광 마력 웅덩이
+        ctx.fillStyle = '#0a1622';
+        ctx.fillRect(0, 0, W, H);
+        // 심해 해구 격자
+        ctx.strokeStyle = '#122a3d';
+        ctx.lineWidth = 2;
+        for (let x = 0; x < W; x += 64) {
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+        }
+        for (let y = 0; y < H; y += 64) {
+          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+        }
+        // 청록빛 발광 열수구/마력 웅덩이
+        ctx.fillStyle = 'rgba(0, 240, 255, 0.16)';
+        ctx.beginPath();
+        ctx.arc(64, 64, 34, 0, Math.PI * 2);
+        ctx.arc(192, 192, 40, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#00f0ff';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        break;
+
+      case 10: // 히말라야 에베레스트 설산 암봉: 고산 빙하 암석판 + 날카로운 서리 결정
+        ctx.fillStyle = '#1c2836';
+        ctx.fillRect(0, 0, W, H);
+        ctx.strokeStyle = '#38516b';
+        ctx.lineWidth = 2.5;
+        for (let x = 0; x < W; x += 64) {
+          for (let y = 0; y < H; y += 64) {
+            ctx.strokeRect(x + 3, y + 3, 58, 58);
+          }
+        }
+        // 얼음 결정 파편
+        ctx.fillStyle = '#7acaff';
+        for (let i = 0; i < 36; i++) {
+          const px = (i * 47 + 8) % W;
+          const py = (i * 83 + 14) % H;
+          ctx.fillRect(px, py, 4, 4);
+        }
+        ctx.fillStyle = 'rgba(220, 245, 255, 0.18)';
+        ctx.fillRect(32, 144, 72, 44);
+        break;
+
+      case 11: // 타클라마칸 사막 모래지옥 & 풍화 사암: 황토 사막 사암 타일 + 모래 물결 & 황금 전갈 룬
+        ctx.fillStyle = '#291e14';
+        ctx.fillRect(0, 0, W, H);
+        // 모래 바람 물결
+        ctx.fillStyle = '#36271a';
+        for (let y = 0; y < H; y += 32) {
+          ctx.fillRect(0, y, W, 14);
+        }
+        // 풍화 사암 블록
+        ctx.strokeStyle = '#523c28';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(24, 24, 76, 48);
+        ctx.strokeRect(148, 148, 84, 52);
+        // 고대 황금빛 사막 룬
+        ctx.strokeStyle = '#d4a338';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(128, 128, 36, 0, Math.PI * 2);
+        ctx.stroke();
+        break;
+
+      case 12: // 로키산맥 화산 마그마 분화구: 검게 그을린 현무암 + 타오르는 붉은 용암 균열
         ctx.fillStyle = '#1c0f0a';
         ctx.fillRect(0, 0, W, H);
         // 현무암 블록
@@ -181,7 +305,7 @@ export class MapTextureGenerator {
         ctx.strokeStyle = '#ff3b00';
         ctx.lineWidth = 2.5;
         ctx.beginPath();
-        ctx.moveTo(0, 128); ctx.lineTo(60, 140); ctx.lineTo(130, 110); ctx.lineTo(200, 150); ctx.lineTo(W, 130);
+        ctx.moveTo(0, 128); ctx.lineTo(60, 140); ctx.lineTo(130, 110); ctx.lineTo(200, 150); ctx.lineTo(W, 128);
         ctx.moveTo(128, 0); ctx.lineTo(110, 70); ctx.lineTo(140, 170); ctx.lineTo(128, H);
         ctx.stroke();
         // 용암 코어 발광 노란색
@@ -190,124 +314,11 @@ export class MapTextureGenerator {
         ctx.stroke();
         break;
 
-      case 8: // 철원 DMZ 오염 벙커 지하 통로: 군용 철제 그레이팅 + 위험 경고 사선 타일
-        ctx.fillStyle = '#181e18';
+      case 13: // 태평양 성층권 금문 운해(雲海) & 모함: 성층권 아스트랄 모함 갑판 + 황금/시안 라인
+        ctx.fillStyle = '#101424';
         ctx.fillRect(0, 0, W, H);
-        // 철망 그레이팅 패턴
-        ctx.strokeStyle = '#2d382d';
-        ctx.lineWidth = 1;
-        for (let x = 0; x < W; x += 16) {
-          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
-        }
-        for (let y = 0; y < H; y += 16) {
-          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
-        }
-        // 경고 사선 스트라이프 바 (하단/상단 경계선)
-        ctx.fillStyle = '#b59a24';
-        ctx.fillRect(0, 116, W, 24);
-        ctx.fillStyle = '#181818';
-        for (let x = -24; x < W + 24; x += 32) {
-          ctx.beginPath();
-          ctx.moveTo(x, 116);
-          ctx.lineTo(x + 16, 116);
-          ctx.lineTo(x + 32, 140);
-          ctx.lineTo(x + 16, 140);
-          ctx.fill();
-        }
-        break;
-
-      case 9: // 지리산 노고단 붉은 단풍 암자: 고찰 돌마당 박석 + 흩날린 붉은 단풍잎
-        ctx.fillStyle = '#262423';
-        ctx.fillRect(0, 0, W, H);
-        // 전통 돌마당 석판 그리드
-        ctx.strokeStyle = '#3d3a37';
-        ctx.lineWidth = 3;
-        for (let x = 0; x < W; x += 64) {
-          for (let y = 0; y < H; y += 64) {
-            ctx.strokeRect(x + 3, y + 3, 58, 58);
-          }
-        }
-        // 붉은 단풍잎 낙엽
-        ctx.fillStyle = '#cc2b1d';
-        for (let i = 0; i < 24; i++) {
-          const px = (i * 59) % W;
-          const py = (i * 97) % H;
-          ctx.beginPath();
-          ctx.arc(px, py, 5, 0, Math.PI * 2);
-          ctx.arc(px + 4, py - 3, 3, 0, Math.PI * 2);
-          ctx.arc(px - 4, py - 3, 3, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        break;
-
-      case 10: // 울릉도 독도 심해 해구 마력 웅덩이: 심해 암흑 해저 + 청록빛 산호 룬
-        ctx.fillStyle = '#0a1622';
-        ctx.fillRect(0, 0, W, H);
-        // 심해 해구 격자
-        ctx.strokeStyle = '#122a3d';
-        ctx.lineWidth = 2;
-        for (let x = 0; x < W; x += 85) {
-          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
-        }
-        for (let y = 0; y < H; y += 85) {
-          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
-        }
-        // 청록빛 발광 마력 웅덩이
-        ctx.fillStyle = 'rgba(0, 240, 255, 0.16)';
-        ctx.beginPath();
-        ctx.arc(60, 60, 35, 0, Math.PI * 2);
-        ctx.arc(190, 190, 42, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#00f0ff';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        break;
-
-      case 11: // 만주 벌판 흑토 고대 성벽 잔해: 기름진 흑토양 + 무너진 고구려 석벽
-        ctx.fillStyle = '#1c1712';
-        ctx.fillRect(0, 0, W, H);
-        // 흑토 질감
-        ctx.fillStyle = '#261f18';
-        for (let i = 0; i < 50; i++) {
-          const px = (i * 43) % W;
-          const py = (i * 83) % H;
-          ctx.fillRect(px, py, 14, 8);
-        }
-        // 성벽 석재 잔해
-        ctx.fillStyle = '#473d32';
-        ctx.fillRect(40, 40, 52, 28);
-        ctx.fillRect(160, 130, 60, 30);
-        ctx.strokeStyle = '#635647';
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(40, 40, 52, 28);
-        ctx.strokeRect(160, 130, 60, 30);
-        break;
-
-      case 12: // 제주 한라산 백록담 영기 안개 분지: 화산암 현무암 구멍돌 + 신령한 푸른 이끼
-        ctx.fillStyle = '#191b1a';
-        ctx.fillRect(0, 0, W, H);
-        // 제주 현무암 돌담 블록
-        ctx.strokeStyle = '#2e3330';
-        ctx.lineWidth = 3;
-        for (let y = 0; y < H; y += 64) {
-          const offsetX = (y % 128 === 0) ? 0 : 32;
-          for (let x = -32; x < W + 32; x += 64) {
-            ctx.strokeRect(x + offsetX + 2, y + 2, 60, 60);
-          }
-        }
-        // 신비한 영기 푸른 이끼
-        ctx.fillStyle = '#246b4e';
-        ctx.beginPath();
-        ctx.arc(80, 140, 18, 0, Math.PI * 2);
-        ctx.arc(200, 50, 22, 0, Math.PI * 2);
-        ctx.fill();
-        break;
-
-      case 13: // 차원의 틈새 왜곡된 시공간 균열: 시공의 보랏빛 공허 + 차원 좌표 격자
-        ctx.fillStyle = '#120b1f';
-        ctx.fillRect(0, 0, W, H);
-        // 아스트랄 좌표 그리드
-        ctx.strokeStyle = '#321c54';
+        // 모함 외장 좌표 격자
+        ctx.strokeStyle = '#25304d';
         ctx.lineWidth = 1.5;
         for (let x = 0; x < W; x += 32) {
           ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
@@ -315,16 +326,21 @@ export class MapTextureGenerator {
         for (let y = 0; y < H; y += 32) {
           ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
         }
-        // 시공간 균열 파편
-        ctx.strokeStyle = '#bf55ec';
+        // 금문 황금 & 플라즈마 시안 선체 에너지 라인
+        ctx.strokeStyle = '#d4a338';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(30, 20); ctx.lineTo(80, 90); ctx.lineTo(60, 140);
-        ctx.moveTo(180, 110); ctx.lineTo(230, 180); ctx.lineTo(200, 240);
+        ctx.moveTo(0, 96); ctx.lineTo(W, 96);
+        ctx.stroke();
+        ctx.strokeStyle = '#00f0ff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(32, 24); ctx.lineTo(96, 88); ctx.lineTo(64, 152);
+        ctx.moveTo(160, 128); ctx.lineTo(224, 192); ctx.lineTo(192, 240);
         ctx.stroke();
         break;
 
-      case 14: // 심연의 옥좌 사령신 강림 제단: 흑요석 대리석 + 진홍빛 사령 마법진
+      case 14: // 2070 성층권 다이아몬드 게이트 종언: 흑요석/다이아몬드 제단 바닥 + 진홍/청록 오망성 룬
       default:
         ctx.fillStyle = '#0f0b12';
         ctx.fillRect(0, 0, W, H);
@@ -336,7 +352,10 @@ export class MapTextureGenerator {
             ctx.strokeRect(x + 2, y + 2, 60, 60);
           }
         }
-        // 사령 군주 오망성 진홍 룬
+        // 다이아몬드 코어 & 진홍 오망성 룬
+        ctx.strokeStyle = '#70f3ff';
+        ctx.lineWidth = 1.2;
+        ctx.strokeRect(120, 120, 16, 16);
         ctx.strokeStyle = '#e60049';
         ctx.lineWidth = 1.8;
         ctx.beginPath();

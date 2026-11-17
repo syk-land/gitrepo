@@ -4,7 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>목적을 잃지 않는 사령군주 : 서바이버즈 — 버전 비교 &amp; 통합 도감 갤러리</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/NeoDunggeunmo.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Gowun+Batang:wght@400;700&display=swap" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
   <style>
     :root {
       --bg-dark: #0c0908;
@@ -20,16 +23,22 @@
       --neon-orange: #ff7722;
       --text-ivory: #f5ede2;
       --text-muted: #b8a692;
-      --font-pixel: 'NeoDunggeunmo', monospace, sans-serif;
+      --font-display: 'Cinzel', 'Gowun Batang', serif;
+      --font-ui: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background: radial-gradient(circle at 50% 10%, #201712 0%, #0c0908 100%);
+      background: radial-gradient(circle at 50% 10%, #241914 0%, #0c0908 100%);
       color: var(--text-ivory);
-      font-family: var(--font-pixel);
+      font-family: var(--font-ui);
       min-height: 100vh;
-      padding: 20px;
-      line-height: 1.5;
+      padding: clamp(10px, 2vw, 24px);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    h1, .section-title, .branch-name {
+      font-family: var(--font-display);
+      letter-spacing: -0.01em;
     }
     .container { max-width: 1360px; margin: 0 auto; }
     .header {
@@ -73,7 +82,7 @@
       color: var(--text-muted);
       border: 2px solid var(--border-wood);
       padding: 10px 16px;
-      font-family: var(--font-pixel);
+      font-family: var(--font-ui);
       font-size: 0.92rem;
       cursor: pointer;
     }
@@ -334,7 +343,13 @@
       { id: 'sniper_shot', name: '대구경 관통 저격', oldVfx: 'legacy/pixel_vfx_skills/vfx_snip_5.png', newIcon: '../assets/skills/skill_sniper_shot.png', newVfx: '../assets/skills/vfx/vfx_sniper_shot.png' },
       { id: 'psi_drone', name: '외계 강습 드론', oldVfx: 'legacy/pixel_vfx_skills/vfx_psi_3.png', newIcon: '../assets/skills/skill_psi_drone.png', newVfx: '../assets/skills/vfx/vfx_psi_drone.png' },
       { id: 'storm_chain', name: '체인 라이트닝', oldVfx: 'legacy/pixel_vfx_skills/vfx_storm_5.png', newIcon: '../assets/skills/skill_storm_chain.png', newVfx: '../assets/skills/vfx/vfx_storm_chain.png' },
+      { id: 'storm_thunder', name: '번개 (낙뢰)', oldVfx: 'legacy/pixel_vfx_skills/vfx_storm_3.png', newIcon: '../assets/pixel_vfx/skills/vfx_storm_3.png', newVfx: '../assets/skills/vfx/vfx_storm_thunder.png' },
+      { id: 'cryo_snowball', name: '스노우볼', oldVfx: 'legacy/pixel_vfx_skills/vfx_cryo_1.png', newIcon: '../assets/pixel_vfx/skills/vfx_cryo_1.png', newVfx: '../assets/skills/vfx/vfx_cryo_snowball.png' },
       { id: 'cryo_nova', name: '프로스트 노바', oldVfx: 'legacy/pixel_vfx_skills/vfx_cryo_5.png', newIcon: '../assets/skills/skill_cryo_nova.png', newVfx: '../assets/skills/vfx/vfx_cryo_nova.png' },
+      { id: 'fire_ball', name: '파이어볼', oldVfx: 'legacy/pixel_vfx_skills/vfx_mk_2.png', newIcon: '../assets/pixel_vfx/skills/vfx_mk_2.png', newVfx: '../assets/skills/vfx/vfx_fire_ball.png' },
+      { id: 'fire_storm', name: '파이어스톰', oldVfx: 'legacy/pixel_vfx_skills/vfx_mk_ult.png', newIcon: '../assets/skills/skill_fire_storm.png', newVfx: '../assets/skills/vfx/vfx_fire_storm.png' },
+      { id: 'spear_crimson', name: '적호창', oldVfx: 'legacy/pixel_vfx_skills/vfx_guard_2.png', newIcon: '../assets/pixel_vfx/skills/vfx_guard_2.png', newVfx: '../assets/skills/vfx/vfx_spear_crimson.png' },
+      { id: 'spear_heaven', name: '파천적호창', oldVfx: 'legacy/pixel_vfx_skills/vfx_guard_ult.png', newIcon: '../assets/skills/skill_spear_heaven.png', newVfx: '../assets/skills/vfx/vfx_spear_heaven.png' },
     ];
 
     const BRANCHES = [
@@ -470,10 +485,11 @@
               </div>
               <div class="compare-arrow">➔</div>
               <div class="compare-side new">
-                <span class="badge-new">16비트 리마스터</span>
+                <span class="badge-new">16비트 리마스터 + 심리스 바닥 타일</span>
                 <div class="vfx-row">
-                  <img style="width:78px;height:44px;" src="../assets/ui/regions/battle_bg_${idx}.png" alt="신 전투배경" />
-                  <img style="width:78px;height:44px;" src="../assets/ui/regions/town_bg_${idx}.png" alt="신 거점배경" />
+                  <img style="width:68px;height:44px;" src="../assets/ui/regions/battle_bg_${idx}.png" title="전투 원경" alt="신 전투배경" />
+                  <img style="width:68px;height:44px;" src="../assets/ui/regions/town_bg_${idx}.png" title="거점 배경" alt="신 거점배경" />
+                  <img style="width:44px;height:44px;" src="../assets/ui/tiles/battle_tile_${idx}.png" title="뱀서류 탑다운 무한 바닥 타일" alt="바닥 타일" />
                 </div>
               </div>
             </div>
@@ -649,8 +665,9 @@
             </div>
             <div class="region-bgs">
               <img src="../assets/ui/gates/gate_${r.gateType}.png" alt="${r.gateName}" style="width:54px; object-fit:contain;" />
-              <img src="../assets/ui/regions/town_bg_${r.regionId}.png" alt="거점 배경" />
-              <img src="../assets/ui/regions/battle_bg_${r.regionId}.png" alt="전투 배경" />
+              <img src="../assets/ui/regions/town_bg_${r.regionId}.png" title="거점 배경" alt="거점 배경" />
+              <img src="../assets/ui/regions/battle_bg_${r.regionId}.png" title="전투 원경" alt="전투 배경" />
+              <img src="../assets/ui/tiles/battle_tile_${r.regionId}.png" title="탑다운 무한 심리스 타일" alt="바닥 타일" style="width:54px; height:54px;" />
             </div>
           </div>
           <div class="monster-row">
@@ -682,13 +699,16 @@
       const renderGroup = (title, items) => `
         <div class="section-title"><span>${title} (${items.length}종)</span></div>
         <div class="card-grid" style="margin-bottom:22px;">
-          ${items.map(it => `
+          ${items.map(it => {
+            const baseCost = it.id === 'trait_start_level' ? '5,000 G' : it.id === 'trait_bonus_projectiles' ? '8,000 G' : '300 G';
+            return `
             <div class="item-card">
               <div class="item-name">${it.name}</div>
-              <div class="item-meta">최대 Lv.${it.maxLevel} · 기본 비용 ${it.baseCost}</div>
-              <div class="item-desc">${it.description}</div>
+              <div class="item-meta">최대 Lv.${it.maxLevel} · 초기 비용 ${baseCost}</div>
+              <div class="item-desc">${it.desc || it.description || ''}</div>
             </div>
-          `).join('')}
+          `;
+          }).join('')}
         </div>
       `;
       return (

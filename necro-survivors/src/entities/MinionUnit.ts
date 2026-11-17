@@ -65,11 +65,23 @@ export class MinionUnit implements ISkillCaster {
     return this.facingDir;
   }
 
+  private getLegionLevel(): number {
+    const player = (this.scene as any)?.player;
+    if (!player?.activeSkills) return 0;
+    if (player.activeSkills.has('awakened_legion')) return 5;
+    return player.activeSkills.get('necro_legion') ?? 0;
+  }
+
   public getEffectiveStats(): CombatStats {
     const owner = this.ownerGetter();
+    const isSkeleton = this.def.id !== 'drone';
+    const legionLv = isSkeleton ? this.getLegionLevel() : 0;
+    const legionAtkBonus = legionLv >= 4 ? 1.30 : 1.0;
+    const legionHpBonus = legionLv >= 2 ? 1.25 : 1.0;
     return {
       ...owner.stats,
-      damageMul: owner.stats.damageMul * this.def.baseAtkRatio * owner.stats.minionDamageMul,
+      damageMul: owner.stats.damageMul * this.def.baseAtkRatio * owner.stats.minionDamageMul * legionAtkBonus,
+      minionHpMul: owner.stats.minionHpMul * legionHpBonus,
     };
   }
 
@@ -100,6 +112,9 @@ export class MinionUnit implements ISkillCaster {
     if (this.hp <= 0) {
       const stats = this.getEffectiveStats();
       let respawn = this.def.respawnSeconds || 3.5;
+      if (this.def.id !== 'drone' && this.getLegionLevel() >= 5) {
+        respawn *= 0.5;
+      }
       if (stats.cooldownMul < 1) {
         respawn *= Math.max(0.4, stats.cooldownMul);
       }
@@ -161,6 +176,8 @@ export class MinionUnit implements ISkillCaster {
 
       if (this.respawnTimer <= 0) {
         this.state = 'ALIVE';
+        const respawnStats = this.getEffectiveStats();
+        this.maxHp = Math.round(respawnStats.maxHp * this.def.baseHpRatio * respawnStats.minionHpMul);
         this.hp = this.maxHp;
         this.sprite.setAlpha(1.0);
         this.sprite.clearTint();
@@ -248,7 +265,18 @@ export class MinionUnit implements ISkillCaster {
         this.facingDir = { x: dx, y: dy };
 
         if (this.attackCooldown <= 0) {
-          this.attackCooldown = this.def.attackInterval;
+          let interval = this.def.attackInterval;
+          if (this.def.id === 'drone') {
+            const pSkills = (this.scene as any)?.player?.activeSkills;
+            if (pSkills?.has('awakened_drone')) {
+              interval *= 0.65;
+            } else {
+              const dLv = pSkills?.get('psi_drone') ?? 1;
+              if (dLv >= 5) interval *= 0.70;
+              else if (dLv >= 2) interval *= 0.80;
+            }
+          }
+          this.attackCooldown = interval;
           if (onRangedAttack) {
             onRangedAttack(this, targetEnemy);
           }

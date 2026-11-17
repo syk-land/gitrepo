@@ -17,8 +17,10 @@ export class Enemy implements SpatialEntity {
   public active: boolean = true;
 
   public sprite: Phaser.GameObjects.Sprite;
+  private shadowArc: Phaser.GameObjects.Ellipse;
   private hpBarGraphics?: Phaser.GameObjects.Graphics;
   private flashTimer: number = 0;
+  private walkAnimTimer: number = Math.random() * Math.PI * 2;
 
   // 상태이상 타이머
   public freezeTimer: number = 0;
@@ -65,6 +67,10 @@ export class Enemy implements SpatialEntity {
     this.isBoss = isBoss;
     this.isElite = isElite;
     this.onKilled = onKilled;
+
+    const shadowW = isBoss ? 68 : isNamed ? 44 : isElite ? 38 : 30;
+    const shadowH = isBoss ? 22 : isNamed ? 14 : isElite ? 12 : 10;
+    this.shadowArc = scene.add.ellipse(x, y + (isBoss ? 44 : isNamed ? 28 : 20), shadowW, shadowH, 0x000000, 0.42).setDepth(13);
 
     this.sprite = scene.add.sprite(x, y, textureKey);
     // 표시 크기 조정
@@ -130,6 +136,7 @@ export class Enemy implements SpatialEntity {
       this.hp = 0;
       this.active = false;
       this.sprite.setVisible(false);
+      this.shadowArc.setVisible(false);
       if (this.hpBarGraphics) {
         this.hpBarGraphics.clear();
         this.hpBarGraphics.destroy();
@@ -216,6 +223,7 @@ export class Enemy implements SpatialEntity {
         this.sprite.clearTint();
         if (this.freezeTimer > 0) this.sprite.setTint(0x00f0ff);
         else if (this.stunTimer > 0) this.sprite.setTint(0xffd000);
+        else if (this.shockTimer > 0) this.sprite.setTint(0xaa88ff);
         else if (this.slowTimer > 0) this.sprite.setTint(0x3388ff);
         else if (this.bleedTimer > 0) this.sprite.setTint(0xff5566);
         else if (this.isElite) this.sprite.setTint(0xffd700);
@@ -275,7 +283,10 @@ export class Enemy implements SpatialEntity {
       this.bleedTickTimer -= dt;
       if (this.bleedTickTimer <= 0) {
         this.bleedTickTimer = 0.5;
-        const bleedDmg = Math.max(1, Math.round(this.bleedDps * 28));
+        let bleedDmg = Math.max(1, Math.round(this.bleedDps * 28));
+        if (this.shockTimer > 0) {
+          bleedDmg = Math.round(bleedDmg * (1 + this.shockAmp));
+        }
         this.hp -= bleedDmg;
         if (typeof (this.scene as any).showDamageText === 'function') {
           (this.scene as any).showDamageText(this.x, this.y - 12, `🩸 ${bleedDmg}`, 0xff3355);
@@ -286,6 +297,7 @@ export class Enemy implements SpatialEntity {
         this.hp = 0;
         this.active = false;
         this.sprite.setVisible(false);
+        this.shadowArc.setVisible(false);
         if (this.hpBarGraphics) {
           this.hpBarGraphics.clear();
           this.hpBarGraphics.destroy();
@@ -328,8 +340,8 @@ export class Enemy implements SpatialEntity {
     const dy = targetY - this.y;
     const dist = Math.sqrt(dx * dx + dy * dy) || 1;
 
-    // 몬스터 방향 전환 (좌우 flipX)
-    this.sprite.setFlipX(dx < 0);
+    // 몬스터 방향 전환: 16비트 몬스터 원본이 좌측(←) 지향이므로 우측(dx > 0) 이동 시 flipX 적용
+    this.sprite.setFlipX(dx > 0);
 
     this.x += (dx / dist) * currentSpeed * dt;
     this.y += (dy / dist) * currentSpeed * dt;
@@ -351,7 +363,14 @@ export class Enemy implements SpatialEntity {
       }
     }
 
-    this.sprite.setPosition(this.x, this.y);
+    // 뱀서류 걷기 바운스 & 워블 애니메이션
+    this.walkAnimTimer += dt * 11;
+    const bounceY = Math.abs(Math.sin(this.walkAnimTimer)) * -3.0;
+    const wobbleRot = Math.sin(this.walkAnimTimer) * 0.055;
+
+    this.sprite.setPosition(this.x, this.y + bounceY);
+    this.sprite.setRotation(wobbleRot);
+    this.shadowArc.setPosition(this.x, this.y + (this.isBoss ? 44 : this.isNamed ? 28 : 20));
     this.renderHpBar();
   }
 
@@ -381,6 +400,7 @@ export class Enemy implements SpatialEntity {
       this.iceGraphics.destroy();
       this.iceGraphics = undefined;
     }
+    this.shadowArc.destroy();
     this.sprite.destroy();
   }
 }

@@ -220,11 +220,13 @@ export class SkillExecutor {
         );
         projectiles.push(p);
       }
-    } else if (skill.id === 'necro_bone_storm') {
-      // [본 스톰]: 전방위 360도 나선형 뼈가시 폭풍 발사
+    } else if (skill.id === 'necro_bone_storm' || skill.id === 'awakened_dragon') {
+      // [본 스톰 / 진 청룡참]: 전방위 360도 균등 방사
       const step = (Math.PI * 2) / totalProjectiles;
+      const speedMul = skill.id === 'necro_bone_storm' ? 1.15 : 1.0;
+      const jitter = skill.id === 'necro_bone_storm' ? 0.12 : 0;
       for (let i = 0; i < totalProjectiles; i++) {
-        const curAngle = i * step + Math.random() * 0.12;
+        const curAngle = i * step + Math.random() * jitter;
         const dirX = Math.cos(curAngle);
         const dirY = Math.sin(curAngle);
 
@@ -241,7 +243,7 @@ export class SkillExecutor {
           finalKnockback,
           dirX,
           dirY,
-          finalSpeed * 1.15,
+          finalSpeed * speedMul,
           lvData.statusEffect,
           undefined,
           0,

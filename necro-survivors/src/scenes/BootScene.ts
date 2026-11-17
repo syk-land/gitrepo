@@ -62,10 +62,11 @@ export class BootScene extends Phaser.Scene {
       this.load.image(minion.id, minion.sprite);
     }
 
-    // 3. 차원문 1~14지역 배경 및 84종 괴수 에셋 일괄 등록
+    // 3. 차원문 1~14지역 배경, 심리스 바닥 타일 및 84종 괴수 에셋 일괄 등록
     for (let r = 1; r <= 14; r++) {
       this.load.image(`battle_bg_${r}`, `assets/ui/regions/battle_bg_${r}.png`);
       this.load.image(`town_bg_${r}`, `assets/ui/regions/town_bg_${r}.png`);
+      this.load.image(`battle_tile_${r}`, `assets/ui/tiles/battle_tile_${r}.png`);
 
       // 괴수 4종 + 수문장 + 보스
       for (let m = 1; m <= 4; m++) {
@@ -106,7 +107,6 @@ export class BootScene extends Phaser.Scene {
     this.load.image('gem_jade', 'assets/ui/gems/gem_jade.png');
     this.load.image('gem_gold', 'assets/ui/gems/gem_gold.png');
     this.load.image('gem_ruby', 'assets/ui/gems/gem_ruby.png');
-    this.load.image('battle_tile_1', 'assets/ui/tiles/battle_tile_1.png');
 
     const gateTypes = ['iron', 'bronze', 'silver', 'gold', 'platinum', 'diamond'];
     for (const g of gateTypes) {

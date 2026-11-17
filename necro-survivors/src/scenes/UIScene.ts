@@ -655,9 +655,11 @@ export class UIScene extends Phaser.Scene {
 
     if (choice.isFallback) {
       if (choice.skill.id === 'fallback_chicken') {
-        player.hp = Math.min(player.maxHp, player.hp + player.maxHp * 0.5);
+        const maxHp = player.getEffectiveStats().maxHp;
+        player.maxHp = maxHp;
+        player.hp = Math.min(maxHp, player.hp + maxHp * 0.5);
       } else {
-        this.battleScene.earnedGold += 500;
+        this.battleScene.earnedGold += Math.round(500 * player.getEffectiveStats().goldMul);
       }
     } else {
       const isActive = choice.skill.category === 'weapon' || choice.skill.category === 'summon';
@@ -862,8 +864,11 @@ export class UIScene extends Phaser.Scene {
       const hit = this.add.zone(width / 2, height / 2 + 50, 160, 40).setInteractive({ useHandCursor: true });
       hit.on('pointerdown', () => {
         SoundEngine.getInstance().click();
-        this.battleScene.earnedGold += 3000;
-        player.hp = player.maxHp;
+        const stats = player.getEffectiveStats();
+        this.battleScene.earnedGold += Math.round(3000 * stats.goldMul);
+        const maxHp = stats.maxHp;
+        player.maxHp = maxHp;
+        player.hp = maxHp;
         this.modalContainer.removeAll(true);
         this.battleScene.isPaused = false;
       });
@@ -1040,7 +1045,8 @@ export class UIScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.modalContainer.add(survival);
 
-    const goldReward = this.battleScene.earnedGold + (isVictory ? 3000 : 500);
+    const bonusGold = Math.round((isVictory ? 3000 : 500) * this.battleScene.player.getEffectiveStats().goldMul);
+    const goldReward = this.battleScene.earnedGold + bonusGold;
     const goldText = this.add.text(width / 2, height / 2 + 10, `💰 획득 마력석: +${goldReward.toLocaleString()} G`, {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '18px',
