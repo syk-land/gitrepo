@@ -453,7 +453,7 @@ export const ACTIVE_SKILLS: SkillData[] = [
   {
     id: 'spear_crimson',
     name: '적호창',
-    icon: 'assets/pixel_vfx/skills/vfx_guard_2.png',
+    icon: 'assets/skills/skill_spear_crimson.png',
     category: 'weapon',
     isNecroSignature: false,
     tier: 1,
