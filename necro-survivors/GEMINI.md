@@ -120,8 +120,9 @@
 - **일반 레벨업**에는 **액티브 스킬만** 등장하며, **패시브 및 각성 스킬**은 **보물 상자 전용**입니다.
 - `src/data/*.ts` 수정 후 갤러리 데이터 동기화가 필요하면 `docs/GALLERY_AND_DEPLOY.md`의 `gallery_data.js` 재생성 절차를 따릅니다.
 
-### 6.3 빌드 및 배포 명령어
+### 6.3 빌드 및 배포 명령어 (수정 후 자동 재배포 필수)
+- `necro-survivors/`의 코드·UI·에셋을 수정하고 `npm run build`가 `0 errors`로 통과하면 **별도 확인 없이 항상 Firebase Hosting으로 즉시 재배포**합니다.
 ```bash
 npm run build                                        # 타입체크 + Vite 프로덕션 빌드 (dist/)
-/home/antigravity/.local/bin/firebase deploy --only hosting   # Firebase Hosting 배포
+firebase deploy --only hosting                       # Firebase Hosting 자동 재배포 (또는 /home/antigravity/.local/bin/firebase)
 ```
