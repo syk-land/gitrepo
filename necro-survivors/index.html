@@ -1,13 +1,55 @@
 <!doctype html>
-<html lang="ko">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>목적을 잃지 않는 사령군주 : 서바이버즈 (2D 뱀서류 RPG)</title>
+    <title>Necro Survivors: Undead Horde</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Gowun+Batang:wght@400;700&display=swap" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" />
+    <script>
+      window.SDK_OPTIONS = {
+        gameId: 'u54rb9xyxouao1s1ztn3dwsk46ubn2co',
+        onEvent: function (a) {
+          if (a && typeof a.name === 'string') {
+            window.dispatchEvent(new CustomEvent('gm-sdk-event', { detail: a }));
+            
+          }
+        },
+      };
+      (function () {
+        var host = (window.location && window.location.hostname) || '';
+        var s = document.createElement('script');
+        s.async = true;
+        if (/yandex/i.test(host)) {
+          s.id = 'yandex-games-sdk';
+          s.src = '/sdk.js';
+          s.onload = function () {
+            if (window.YaGames && typeof window.YaGames.init === 'function') {
+              window.YaGames.init().then(function (ysdk) {
+                window.__ysdk = ysdk;
+                try { ysdk.features && ysdk.features.LoadingAPI && ysdk.features.LoadingAPI.ready(); } catch (e) {}
+                window.dispatchEvent(new CustomEvent('gm-sdk-event', { detail: { name: 'SDK_READY' } }));
+              }).catch(function () {});
+            }
+          };
+        } else {
+          s.id = 'gamemonetize-sdk';
+          s.src = 'https://api.gamemonetize.com/sdk.js';
+        }
+        document.head.appendChild(s);
+        window.addEventListener('click', function () {
+          if (window.__gmPrerollDone) return;
+          if (window.sdk && typeof window.sdk.showBanner === 'function') {
+            window.__gmPrerollDone = true;
+            try { window.sdk.showBanner(); } catch (e) {}
+          } else if (typeof window.ShowAds === 'function') {
+            window.__gmPrerollDone = true;
+            try { window.ShowAds(); } catch (e) {}
+          }
+        }, { passive: true });
+      })();
+    </script>
     <style>
       * {
         box-sizing: border-box;
@@ -70,7 +112,7 @@
         display: block;
         width: 100% !important;
         height: 100% !important;
-        image-rendering: auto !important;
+        image-rendering: pixelated !important;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         text-rendering: optimizeLegibility;
@@ -80,5 +122,6 @@
   <body>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
+    <script src="./tutorial.js"></script>
   </body>
 </html>

@@ -1,53 +1,45 @@
 import { TraitTalentDef } from './types';
 
-// =========================================================================
-// 1. 전투 특성 9종 (공격/쿨타임/투사체개수/치명/범위/소환공격 등)
-// =========================================================================
 export const COMBAT_TRAITS: TraitTalentDef[] = [
-  { id: 'trait_might', name: '⚔️ 공격력 증폭', category: 'trait', desc: '모든 스킬 피해량 +10% 증가', baseVal: 0.10, statKey: 'damageMul', maxLevel: 10 },
-  { id: 'trait_cooldown', name: '⏱️ 쿨타임 단축', category: 'trait', desc: '모든 스킬 기본 쿨타임 -4% 단축', baseVal: 0.04, statKey: 'cooldownMul', maxLevel: 10 },
-  { id: 'trait_bonus_projectiles', name: '🔱 투사체 개수 증가', category: 'trait', desc: '모든 발사 스킬 투사체 +1발 추가 발사 (최대 +2발)', baseVal: 1, statKey: 'bonusProjectiles', maxLevel: 2 },
-  { id: 'trait_hawk_eye', name: '🎯 치명타 확률', category: 'trait', desc: '치명타 발생 확률 +5% 증가', baseVal: 0.05, statKey: 'critRate', maxLevel: 10 },
-  { id: 'trait_crit_damage', name: '💥 치명타 피해', category: 'trait', desc: '치명타 적중 시 피해 배율 +15% 증가', baseVal: 0.15, statKey: 'critDamage', maxLevel: 10 },
-  { id: 'trait_area', name: '💎 스킬 범위', category: 'trait', desc: '모든 스킬 및 폭발 효과 범위 +8% 증가', baseVal: 0.08, statKey: 'areaMul', maxLevel: 10 },
-  { id: 'trait_holy_grace', name: '🏹 투사체 속도', category: 'trait', desc: '투사체 비행 속도 +8% 증가', baseVal: 0.08, statKey: 'projectileSpeedMul', maxLevel: 10 },
-  { id: 'trait_undead_cmd', name: '💀 소환수 공격력', category: 'trait', desc: '해골/사령 소환수 공격력 +12% 증가', baseVal: 0.12, statKey: 'minionDamageMul', maxLevel: 10 },
-  { id: 'trait_minion_hp', name: '🪖 소환수 체력', category: 'trait', desc: '해골/사령 소환수 최대 체력 +15% 증가', baseVal: 0.15, statKey: 'minionHpMul', maxLevel: 10 },
+  { id: 'trait_might', name: 'Attack Power', category: 'trait', desc: 'All skill damage +10%', baseVal: 0.10, statKey: 'damageMul', maxLevel: 10 },
+  { id: 'trait_cooldown', name: 'Cooldown Haste', category: 'trait', desc: 'All skill cooldowns -4%', baseVal: 0.04, statKey: 'cooldownMul', maxLevel: 10 },
+  { id: 'trait_bonus_projectiles', name: 'Extra Projectiles', category: 'trait', desc: '+1 projectile on all skills (Max +2)', baseVal: 1, statKey: 'bonusProjectiles', maxLevel: 2 },
+  { id: 'trait_hawk_eye', name: 'Crit Chance', category: 'trait', desc: 'Critical hit rate +5%', baseVal: 0.05, statKey: 'critRate', maxLevel: 10 },
+  { id: 'trait_crit_damage', name: 'Crit Damage', category: 'trait', desc: 'Critical damage multiplier +15%', baseVal: 0.15, statKey: 'critDamage', maxLevel: 10 },
+  { id: 'trait_area', name: 'Skill Area', category: 'trait', desc: 'All skill & explosion AoE +8%', baseVal: 0.08, statKey: 'areaMul', maxLevel: 10 },
+  { id: 'trait_holy_grace', name: 'Projectile Speed', category: 'trait', desc: 'Projectile flight speed +8%', baseVal: 0.08, statKey: 'projectileSpeedMul', maxLevel: 10 },
+  { id: 'trait_undead_cmd', name: 'Minion Attack', category: 'trait', desc: 'Undead summon attack +12%', baseVal: 0.12, statKey: 'minionDamageMul', maxLevel: 10 },
+  { id: 'trait_minion_hp', name: 'Minion Max HP', category: 'trait', desc: 'Undead summon max HP +15%', baseVal: 0.15, statKey: 'minionHpMul', maxLevel: 10 },
 ];
 
-// =========================================================================
-// 2. 생존 및 성장 특성 9종 (초기레벨/체력/방어/재생/이속/자석 등)
-// =========================================================================
 export const SURVIVAL_TRAITS: TraitTalentDef[] = [
-  { id: 'trait_start_level', name: '🌟 초기 레벨 증가', category: 'talent', desc: '출정 시 추가 레벨 획득 후 시작 (최대 +2Lv)', baseVal: 1, statKey: 'startLevel', maxLevel: 2 },
-  { id: 'trait_iron_body', name: '❤️ 최대 체력', category: 'talent', desc: '플레이어 최대 체력 +20 HP 증가', baseVal: 0.10, statKey: 'maxHp', maxLevel: 10 },
-  { id: 'trait_armor', name: '🛡️ 방어력', category: 'talent', desc: '피격 시 고정 피해 감소 방어력 +3', baseVal: 3.0, statKey: 'armor', maxLevel: 10 },
-  { id: 'trait_hp_regen', name: '🩸 체력 재생', category: 'talent', desc: '초당 체력 지속 회복량 +1.5 HP/초', baseVal: 1.5, statKey: 'hpRegenPerSec', maxLevel: 10 },
-  { id: 'trait_shadow_step', name: '💨 이동 속도', category: 'talent', desc: '기본 이동 속도 +10px/s 증가', baseVal: 0.06, statKey: 'moveSpeed', maxLevel: 10 },
-  { id: 'trait_mana_flow', name: '🌀 자석 반경', category: 'talent', desc: '경험치 보석 흡인 반경 +15px 증가', baseVal: 0.15, statKey: 'pickupRadius', maxLevel: 10 },
-  { id: 'trait_minion_count', name: '👥 소환수 수량', category: 'talent', desc: '모든 소환수(전사/궁수/마법사/드론) 수량 +10% 증가 (최대 +100%)', baseVal: 0.10, statKey: 'minionCountMul', maxLevel: 10 },
-  { id: 'talent_merchant', name: '💰 골드 획득', category: 'talent', desc: '전투 중 마력석(골드) 획득량 +15% 증가', baseVal: 0.15, statKey: 'goldMul', maxLevel: 10 },
-  { id: 'talent_exp_surge', name: '📖 경험치 획득', category: 'talent', desc: '몬스터 처치 경험치 획득량 +12% 증가', baseVal: 0.12, statKey: 'expMul', maxLevel: 10 },
+  { id: 'trait_start_level', name: 'Starting Level', category: 'talent', desc: 'Start battles with bonus levels (Max +2)', baseVal: 1, statKey: 'startLevel', maxLevel: 2 },
+  { id: 'trait_iron_body', name: 'Max HP', category: 'talent', desc: 'Player max HP +20', baseVal: 0.10, statKey: 'maxHp', maxLevel: 10 },
+  { id: 'trait_armor', name: 'Armor', category: 'talent', desc: 'Flat damage reduction +3', baseVal: 3.0, statKey: 'armor', maxLevel: 10 },
+  { id: 'trait_hp_regen', name: 'HP Regen', category: 'talent', desc: 'HP regeneration +1.5/sec', baseVal: 1.5, statKey: 'hpRegenPerSec', maxLevel: 10 },
+  { id: 'trait_shadow_step', name: 'Move Speed', category: 'talent', desc: 'Movement speed +10px/s', baseVal: 0.06, statKey: 'moveSpeed', maxLevel: 10 },
+  { id: 'trait_mana_flow', name: 'Magnet Radius', category: 'talent', desc: 'EXP gem pickup range +15px', baseVal: 0.15, statKey: 'pickupRadius', maxLevel: 10 },
+  { id: 'trait_minion_count', name: 'Legion Size', category: 'talent', desc: 'All summon counts +10% (Max +100%)', baseVal: 0.10, statKey: 'minionCountMul', maxLevel: 10 },
+  { id: 'talent_merchant', name: 'Gold Greed', category: 'talent', desc: 'Battle gold earned +15%', baseVal: 0.15, statKey: 'goldMul', maxLevel: 10 },
+  { id: 'talent_exp_surge', name: 'EXP Surge', category: 'talent', desc: 'Monster kill EXP +12%', baseVal: 0.12, statKey: 'expMul', maxLevel: 10 },
 ];
 
-// 하위 호환용 내보내기
 export const TRAITS_DATA: TraitTalentDef[] = COMBAT_TRAITS;
 export const TALENTS_DATA: TraitTalentDef[] = SURVIVAL_TRAITS;
 
-// 레거시 세이브 호환용 추가 맵
 export const LEGACY_ALTAR_ITEMS: TraitTalentDef[] = [
-  { id: 'trait_frost_heart', name: '❄️ 극한의 심장', category: 'trait', desc: '모든 공격력 증폭', baseVal: 0.10, statKey: 'damageMul', maxLevel: 10 },
-  { id: 'trait_boss_slayer', name: '⚔️ 학살자의 투기', category: 'trait', desc: '보스 대상 추가 피해', baseVal: 0.12, statKey: 'damageMul', maxLevel: 10 },
-  { id: 'trait_blood_vamp', name: '🩸 포식자의 본능', category: 'trait', desc: '초당 체력 회복량 증가', baseVal: 1.5, statKey: 'hpRegenPerSec', maxLevel: 10 },
-  { id: 'trait_thorn_armor', name: '🌵 가시 갑옷', category: 'trait', desc: '기본 고정 방어력 증가', baseVal: 3.0, statKey: 'armor', maxLevel: 10 },
-  { id: 'talent_cooldown', name: '⏱️ 초월적 연산', category: 'talent', desc: '모든 액티브 스킬 쿨타임 감소', baseVal: 0.04, statKey: 'cooldownMul', maxLevel: 10 },
-  { id: 'talent_gate_breaker', name: '💥 차원문 파쇄자', category: 'talent', desc: '괴수 체력 감소', baseVal: 0.04, statKey: 'enemyHpReduction', maxLevel: 10 },
-  { id: 'talent_blacksmith', name: '🔨 군단 무기고', category: 'talent', desc: '소환수 공격력 증폭', baseVal: 0.10, statKey: 'minionDamageMul', maxLevel: 10 },
-  { id: 'talent_relic_finder', name: '💎 심연의 직관', category: 'talent', desc: '스킬 효과 범위 증가', baseVal: 0.08, statKey: 'areaMul', maxLevel: 10 },
-  { id: 'talent_double_cast', name: '⚡ 이중 영창', category: 'talent', desc: '투사체 1발 추가 확률', baseVal: 0.05, statKey: 'doubleCastChance', maxLevel: 10 },
-  { id: 'talent_immortal_will', name: '🛡️ 불멸의 의지', category: 'talent', desc: '피해 감소', baseVal: 0.05, statKey: 'lowHpDamageReduction', maxLevel: 10 },
-  { id: 'talent_legion_surge', name: '🪖 망자의 군세', category: 'talent', desc: '모든 소환수 수량 +10% 증가', baseVal: 0.10, statKey: 'minionCountMul', maxLevel: 10 },
-  { id: 'talent_overcharge', name: '🔮 마력 과충전', category: 'talent', desc: '필살기 쿨타임 감소', baseVal: 0.05, statKey: 'cooldownMul', maxLevel: 10 },
+  { id: 'trait_frost_heart', name: 'Frost Heart', category: 'trait', desc: 'Boost all attack power', baseVal: 0.10, statKey: 'damageMul', maxLevel: 10 },
+  { id: 'trait_boss_slayer', name: 'Boss Slayer', category: 'trait', desc: 'Bonus damage vs bosses', baseVal: 0.12, statKey: 'damageMul', maxLevel: 10 },
+  { id: 'trait_blood_vamp', name: 'Blood Instinct', category: 'trait', desc: 'HP regen per second', baseVal: 1.5, statKey: 'hpRegenPerSec', maxLevel: 10 },
+  { id: 'trait_thorn_armor', name: 'Thorn Armor', category: 'trait', desc: 'Flat armor increase', baseVal: 3.0, statKey: 'armor', maxLevel: 10 },
+  { id: 'talent_cooldown', name: 'Hyper Focus', category: 'talent', desc: 'Reduce skill cooldowns', baseVal: 0.04, statKey: 'cooldownMul', maxLevel: 10 },
+  { id: 'talent_gate_breaker', name: 'Gate Breaker', category: 'talent', desc: 'Reduce enemy HP', baseVal: 0.04, statKey: 'enemyHpReduction', maxLevel: 10 },
+  { id: 'talent_blacksmith', name: 'Legion Armory', category: 'talent', desc: 'Boost minion attack', baseVal: 0.10, statKey: 'minionDamageMul', maxLevel: 10 },
+  { id: 'talent_relic_finder', name: 'Abyssal Sight', category: 'talent', desc: 'Boost skill area', baseVal: 0.08, statKey: 'areaMul', maxLevel: 10 },
+  { id: 'talent_double_cast', name: 'Double Cast', category: 'talent', desc: 'Extra projectile chance', baseVal: 0.05, statKey: 'doubleCastChance', maxLevel: 10 },
+  { id: 'talent_immortal_will', name: 'Immortal Will', category: 'talent', desc: 'Damage reduction', baseVal: 0.05, statKey: 'lowHpDamageReduction', maxLevel: 10 },
+  { id: 'talent_legion_surge', name: 'Legion Surge', category: 'talent', desc: 'Summon count +10%', baseVal: 0.10, statKey: 'minionCountMul', maxLevel: 10 },
+  { id: 'talent_overcharge', name: 'Overcharge', category: 'talent', desc: 'Reduce ultimate cooldown', baseVal: 0.05, statKey: 'cooldownMul', maxLevel: 10 },
 ];
 
 export const ALL_ALTAR_MAP: Map<string, TraitTalentDef> = new Map([
@@ -56,7 +48,6 @@ export const ALL_ALTAR_MAP: Map<string, TraitTalentDef> = new Map([
   ...LEGACY_ALTAR_ITEMS.map((t) => [t.id, t] as [string, TraitTalentDef]),
 ]);
 
-// 강화 비용 계산 공식 (고가치 2단계 특성은 별도 고가 책정)
 export function getAltarUpgradeCost(currentLevel: number, def?: TraitTalentDef): number {
   if (def?.id === 'trait_start_level') {
     return currentLevel <= 0 ? 5000 : 18000;
@@ -68,7 +59,6 @@ export function getAltarUpgradeCost(currentLevel: number, def?: TraitTalentDef):
   return Math.round(300 * Math.pow(nextLevel, 1.7));
 }
 
-// 레벨별 효과 배율 계산
 export function getAltarEffectiveValue(
   def: TraitTalentDef,
   level: number,
@@ -91,51 +81,48 @@ export function getAltarEffectiveValue(
   return val;
 }
 
-// UI 표시용 현재 수치 포맷팅 헬퍼 (단일 스탯 맞춤 표시)
 export function formatAltarBonus(def: TraitTalentDef, level: number): string {
-  if (level <= 0) return '현재: 미각인 (Lv.0)';
+  if (level <= 0) return 'Current: Locked (Lv.0)';
   const val = getAltarEffectiveValue(def, level, false);
   switch (def.statKey) {
     case 'bonusProjectiles':
-      return level >= 2 ? '현재 효과: 투사체 +2발 추가 (최대)' : level === 1 ? '현재 효과: 투사체 +1발 추가' : '현재: 미각인 (추가 없음)';
+      return level >= 2 ? 'Current: +2 Projectiles (MAX)' : 'Current: +1 Projectile';
     case 'startLevel':
-      return level >= 2 ? '현재 효과: +2레벨 시작 (Lv.3 출정)' : level === 1 ? '현재 효과: +1레벨 시작 (Lv.2 출정)' : '현재: 미각인 (Lv.1 시작)';
+      return level >= 2 ? 'Current: Start at Lv.3' : 'Current: Start at Lv.2';
     case 'damageMul':
-      return `현재 효과: +${Math.round(val * 100)}% 공격력`;
+      return `Current: +${Math.round(val * 100)}% Attack`;
     case 'cooldownMul':
-      return `현재 효과: -${Math.round(val * 100)}% 쿨타임`;
+      return `Current: -${Math.round(val * 100)}% Cooldown`;
     case 'maxHp':
-      return `현재 효과: +${Math.round(200 * val)} HP`;
+      return `Current: +${Math.round(200 * val)} HP`;
     case 'armor':
-      return `현재 효과: +${Math.round(val)} 방어력`;
+      return `Current: +${Math.round(val)} Armor`;
     case 'hpRegenPerSec':
-      return `현재 효과: +${val.toFixed(1)} HP/초`;
+      return `Current: +${val.toFixed(1)} HP/s`;
     case 'critRate':
-      return `현재 효과: +${Math.round(val * 100)}% 치명타율`;
+      return `Current: +${Math.round(val * 100)}% Crit Rate`;
     case 'critDamage':
-      return `현재 효과: +${Math.round(val * 100)}% 치명타피해`;
+      return `Current: +${Math.round(val * 100)}% Crit DMG`;
     case 'moveSpeed':
-      return `현재 효과: +${Math.round(165 * val)} 속도`;
+      return `Current: +${Math.round(165 * val)} Speed`;
     case 'pickupRadius':
-      return `현재 효과: +${Math.round(95 * val)}px 자석반경`;
+      return `Current: +${Math.round(95 * val)}px Magnet`;
     case 'areaMul':
-      return `현재 효과: +${Math.round(val * 100)}% 스킬범위`;
+      return `Current: +${Math.round(val * 100)}% AoE`;
     case 'projectileSpeedMul':
-      return `현재 효과: +${Math.round(val * 100)}% 투사체속도`;
+      return `Current: +${Math.round(val * 100)}% Proj Speed`;
     case 'minionDamageMul':
-      return `현재 효과: +${Math.round(val * 100)}% 소환수공격`;
+      return `Current: +${Math.round(val * 100)}% Minion ATK`;
     case 'minionHpMul':
-      return `현재 효과: +${Math.round(val * 100)}% 소환수체력`;
+      return `Current: +${Math.round(val * 100)}% Minion HP`;
     case 'minionCountMul':
     case 'bonusMinionCount':
-      return level >= 10
-        ? `현재 효과: +100% 소환수 증원 (2배 출격, 최대)`
-        : `현재 효과: +${Math.round(val * 100)}% 소환수 증원 (최대 +100%)`;
+      return level >= 10 ? 'Current: +100% Legion Size (MAX)' : `Current: +${Math.round(val * 100)}% Legion Size`;
     case 'goldMul':
-      return `현재 효과: +${Math.round(val * 100)}% 골드획득`;
+      return `Current: +${Math.round(val * 100)}% Gold`;
     case 'expMul':
-      return `현재 효과: +${Math.round(val * 100)}% 경험치획득`;
+      return `Current: +${Math.round(val * 100)}% EXP`;
     default:
-      return `현재 적용: Lv.${level}`;
+      return `Current: Lv.${level}`;
   }
 }

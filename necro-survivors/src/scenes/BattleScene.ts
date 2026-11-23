@@ -552,7 +552,7 @@ export class BattleScene extends Phaser.Scene {
     sprite.setDisplaySize(38, 38);
     sprite.setDepth(21);
 
-    const label = this.add.text(x, y - 24, '📜 각성 비급 양피지', {
+    const label = this.add.text(x, y - 24, 'AWAKENING SCROLL', {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '11px',
       color: '#ffd000',
@@ -813,13 +813,13 @@ export class BattleScene extends Phaser.Scene {
   private onNamedSpawned(named: Enemy): void {
     SoundEngine.getInstance().bossWarning();
     const uiScene = this.scene.get('UIScene') as UIScene;
-    uiScene.showBossWarning(`⚠️ [수문장 네임드 강림] ${this.region.named}`);
+    uiScene.showBossWarning(`ELITE APPEARED: ${this.region.named}`);
   }
 
   private onBossSpawned(boss: Enemy): void {
     SoundEngine.getInstance().bossWarning();
     const uiScene = this.scene.get('UIScene') as UIScene;
-    uiScene.showBossWarning(`⚠️ [지역 최종 보스 출현] ${this.region.boss}`);
+    uiScene.showBossWarning(`BOSS APPEARED: ${this.region.boss}`);
   }
 
   public handleStageClear(): void {

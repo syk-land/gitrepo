@@ -1,5 +1,21 @@
 import { SaveManager } from '../core/SaveManager';
 
+declare global {
+  interface Window {
+    __ysdk?: {
+      adv?: {
+        showFullscreenAdv?: (opts?: unknown) => void;
+        showRewardedVideo?: (opts?: unknown) => void;
+      };
+    };
+    sdk?: {
+      showBanner?: () => void;
+      showAd?: (type?: string) => void;
+    };
+    ShowAds?: (type?: string) => void;
+  }
+}
+
 export class AdBillingAdapter {
   private static instance: AdBillingAdapter;
 
@@ -12,47 +28,112 @@ export class AdBillingAdapter {
     return AdBillingAdapter.instance;
   }
 
-  // 보상형 광고 1: 영혼 역행 부활 (판당 1회)
+  private runRewardedAd(): Promise<boolean> {
+    if (window.__ysdk?.adv?.showRewardedVideo) {
+      return new Promise((resolve) => {
+        let rewarded = false;
+        try {
+          window.__ysdk!.adv!.showRewardedVideo!({
+            callbacks: {
+              onRewarded: () => { rewarded = true; },
+              onClose: () => resolve(rewarded),
+              onError: () => resolve(true),
+            },
+          });
+        } catch {
+          resolve(true);
+        }
+      });
+    }
+
+    const gmReady =
+      (window.sdk && typeof window.sdk.showBanner === 'function') ||
+      typeof window.ShowAds === 'function';
+    if (!gmReady) {
+      return Promise.resolve(true);
+    }
+
+    return new Promise((resolve) => {
+      let settled = false;
+      const finish = (ok: boolean) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        window.removeEventListener('gm-sdk-event', onEvt);
+        resolve(ok);
+      };
+      const onEvt = (e: Event) => {
+        const name = (e as CustomEvent).detail?.name as string | undefined;
+        if (!name) return;
+        if (
+          name === 'SDK_REWARDED_WATCH_COMPLETE' ||
+          name === 'SDK_REWARDED_FINISHED' ||
+          name === 'AD_REWARDED' ||
+          name === 'AD_FINISHED' ||
+          name === 'AD_COMPLETE' ||
+          name === 'AD_CANCELED' ||
+          name === 'AD_ERROR' ||
+          name === 'SDK_REWARDED_NOT_AVAILABLE' ||
+          name === 'SDK_GAME_START'
+        ) {
+          finish(true);
+        } else if (name === 'AD_SKIPPED') {
+          finish(false);
+        }
+      };
+      const timer = setTimeout(() => finish(true), 8000);
+      window.addEventListener('gm-sdk-event', onEvt);
+      try {
+        if (window.sdk && typeof window.sdk.showBanner === 'function') {
+          window.sdk.showBanner();
+        } else if (typeof window.ShowAds === 'function') {
+          window.ShowAds('rewarded');
+        } else {
+          finish(true);
+        }
+      } catch {
+        finish(true);
+      }
+    });
+  }
+
+  public showInterstitial(): void {
+    try {
+      if (window.__ysdk?.adv?.showFullscreenAdv) {
+        window.__ysdk.adv.showFullscreenAdv({});
+        return;
+      }
+      if (window.sdk && typeof window.sdk.showBanner === 'function') {
+        window.sdk.showBanner();
+      } else if (typeof window.ShowAds === 'function') {
+        window.ShowAds();
+      }
+    } catch {
+      // silent fallback
+    }
+  }
+
+  // Rewarded Ad 1: Soul Rewind Revive (1x per run)
   public async showReviveAd(): Promise<boolean> {
     const save = SaveManager.getInstance().getData();
-    if (save.hasAdFreePass) {
-      return true; // 광고 프리 패스 보유 시 광고 없이 즉시 패스
-    }
-    return new Promise((resolve) => {
-      // 모바일 웹/로컬 개발 환경에서는 1초 타이머 후 보상 지급 (모의 모드)
-      setTimeout(() => {
-        resolve(true);
-      }, 700);
-    });
+    if (save.hasAdFreePass) return true;
+    return this.runRewardedAd();
   }
 
-  // 보상형 광고 2: 운명 재굴림 (Reroll)
+  // Rewarded Ad 2: Fate Reroll
   public async showRerollAd(): Promise<boolean> {
     const save = SaveManager.getInstance().getData();
-    if (save.hasAdFreePass) {
-      return true;
-    }
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(true);
-      }, 500);
-    });
+    if (save.hasAdFreePass) return true;
+    return this.runRewardedAd();
   }
 
-  // 보상형 광고 3: 차원문 전리품 2배
+  // Rewarded Ad 3: 2x Portal Loot
   public async showDoubleRewardAd(): Promise<boolean> {
     const save = SaveManager.getInstance().getData();
-    if (save.hasAdFreePass) {
-      return true;
-    }
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(true);
-      }, 800);
-    });
+    if (save.hasAdFreePass) return true;
+    return this.runRewardedAd();
   }
 
-  // 인앱결제 1: 광고 영구 제거 패스
   public async buyAdFreePass(): Promise<boolean> {
     const save = SaveManager.getInstance().getData();
     save.hasAdFreePass = true;
@@ -60,7 +141,6 @@ export class AdBillingAdapter {
     return true;
   }
 
-  // 인앱결제 2: 사령군주 스타터 팩 (15,000 마력석 + 사령의 권능 Lv.3)
   public async buyStarterPack(): Promise<boolean> {
     const save = SaveManager.getInstance().getData();
     save.gold += 15000;

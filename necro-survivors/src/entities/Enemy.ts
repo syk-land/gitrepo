@@ -162,7 +162,7 @@ export class Enemy implements SpatialEntity {
       this.freezeTimer = Math.max(this.freezeTimer, duration);
       this.sprite.setTint(0x00f0ff);
       if (!wasFrozen && typeof (this.scene as any).showDamageText === 'function') {
-        (this.scene as any).showDamageText(this.x, this.y - 20, '❄️ 빙결!', 0x00f0ff, true);
+        (this.scene as any).showDamageText(this.x, this.y - 20, 'FROZEN!', 0x00f0ff, true);
       }
     } else if (type === 'slow') {
       this.slowTimer = Math.max(this.slowTimer, duration);
@@ -177,7 +177,7 @@ export class Enemy implements SpatialEntity {
         this.sprite.setTint(0xffd000);
       }
       if (!wasStunned && typeof (this.scene as any).showDamageText === 'function') {
-        (this.scene as any).showDamageText(this.x, this.y - 20, '⚡ 기절!', 0xffd000, true);
+        (this.scene as any).showDamageText(this.x, this.y - 20, 'STUNNED!', 0xffd000, true);
       }
     } else if (type === 'bleed') {
       const wasBleeding = this.bleedTimer > 0;
@@ -187,7 +187,7 @@ export class Enemy implements SpatialEntity {
         this.sprite.setTint(0xff5566);
       }
       if (!wasBleeding && typeof (this.scene as any).showDamageText === 'function') {
-        (this.scene as any).showDamageText(this.x, this.y - 20, '🩸 출혈!', 0xff2244, true);
+        (this.scene as any).showDamageText(this.x, this.y - 20, 'BLEED!', 0xff2244, true);
       }
     } else if (type === 'pull') {
       // 흡인 영역 내부: 이동속도 50% 둔화 적용
@@ -203,7 +203,7 @@ export class Enemy implements SpatialEntity {
         this.sprite.setTint(0xaa88ff);
       }
       if (!wasShocked && typeof (this.scene as any).showDamageText === 'function') {
-        (this.scene as any).showDamageText(this.x, this.y - 20, '⚡ 감전!', 0xbb88ff, true);
+        (this.scene as any).showDamageText(this.x, this.y - 20, 'SHOCKED!', 0xbb88ff, true);
       }
     }
   }

@@ -3,8 +3,8 @@ import { MinionDef } from './types';
 export const MINIONS_DATA: Record<string, MinionDef> = {
   skeleton_warrior: {
     id: 'skeleton_warrior',
-    name: '해골 전사',
-    sprite: 'assets/summons/minion_skeleton_warrior.png',
+    name: 'Skeleton Warrior',
+    sprite: 'assets/summons/minion_skeleton_warrior.webp',
     combatRole: 'melee_blocker',
     baseHpRatio: 0.45,
     baseAtkRatio: 0.35,
@@ -16,8 +16,8 @@ export const MINIONS_DATA: Record<string, MinionDef> = {
   },
   skeleton_archer: {
     id: 'skeleton_archer',
-    name: '해골 궁수',
-    sprite: 'assets/summons/minion_skeleton_archer.png',
+    name: 'Skeleton Archer',
+    sprite: 'assets/summons/minion_skeleton_archer.webp',
     combatRole: 'ranged_orbit',
     baseHpRatio: 0.30,
     baseAtkRatio: 0.40,
@@ -29,8 +29,8 @@ export const MINIONS_DATA: Record<string, MinionDef> = {
   },
   skeleton_mage: {
     id: 'skeleton_mage',
-    name: '해골 마법사',
-    sprite: 'assets/summons/minion_skeleton_mage.png',
+    name: 'Skeleton Mage',
+    sprite: 'assets/summons/minion_skeleton_mage.webp',
     combatRole: 'ranged_orbit',
     baseHpRatio: 0.28,
     baseAtkRatio: 0.50,
@@ -42,8 +42,8 @@ export const MINIONS_DATA: Record<string, MinionDef> = {
   },
   arthur: {
     id: 'arthur',
-    name: '제1군단장 듀라한 아서',
-    sprite: 'assets/summons/minion_arthur.png',
+    name: 'Dullahan Arthur',
+    sprite: 'assets/summons/minion_arthur.webp',
     combatRole: 'melee_blocker',
     baseHpRatio: 1.35,
     baseAtkRatio: 1.10,
@@ -55,8 +55,8 @@ export const MINIONS_DATA: Record<string, MinionDef> = {
   },
   drone: {
     id: 'drone',
-    name: '외계 강습 드론',
-    sprite: 'assets/summons/minion_drone.png',
+    name: 'Assault Drone',
+    sprite: 'assets/summons/minion_drone.webp',
     combatRole: 'ranged_orbit',
     baseHpRatio: 0.50,
     baseAtkRatio: 0.65,

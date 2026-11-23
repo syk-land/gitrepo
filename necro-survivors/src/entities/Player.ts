@@ -73,7 +73,7 @@ export class Player implements ISkillCaster {
   }
 
   public getCasterName(): string {
-    return '사령군주 최미남';
+    return 'Necromancer Lord';
   }
 
   // 기본 스탯 + 영혼 각인의 제단 + 인게임 패시브 실시간 합산

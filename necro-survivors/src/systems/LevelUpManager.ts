@@ -116,14 +116,14 @@ export class LevelUpManager {
 
       // 상위 스킬 배지 및 해금 안내 / 신규 계열 배지
       if (curLv === 0 && isActive && !ownedActiveBranches.has(getActiveBranchId(skill.id))) {
-        synergyHint = `🆕 [새 무기 계열 (${ownedActiveBranches.size + 1}/3)]`;
+        synergyHint = `NEW WEAPON BRANCH (${ownedActiveBranches.size + 1}/3)`;
       } else if (skill.tier === 2 && skill.prerequisiteSkillId) {
         const prereqSkill = ALL_SKILLS_MAP.get(skill.prerequisiteSkillId);
-        synergyHint = `🌟 [상위 무기! ${prereqSkill ? prereqSkill.name : ''} 연계 심화]`;
+        synergyHint = `ADVANCED WEAPON (${prereqSkill ? prereqSkill.name : ''} Tree)`;
       } else if (skill.tier === 1 && curLv < 3) {
         const upperSkill = ACTIVE_SKILLS.find((s) => s.prerequisiteSkillId === skill.id);
         if (upperSkill) {
-          synergyHint = `🔒 [Lv.3 달성 시 상위 무기 '${upperSkill.name}' 해금!]`;
+          synergyHint = `Lv.3 Unlocks Advanced: ${upperSkill.name}`;
         }
       }
 
@@ -132,7 +132,7 @@ export class LevelUpManager {
         for (const activeId of ownedActives) {
           const activeSkill = ALL_SKILLS_MAP.get(activeId);
           if (activeSkill && activeSkill.requiredPassiveId === skill.id) {
-            synergyHint = `🌟 [${activeSkill.name} 각성 재료]`;
+            synergyHint = `Evolution Synergy: ${activeSkill.name}`;
             break;
           }
         }
@@ -142,7 +142,7 @@ export class LevelUpManager {
               (s) => s.prerequisiteSkillId === activeId && s.requiredPassiveId === skill.id
             );
             if (upperSkill) {
-              synergyHint = `🌟 [${upperSkill.name} 계열 연계 패시브]`;
+              synergyHint = `Branch Synergy: ${upperSkill.name}`;
               break;
             }
           }
@@ -152,9 +152,9 @@ export class LevelUpManager {
         const hasPartner = (player.passiveSkills.get(skill.requiredPassiveId) ?? 0) > 0;
         const partnerPassive = ALL_SKILLS_MAP.get(skill.requiredPassiveId);
         if (hasPartner && partnerPassive) {
-          synergyHint = `🌟 [각성 재료 (${partnerPassive.name}) 보유!]`;
+          synergyHint = `Synergy Ready: ${partnerPassive.name}`;
         } else if (partnerPassive) {
-          synergyHint = `💡 [각성 필요 재료: ${partnerPassive.name}]`;
+          synergyHint = `Needs Synergy: ${partnerPassive.name}`;
         }
       }
 
@@ -173,8 +173,8 @@ export class LevelUpManager {
       result.push({
         skill: {
           id: isChicken ? 'fallback_chicken' : 'fallback_gold',
-          name: isChicken ? '🍗 한밤의 치킨' : '💰 마력석 주머니',
-          icon: isChicken ? 'assets/ui/items_sets/set_necro_core.png' : 'assets/ui/gates/gate_gold.png',
+          name: isChicken ? 'Roast Chicken' : 'Gold Pouch',
+          icon: isChicken ? 'assets/ui/items_sets/set_necro_core.webp' : 'assets/ui/gates/gate_gold.webp',
           category: 'passive',
           isNecroSignature: false,
           targeting: 'self_aoe',
@@ -183,7 +183,7 @@ export class LevelUpManager {
           levels: [
             {
               level: 1,
-              description: isChicken ? '체력 50% 즉시 회복' : '마력석 +500 골드 즉시 획득',
+              description: isChicken ? 'Instantly restore 50% HP' : 'Instantly gain +500 Gold',
               damageCoeff: 0,
               cooldown: 0,
               projectileCount: 0,

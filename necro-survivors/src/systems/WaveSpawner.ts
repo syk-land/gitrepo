@@ -209,7 +209,7 @@ export class WaveSpawner {
 
     this.enemies.push(elite);
     if (typeof (this.scene as any).showDamageText === 'function') {
-      (this.scene as any).showDamageText(pos.x, pos.y - 20, '⚠️ [정예 괴수 출현]', 0xffd000, true);
+      (this.scene as any).showDamageText(pos.x, pos.y - 20, 'ELITE MONSTER APPEARED!', 0xffd000, true);
     }
   }
 

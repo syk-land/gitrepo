@@ -44,10 +44,10 @@ const config: Phaser.Types.Core.GameConfig = {
   height: 960,
   parent: 'app',
   backgroundColor: '#0c0908',
-  pixelArt: false,
-  antialias: true,
-  antialiasGL: true,
-  roundPixels: false,
+  pixelArt: true,
+  antialias: false,
+  antialiasGL: false,
+  roundPixels: true,
   input: {
     activePointers: 4, // 멀티터치 지원 (조이스틱 조작 중 필살기 및 배속 버튼 동시 터치)
   },

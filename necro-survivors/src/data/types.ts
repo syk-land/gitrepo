@@ -69,7 +69,7 @@ export interface SkillLevelData {
 export interface SkillData {
   id: string;
   name: string;
-  icon: string;              // assets/pixel_vfx/skills/vfx_*.png
+  icon: string;              // assets/pixel_vfx/skills/vfx_*.webp
   category: 'weapon' | 'summon' | 'passive' | 'awakened';
   isNecroSignature: boolean; // 강령술사 고유 스킬 여부 (레벨업 가중치 우대)
   targeting: TargetingType;
@@ -104,7 +104,7 @@ export interface RegionData {
   name: string;
   gateType: 'iron' | 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
   gateName: string;
-  battleBg: string;          // assets/ui/regions/battle_bg_{r}.png
+  battleBg: string;          // assets/ui/regions/battle_bg_{r}.webp
   monsters: [string, string, string, string]; // W1 ~ W4
   named: string;             // W5 수문장
   boss: string;              // W6 최종 보스

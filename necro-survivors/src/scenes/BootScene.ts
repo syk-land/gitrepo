@@ -15,13 +15,15 @@ export class BootScene extends Phaser.Scene {
     const height = this.cameras.main.height;
 
     // 로딩 진행률 UI
-    const titleText = this.add.text(width / 2, height / 2 - 80, '💀 목적을 잃지 않는 사령군주 : 서바이버즈', {
-      fontFamily: 'NeoDunggeunmo, monospace',
-      fontSize: '20px',
+    const titleText = this.add.text(width / 2, height / 2 - 80, 'NECRO SURVIVORS', {
+      fontFamily: 'Cinzel, serif',
+      fontSize: '24px',
+      fontStyle: 'bold',
       color: '#00ffaa',
     }).setOrigin(0.5);
 
-    const subText = this.add.text(width / 2, height / 2 - 40, '200종 정통 도트 에셋 및 차원문 동기화 중...', {
+    const subText = this.add.text(width / 2, height / 2 - 44, 'Summoning Undead Legion & Portals...', {
+      fontFamily: 'Inter, sans-serif',
       fontSize: '14px',
       color: '#ffd000',
     }).setOrigin(0.5);
@@ -55,7 +57,7 @@ export class BootScene extends Phaser.Scene {
     });
 
     // 1. 주인공 사령군주 (최미남)
-    this.load.image('hero_nemesis', 'assets/agents/agent_male_nemesis.png');
+    this.load.image('hero_nemesis', 'assets/agents/agent_male_nemesis.webp');
 
     // 2. 소환수 군단 5종
     for (const minion of Object.values(MINIONS_DATA)) {
@@ -64,16 +66,16 @@ export class BootScene extends Phaser.Scene {
 
     // 3. 차원문 1~14지역 배경, 심리스 바닥 타일 및 84종 괴수 에셋 일괄 등록
     for (let r = 1; r <= 14; r++) {
-      this.load.image(`battle_bg_${r}`, `assets/ui/regions/battle_bg_${r}.png`);
-      this.load.image(`town_bg_${r}`, `assets/ui/regions/town_bg_${r}.png`);
-      this.load.image(`battle_tile_${r}`, `assets/ui/tiles/battle_tile_${r}.png`);
+      this.load.image(`battle_bg_${r}`, `assets/ui/regions/battle_bg_${r}.webp`);
+      this.load.image(`town_bg_${r}`, `assets/ui/regions/town_bg_${r}.webp`);
+      this.load.image(`battle_tile_${r}`, `assets/ui/tiles/battle_tile_${r}.webp`);
 
       // 괴수 4종 + 수문장 + 보스
       for (let m = 1; m <= 4; m++) {
-        this.load.image(`m_${r}_${m}`, `assets/monsters/m_${r}_${m}.png`);
+        this.load.image(`m_${r}_${m}`, `assets/monsters/m_${r}_${m}.webp`);
       }
-      this.load.image(`m_${r}_named`, `assets/monsters/m_${r}_named.png`);
-      this.load.image(`m_${r}_boss`, `assets/monsters/m_${r}_boss.png`);
+      this.load.image(`m_${r}_named`, `assets/monsters/m_${r}_named.webp`);
+      this.load.image(`m_${r}_boss`, `assets/monsters/m_${r}_boss.webp`);
     }
 
     // 4. 스킬 UI 아이콘 & 인게임 투사체 VFX
@@ -94,28 +96,28 @@ export class BootScene extends Phaser.Scene {
       'awakened_spear_crimson', 'awakened_spear_heaven',
     ];
     for (const id of inGameVfxList) {
-      this.load.image(`vfx_${id}`, `assets/skills/vfx/vfx_${id}.png`);
+      this.load.image(`vfx_${id}`, `assets/skills/vfx/vfx_${id}.webp`);
     }
-    this.load.image('vfx_minion_arrow', 'assets/skills/vfx/vfx_minion_arrow.png');
-    this.load.image('vfx_minion_mage', 'assets/skills/vfx/vfx_minion_mage.png');
-    this.load.image('vfx_minion_drone', 'assets/skills/vfx/vfx_minion_drone.png');
+    this.load.image('vfx_minion_arrow', 'assets/skills/vfx/vfx_minion_arrow.webp');
+    this.load.image('vfx_minion_mage', 'assets/skills/vfx/vfx_minion_mage.webp');
+    this.load.image('vfx_minion_drone', 'assets/skills/vfx/vfx_minion_drone.webp');
 
     // 5. 게이트 및 UI 프레임, 드랍 아이템 (비급서, 진화 보물상자, 4단계 마력석 보석)
-    this.load.image('item_parchment', 'assets/ui/item_parchment.png');
-    this.load.image('item_evolution_chest', 'assets/ui/item_evolution_chest.png');
-    this.load.image('gem_cyan', 'assets/ui/gems/gem_cyan.png');
-    this.load.image('gem_jade', 'assets/ui/gems/gem_jade.png');
-    this.load.image('gem_gold', 'assets/ui/gems/gem_gold.png');
-    this.load.image('gem_ruby', 'assets/ui/gems/gem_ruby.png');
+    this.load.image('item_parchment', 'assets/ui/item_parchment.webp');
+    this.load.image('item_evolution_chest', 'assets/ui/item_evolution_chest.webp');
+    this.load.image('gem_cyan', 'assets/ui/gems/gem_cyan.webp');
+    this.load.image('gem_jade', 'assets/ui/gems/gem_jade.webp');
+    this.load.image('gem_gold', 'assets/ui/gems/gem_gold.webp');
+    this.load.image('gem_ruby', 'assets/ui/gems/gem_ruby.webp');
 
     const gateTypes = ['iron', 'bronze', 'silver', 'gold', 'platinum', 'diamond'];
     for (const g of gateTypes) {
-      this.load.image(`gate_${g}`, `assets/ui/gates/gate_${g}.png`);
+      this.load.image(`gate_${g}`, `assets/ui/gates/gate_${g}.webp`);
     }
 
-    this.load.image('ui_joseon_frame', 'assets/ui/ui_joseon_frame_cropped.png');
-    this.load.image('ui_hanji_card', 'assets/ui/ui_hanji_card_cropped.png');
-    this.load.image('ui_hanji_tile', 'assets/ui/ui_hanji_center_tile.png');
+    this.load.image('ui_joseon_frame', 'assets/ui/ui_joseon_frame_cropped.webp');
+    this.load.image('ui_hanji_card', 'assets/ui/ui_hanji_card_cropped.webp');
+    this.load.image('ui_hanji_tile', 'assets/ui/ui_hanji_center_tile.webp');
   }
 
   create(): void {
