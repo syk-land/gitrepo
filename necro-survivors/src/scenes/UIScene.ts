@@ -1363,7 +1363,9 @@ export class UIScene extends Phaser.Scene {
     const dim = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.88).setInteractive();
     this.modalContainer.add(dim);
 
-    const box = drawHanokFrame(this, width / 2 - 200, height / 2 - 210, 400, 420, {
+    const canRevive = !isVictory && !this.battleScene.hasUsedRevive;
+    const boxHeight = canRevive ? 480 : 420;
+    const box = drawHanokFrame(this, width / 2 - 200, height / 2 - 210, 400, boxHeight, {
       bgColor: 0x18120e,
       bgAlpha: 0.97,
       accentColor: isVictory ? 0x00ffaa : 0xff3344,
@@ -1417,13 +1419,50 @@ export class UIScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.modalContainer.add(goldText);
 
+    let isClaiming = false;
+    const btnOffsetY = canRevive ? 56 : 0;
+
+    // 버튼 0 (패배 시 1회 한정): 광고 보고 100% 체력 부활
+    if (canRevive) {
+      const reviveBtn = this.add.graphics();
+      reviveBtn.fillStyle(0x00cc88, 1);
+      reviveBtn.fillRoundedRect(width / 2 - 140, height / 2 + 54, 280, 46, 6);
+      this.modalContainer.add(reviveBtn);
+
+      const reviveText = this.add.text(width / 2, height / 2 + 77, 'REVIVE FULL HP (WATCH AD)', {
+        fontFamily: 'Inter, sans-serif',
+        fontSize: '14px',
+        color: '#0c0908',
+        fontStyle: 'bold',
+      }).setOrigin(0.5);
+      this.modalContainer.add(reviveText);
+
+      const reviveHit = this.add.zone(width / 2, height / 2 + 77, 280, 46).setInteractive({ useHandCursor: true });
+      reviveHit.on('pointerdown', async () => {
+        if (isClaiming) return;
+        isClaiming = true;
+        SoundEngine.getInstance().click();
+        reviveText.setText('LOADING AD...');
+        const success = await AdBillingAdapter.getInstance().showReviveAd();
+        if (success) {
+          this.modalContainer.removeAll(true);
+          this.activeModalType = 'none';
+          this.battleScene.revivePlayer();
+        } else {
+          isClaiming = false;
+          reviveText.setText('REVIVE FULL HP (WATCH AD)');
+        }
+      });
+      this.modalContainer.add(reviveHit);
+    }
+
     // 버튼 1: 보상형 광고 2배 수령
     const doubleBtn = this.add.graphics();
     doubleBtn.fillStyle(0xd4a338, 1);
-    doubleBtn.fillRoundedRect(width / 2 - 140, height / 2 + 60, 280, 46, 6);
+    doubleBtn.fillRoundedRect(width / 2 - 140, height / 2 + 60 + btnOffsetY, 280, 46, 6);
     this.modalContainer.add(doubleBtn);
 
-    const doubleText = this.add.text(width / 2, height / 2 + 83, 'WATCH AD: 2X GOLD LOOT', {
+    const doubleText = this.add.text(width / 2, height / 2 + 83 + btnOffsetY, 'WATCH AD: 2X GOLD LOOT', {
       fontFamily: 'Inter, sans-serif',
       fontSize: '14px',
       color: '#0c0908',
@@ -1431,8 +1470,7 @@ export class UIScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.modalContainer.add(doubleText);
 
-    let isClaiming = false;
-    const doubleHit = this.add.zone(width / 2, height / 2 + 83, 280, 46).setInteractive({ useHandCursor: true });
+    const doubleHit = this.add.zone(width / 2, height / 2 + 83 + btnOffsetY, 280, 46).setInteractive({ useHandCursor: true });
     doubleHit.on('pointerdown', async () => {
       if (isClaiming) return;
       isClaiming = true;
@@ -1454,11 +1492,11 @@ export class UIScene extends Phaser.Scene {
     const exitBtn = this.add.graphics();
     exitBtn.fillStyle(0x231b15, 1);
     exitBtn.lineStyle(1, 0x543b28, 1);
-    exitBtn.fillRoundedRect(width / 2 - 140, height / 2 + 120, 280, 44, 6);
-    exitBtn.strokeRoundedRect(width / 2 - 140, height / 2 + 120, 280, 44, 6);
+    exitBtn.fillRoundedRect(width / 2 - 140, height / 2 + 120 + btnOffsetY, 280, 44, 6);
+    exitBtn.strokeRoundedRect(width / 2 - 140, height / 2 + 120 + btnOffsetY, 280, 44, 6);
     this.modalContainer.add(exitBtn);
 
-    const exitText = this.add.text(width / 2, height / 2 + 142, 'RETURN TO HUB', {
+    const exitText = this.add.text(width / 2, height / 2 + 142 + btnOffsetY, 'RETURN TO HUB', {
       fontFamily: 'Inter, sans-serif',
       fontSize: '15px',
       fontStyle: 'bold',
@@ -1466,7 +1504,7 @@ export class UIScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.modalContainer.add(exitText);
 
-    const exitHit = this.add.zone(width / 2, height / 2 + 142, 280, 44).setInteractive({ useHandCursor: true });
+    const exitHit = this.add.zone(width / 2, height / 2 + 142 + btnOffsetY, 280, 44).setInteractive({ useHandCursor: true });
     exitHit.on('pointerdown', () => {
       if (isClaiming) return;
       isClaiming = true;

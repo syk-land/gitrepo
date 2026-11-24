@@ -56,6 +56,7 @@ export class BattleScene extends Phaser.Scene {
   private evolutionChest: Phaser.GameObjects.Sprite | null = null;
   public awakeningDrops: { sprite: Phaser.GameObjects.Sprite; label: Phaser.GameObjects.Text; x: number; y: number; active: boolean }[] = [];
   public gameSpeed: number = 1.0;
+  public hasUsedRevive: boolean = false;
 
   constructor() {
     super('BattleScene');
@@ -79,6 +80,7 @@ export class BattleScene extends Phaser.Scene {
     this.damageTextPool = [];
     this.activeDamageTextCount = 0;
     this.gameSpeed = 1.0;
+    this.hasUsedRevive = false;
     this.minions = [];
     this.enemies = [];
     this.projectiles = [];
@@ -983,6 +985,34 @@ export class BattleScene extends Phaser.Scene {
     this.isPaused = true;
     const uiScene = this.scene.get('UIScene') as UIScene;
     uiScene.showResultModal(false);
+  }
+
+  public revivePlayer(): void {
+    if (this.hasUsedRevive) return;
+    this.hasUsedRevive = true;
+    this.player.hp = this.player.maxHp;
+    this.player.invulnTimer = 2.5;
+    this.player.sprite.setAlpha(1);
+    // Knock back nearby enemies so player has breathing room
+    const px = this.player.x;
+    const py = this.player.y;
+    for (const enemy of this.enemies) {
+      if (!enemy.active) continue;
+      const dx = enemy.x - px;
+      const dy = enemy.y - py;
+      const distSq = dx * dx + dy * dy;
+      if (distSq < 260 * 260) {
+        const dist = Math.sqrt(distSq) || 1;
+        const push = 260 - dist + 80;
+        enemy.x += (dx / dist) * push;
+        enemy.y += (dy / dist) * push;
+        if (enemy.sprite) enemy.sprite.setPosition(enemy.x, enemy.y);
+      }
+    }
+    this.cameras.main.flash(320, 0, 255, 170);
+    SoundEngine.getInstance().levelUp();
+    this.showDamageText(px, py - 34, 'SOUL REVIVED!', 0x00ffaa, true);
+    this.isPaused = false;
   }
 
   public showDamageText(x: number, y: number, text: string, color: number, isCrit: boolean = false): void {
