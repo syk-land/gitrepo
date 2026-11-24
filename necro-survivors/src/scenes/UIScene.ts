@@ -532,6 +532,23 @@ export class UIScene extends Phaser.Scene {
           this.setGameSpeedByValue(3.0);
         }
       });
+
+      // Clear held keyboard/joystick inputs when browser window loses focus (prevents stuck movement)
+      const clearHeldInputs = () => {
+        this.input.keyboard?.resetKeys();
+        this.joystickActive = false;
+        this.joystickPointerId = -1;
+        this.joystickVector.x = 0;
+        this.joystickVector.y = 0;
+        if (this.battleScene?.inputVector) {
+          this.battleScene.inputVector.x = 0;
+          this.battleScene.inputVector.y = 0;
+        }
+      };
+      window.addEventListener('blur', clearHeldInputs);
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+        window.removeEventListener('blur', clearHeldInputs);
+      });
     }
   }
 

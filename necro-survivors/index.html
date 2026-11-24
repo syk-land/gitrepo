@@ -34,21 +34,13 @@
               }).catch(function () {});
             }
           };
-        } else {
+        } else if (/gamemonetize/i.test(host)) {
           s.id = 'gamemonetize-sdk';
           s.src = 'https://api.gamemonetize.com/sdk.js';
+        } else {
+          return;
         }
         document.head.appendChild(s);
-        window.addEventListener('click', function () {
-          if (window.__gmPrerollDone) return;
-          if (window.sdk && typeof window.sdk.showBanner === 'function') {
-            window.__gmPrerollDone = true;
-            try { window.sdk.showBanner(); } catch (e) {}
-          } else if (typeof window.ShowAds === 'function') {
-            window.__gmPrerollDone = true;
-            try { window.ShowAds(); } catch (e) {}
-          }
-        }, { passive: true });
       })();
     </script>
     <style>
