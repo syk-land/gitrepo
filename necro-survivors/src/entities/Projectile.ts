@@ -6,6 +6,8 @@ import { ISkillCaster } from './ISkillCaster';
 import { SoundEngine } from '../core/SoundEngine';
 
 export class Projectile {
+  private static hitScratch: Enemy[] = [];
+  private static splashScratch: Enemy[] = [];
   public skillId: string = '';
   public x: number;
   public y: number;
@@ -235,7 +237,7 @@ export class Projectile {
   private checkCollisions(grid: SpatialHashGrid<Enemy>): void {
     // 실제 스프라이트 피격 원형 판정: hitboxRadius + enemy.radius (문제점 4 해결)
     const queryR = this.hitboxRadius + 45;
-    const hits = grid.queryRadius(this.x, this.y, queryR);
+    const hits = grid.queryRadius(this.x, this.y, queryR, Projectile.hitScratch);
 
     for (const enemy of hits) {
       if (!enemy.active || this.hitEnemies.has(enemy)) continue;
@@ -285,6 +287,11 @@ export class Projectile {
 
       if (isCrit) {
         SoundEngine.getInstance().crit();
+        if (typeof (this.scene as any).triggerHitShake === 'function') {
+          (this.scene as any).triggerHitShake(0.003, 60);
+        }
+      } else if ((enemy.isBoss || enemy.isNamed) && typeof (this.scene as any).triggerHitShake === 'function') {
+        (this.scene as any).triggerHitShake(0.0035, 65);
       }
 
       if (typeof (this.scene as any).showDamageText === 'function') {
@@ -326,7 +333,7 @@ export class Projectile {
       if (this.skillId === 'necro_lich_curse' && this.scene) {
         const curseRadius = Math.max(55, this.areaRadius);
         const splashDmg = Math.round(hitDmg * 0.70);
-        const curseTargets = grid.queryRadius(enemy.x, enemy.y, curseRadius);
+        const curseTargets = grid.queryRadius(enemy.x, enemy.y, curseRadius, Projectile.splashScratch);
         for (const ct of curseTargets) {
           if (!ct.active || ct === enemy) continue;
           const cdx = ct.x - enemy.x;
@@ -352,7 +359,7 @@ export class Projectile {
       if ((this.skillId === 'fire_ball' || this.skillId === 'awakened_fireball') && this.scene) {
         const expRadius = Math.max(45, this.areaRadius);
         const splashDmg = Math.round(hitDmg * 0.75);
-        const splashTargets = grid.queryRadius(enemy.x, enemy.y, expRadius);
+        const splashTargets = grid.queryRadius(enemy.x, enemy.y, expRadius, Projectile.splashScratch);
         for (const st of splashTargets) {
           if (!st.active || st === enemy) continue;
           const sdx = st.x - enemy.x;
@@ -430,6 +437,11 @@ export class Projectile {
 
       if (isCrit) {
         SoundEngine.getInstance().crit();
+        if (typeof (this.scene as any).triggerHitShake === 'function') {
+          (this.scene as any).triggerHitShake(0.003, 60);
+        }
+      } else if ((nextTarget.isBoss || nextTarget.isNamed) && typeof (this.scene as any).triggerHitShake === 'function') {
+        (this.scene as any).triggerHitShake(0.0035, 65);
       }
 
       // 번개 아크 시각 효과 라인 렌더링

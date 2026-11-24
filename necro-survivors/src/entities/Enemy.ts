@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { SpatialEntity, SpatialHashGrid } from '../core/SpatialHashGrid';
 
 export class Enemy implements SpatialEntity {
+  private static neighborScratch: Enemy[] = [];
   public x: number;
   public y: number;
   public radius: number;
@@ -347,7 +348,7 @@ export class Enemy implements SpatialEntity {
     this.y += (dy / dist) * currentSpeed * dt;
 
     // 몬스터 간 부드러운 밀어내기 (Soft Separation - 렉 없는 공간 해싱 기반)
-    const neighbors = grid.queryRadius(this.x, this.y, this.radius * 2);
+    const neighbors = grid.queryRadius(this.x, this.y, this.radius * 2, Enemy.neighborScratch);
     for (const neighbor of neighbors) {
       if (neighbor === this || !neighbor.active) continue;
       const ndx = this.x - neighbor.x;

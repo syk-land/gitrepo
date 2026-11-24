@@ -4,12 +4,12 @@ import { HubScene } from './scenes/HubScene';
 import { BattleScene } from './scenes/BattleScene';
 import { UIScene } from './scenes/UIScene';
 
-// 텍스트 고해상도 렌더링 & 고급 타이포그래피 패치:
-// 1) 해상도 변화 및 고해상도(Retina/모바일) 환경에서 폰트가 깨지지 않도록 2~3배 슈퍼샘플링 적용
-// 2) 텍스트 내부 텍스처에 LINEAR 필터를 강제하여 축소/확대 시 글자 획 탈락 방지
-// 3) padding을 부여해 이모지 상하단 클리핑 방지
-const UI_FONT_STACK = "'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif";
-const DISPLAY_FONT_STACK = "'Cinzel', 'Gowun Batang', 'Pretendard Variable', 'Pretendard', serif";
+// High-DPI text rendering & typography patch:
+// 1) Cap text supersampling at 2x to reduce mobile GPU texture memory and draw overhead
+// 2) Force LINEAR filtering on text textures to keep scaled glyphs crisp
+// 3) Add slight padding to prevent emoji/glyph clipping
+const UI_FONT_STACK = "'Inter', -apple-system, BlinkMacSystemFont, sans-serif";
+const DISPLAY_FONT_STACK = "'Cinzel', 'Inter', serif";
 
 const origText = (Phaser.GameObjects.GameObjectFactory.prototype as any).text;
 (Phaser.GameObjects.GameObjectFactory.prototype as any).text = function (
@@ -19,11 +19,11 @@ const origText = (Phaser.GameObjects.GameObjectFactory.prototype as any).text;
   style?: Phaser.Types.GameObjects.Text.TextStyle
 ) {
   const fontSizeNum = style?.fontSize ? parseInt(String(style.fontSize), 10) : 14;
-  const isDisplayHeading = fontSizeNum >= 18 || style?.fontFamily?.includes('Gowun Batang') || style?.fontFamily?.includes('Cinzel');
+  const isDisplayHeading = fontSizeNum >= 18 || style?.fontFamily?.includes('Cinzel');
   const resolvedFont = isDisplayHeading ? DISPLAY_FONT_STACK : UI_FONT_STACK;
 
   const mergedStyle: Phaser.Types.GameObjects.Text.TextStyle = {
-    resolution: Math.min(3, Math.max(2, Math.ceil((window.devicePixelRatio || 1) * 2))),
+    resolution: Math.min(2, Math.max(1.5, window.devicePixelRatio || 1)),
     padding: { x: 4, y: 3 },
     shadow: { offsetX: 0, offsetY: 1, color: '#000000', blur: 2, fill: true },
     ...style,
@@ -63,19 +63,25 @@ async function initGame(): Promise<void> {
     if (document.fonts) {
       await Promise.race([
         Promise.all([
-          document.fonts.load('700 20px "Gowun Batang"'),
-          document.fonts.load('700 16px "Pretendard Variable"'),
-          document.fonts.ready,
+          document.fonts.load('700 20px "Cinzel"'),
+          document.fonts.load('600 16px "Inter"'),
         ]),
-        new Promise((resolve) => setTimeout(resolve, 1800)),
+        new Promise((resolve) => setTimeout(resolve, 500)),
       ]);
     }
   } catch {
     // Ignore font pre-load failures and proceed with fallback fonts
   }
   const game = new Phaser.Game(config);
+  let resizeTimer: number | null = null;
   window.addEventListener('resize', () => {
-    game.scale.refresh();
+    if (resizeTimer !== null) {
+      window.clearTimeout(resizeTimer);
+    }
+    resizeTimer = window.setTimeout(() => {
+      resizeTimer = null;
+      game.scale.refresh();
+    }, 120);
   });
 }
 

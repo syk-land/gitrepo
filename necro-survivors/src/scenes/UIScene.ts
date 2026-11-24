@@ -46,6 +46,16 @@ export class UIScene extends Phaser.Scene {
   private currentSpeedIndex: number = 0;
   private readonly speedOptions: number[] = [1.0, 1.5, 2.0, 3.0];
 
+  // Compact HUD utility buttons (Pause / Mute) & Kill Streak badge
+  private muteText!: Phaser.GameObjects.Text;
+  private muteBg!: Phaser.GameObjects.Graphics;
+  private streakContainer!: Phaser.GameObjects.Container;
+  private streakBg!: Phaser.GameObjects.Graphics;
+  private streakBarFill!: Phaser.GameObjects.Graphics;
+  private streakText!: Phaser.GameObjects.Text;
+  private activeModalType: 'none' | 'pause' | 'blocking' = 'none';
+  private toastText?: Phaser.GameObjects.Text;
+
   constructor() {
     super('UIScene');
   }
@@ -138,6 +148,179 @@ export class UIScene extends Phaser.Scene {
 
     // 배속 조절 버튼 (1x / 1.5x / 2x / 3x)
     this.createSpeedButton(width - 48, 54);
+
+    // Compact Pause & Mute buttons on top-left HUD
+    this.createUtilityButtons();
+
+    // Compact Kill Streak / Horde Combo badge below top HUD
+    this.createKillStreakBadge(width);
+  }
+
+  private createUtilityButtons(): void {
+    // Pause button (x = 26, y = 54)
+    const pauseContainer = this.add.container(26, 54).setDepth(150);
+    const pauseBg = this.add.graphics();
+    pauseBg.fillStyle(0x18120e, 0.95);
+    pauseBg.lineStyle(1.5, 0x543b28, 1);
+    pauseBg.fillRoundedRect(-14, -14, 28, 28, 6);
+    pauseBg.strokeRoundedRect(-14, -14, 28, 28, 6);
+    pauseContainer.add(pauseBg);
+
+    const pauseTxt = this.add.text(0, 0, 'II', {
+      fontFamily: 'Inter, sans-serif',
+      fontSize: '12px',
+      fontStyle: 'bold',
+      color: '#f5ede2',
+    }).setOrigin(0.5);
+    pauseContainer.add(pauseTxt);
+
+    const pauseHit = this.add.rectangle(0, 0, 32, 32, 0x000000, 0.001).setInteractive({ useHandCursor: true });
+    pauseHit.on('pointerdown', (_pointer: Phaser.Input.Pointer, _lx: number, _ly: number, event: Phaser.Types.Input.EventData) => {
+      if (event && event.stopPropagation) event.stopPropagation();
+      this.togglePause();
+    });
+    pauseContainer.add(pauseHit);
+
+    // Mute button (x = 60, y = 54)
+    const muteContainer = this.add.container(60, 54).setDepth(150);
+    this.muteBg = this.add.graphics();
+    muteContainer.add(this.muteBg);
+
+    this.muteText = this.add.text(0, 0, '🔊', {
+      fontFamily: 'Inter, sans-serif',
+      fontSize: '13px',
+      color: '#f5ede2',
+    }).setOrigin(0.5);
+    muteContainer.add(this.muteText);
+    this.updateMuteButtonVisual();
+
+    const muteHit = this.add.rectangle(0, 0, 32, 32, 0x000000, 0.001).setInteractive({ useHandCursor: true });
+    muteHit.on('pointerdown', (_pointer: Phaser.Input.Pointer, _lx: number, _ly: number, event: Phaser.Types.Input.EventData) => {
+      if (event && event.stopPropagation) event.stopPropagation();
+      this.toggleAudioMute();
+    });
+    muteContainer.add(muteHit);
+  }
+
+  private updateMuteButtonVisual(): void {
+    if (!this.muteBg || !this.muteText) return;
+    const enabled = SoundEngine.getInstance().enabled;
+    this.muteBg.clear();
+    this.muteBg.fillStyle(0x18120e, 0.95);
+    this.muteBg.lineStyle(1.5, enabled ? 0x00ffaa : 0xff3344, 1);
+    this.muteBg.fillRoundedRect(-14, -14, 28, 28, 6);
+    this.muteBg.strokeRoundedRect(-14, -14, 28, 28, 6);
+    this.muteText.setText(enabled ? '🔊' : '🔇');
+  }
+
+  public toggleAudioMute(): void {
+    const enabled = SoundEngine.getInstance().toggleMute();
+    this.updateMuteButtonVisual();
+    if (enabled) {
+      SoundEngine.getInstance().click();
+    }
+    this.showHudToast(enabled ? 'AUDIO: ON (M)' : 'AUDIO: MUTED (M)', enabled ? '#00ffaa' : '#ff5566');
+  }
+
+  private showHudToast(message: string, color: string = '#ffd000'): void {
+    if (this.toastText && this.toastText.scene) {
+      this.toastText.destroy();
+    }
+    const width = this.cameras.main.width;
+    const toast = this.add.text(width / 2, 98, message, {
+      fontFamily: 'Inter, sans-serif',
+      fontSize: '12px',
+      fontStyle: 'bold',
+      color,
+      backgroundColor: '#120d0a',
+      padding: { x: 10, y: 4 },
+    }).setOrigin(0.5).setDepth(190);
+    this.toastText = toast;
+
+    this.tweens.add({
+      targets: toast,
+      alpha: 0,
+      y: 88,
+      delay: 750,
+      duration: 350,
+      onComplete: () => {
+        if (toast.scene) toast.destroy();
+        if (this.toastText === toast) this.toastText = undefined;
+      },
+    });
+  }
+
+  private createKillStreakBadge(width: number): void {
+    this.streakContainer = this.add.container(width - 74, 102).setDepth(145).setVisible(false);
+    this.streakBg = this.add.graphics();
+    this.streakContainer.add(this.streakBg);
+
+    this.streakBarFill = this.add.graphics();
+    this.streakContainer.add(this.streakBarFill);
+
+    this.streakText = this.add.text(0, -3, '🔥 0 STREAK', {
+      fontFamily: 'Inter, sans-serif',
+      fontSize: '12px',
+      fontStyle: 'bold',
+      color: '#ffd000',
+    }).setOrigin(0.5);
+    this.streakContainer.add(this.streakText);
+  }
+
+  public showKillStreakBanner(milestone: number): void {
+    const width = this.cameras.main.width;
+    let label = `${milestone} KILL STREAK!`;
+    let accent = 0xffd000;
+    let textColor = '#ffd000';
+
+    if (milestone >= 200) {
+      label = `${milestone} NECRO OVERLORD!`;
+      accent = 0x00f0ff;
+      textColor = '#00f0ff';
+    } else if (milestone >= 100) {
+      label = `${milestone} HORDE SLAYER!`;
+      accent = 0xff2a6d;
+      textColor = '#ff5588';
+    } else if (milestone >= 50) {
+      label = `${milestone} UNSTOPPABLE!`;
+      accent = 0xff8800;
+      textColor = '#ffaa33';
+    }
+
+    const banner = this.add.container(width / 2, 152).setDepth(155).setScale(0.85).setAlpha(0);
+    const bg = this.add.graphics();
+    bg.fillStyle(0x120c09, 0.9);
+    bg.lineStyle(2, accent, 1);
+    bg.fillRoundedRect(-145, -18, 290, 36, 8);
+    bg.strokeRoundedRect(-145, -18, 290, 36, 8);
+    banner.add(bg);
+
+    const txt = this.add.text(0, 0, `🔥 ${label}`, {
+      fontFamily: 'Cinzel, serif',
+      fontSize: '16px',
+      fontStyle: 'bold',
+      color: textColor,
+    }).setOrigin(0.5);
+    banner.add(txt);
+
+    this.tweens.add({
+      targets: banner,
+      scale: 1,
+      alpha: 1,
+      duration: 180,
+      ease: 'Back.easeOut',
+      onComplete: () => {
+        this.tweens.add({
+          targets: banner,
+          alpha: 0,
+          y: 138,
+          delay: 1100,
+          duration: 380,
+          ease: 'Quad.easeIn',
+          onComplete: () => banner.destroy(),
+        });
+      },
+    });
   }
 
   private createSpeedButton(x: number, y: number): void {
@@ -294,9 +477,11 @@ export class UIScene extends Phaser.Scene {
       }
 
       if (dist > 5) {
-        this.battleScene.inputVector = { x: dx / dist, y: dy / dist };
+        this.battleScene.inputVector.x = dx / dist;
+        this.battleScene.inputVector.y = dy / dist;
       } else {
-        this.battleScene.inputVector = { x: 0, y: 0 };
+        this.battleScene.inputVector.x = 0;
+        this.battleScene.inputVector.y = 0;
       }
     });
 
@@ -307,7 +492,8 @@ export class UIScene extends Phaser.Scene {
       this.joystickPointer = null;
       this.joystickBase.setVisible(false);
       this.joystickThumb.setVisible(false);
-      this.battleScene.inputVector = { x: 0, y: 0 };
+      this.battleScene.inputVector.x = 0;
+      this.battleScene.inputVector.y = 0;
     };
 
     this.input.on('pointerup', onPointerRelease);
@@ -320,24 +506,167 @@ export class UIScene extends Phaser.Scene {
       this.wasdKeys = this.input.keyboard.addKeys('W,A,S,D') as typeof this.wasdKeys;
 
       this.input.keyboard.on('keydown', (event: KeyboardEvent) => {
-        if (event.key === 'b' || event.key === 'B' || event.key === 'x' || event.key === 'X') {
+        if (event.repeat) return;
+        const key = event.key;
+
+        if (key === ' ' || key === 'p' || key === 'P' || key === 'Escape') {
+          if (key === ' ') event.preventDefault();
+          this.togglePause();
+          return;
+        }
+
+        if (key === 'm' || key === 'M') {
+          this.toggleAudioMute();
+          return;
+        }
+
+        if (this.activeModalType === 'blocking') return;
+
+        if (key === 'b' || key === 'B' || key === 'x' || key === 'X') {
           this.toggleGameSpeed();
-        } else if (event.key === '1') {
+        } else if (key === '1') {
           this.setGameSpeedByValue(1.0);
-        } else if (event.key === '2') {
+        } else if (key === '2') {
           this.setGameSpeedByValue(2.0);
-        } else if (event.key === '3') {
+        } else if (key === '3') {
           this.setGameSpeedByValue(3.0);
         }
       });
     }
   }
 
+  public togglePause(): void {
+    if (this.activeModalType === 'blocking') return;
+    if (this.activeModalType === 'pause') {
+      this.hidePauseModal();
+    } else if (!this.battleScene.isPaused) {
+      this.showPauseModal('PAUSED');
+    }
+  }
+
+  public showPauseModal(titleLabel: string = 'PAUSED'): void {
+    if (this.activeModalType === 'blocking') return;
+    this.activeModalType = 'pause';
+    this.battleScene.setManualPause(true);
+    this.modalContainer.removeAll(true);
+
+    const width = this.cameras.main.width;
+    const height = this.cameras.main.height;
+
+    const dim = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.72).setInteractive();
+    this.modalContainer.add(dim);
+
+    const box = drawHanokFrame(this, width / 2 - 170, height / 2 - 145, 340, 290, {
+      bgColor: 0x18120e,
+      bgAlpha: 0.97,
+      accentColor: 0xd4a338,
+      radius: 8,
+    });
+    this.modalContainer.add(box);
+
+    const title = this.add.text(width / 2, height / 2 - 102, titleLabel, {
+      fontFamily: 'Cinzel, serif',
+      fontSize: '22px',
+      fontStyle: 'bold',
+      color: '#ffd000',
+    }).setOrigin(0.5);
+    this.modalContainer.add(title);
+
+    const hint = this.add.text(width / 2, height / 2 - 70, 'WASD / Arrows: Move  |  Space / P: Pause  |  M: Mute', {
+      fontFamily: 'Inter, sans-serif',
+      fontSize: '11px',
+      color: '#b8a692',
+    }).setOrigin(0.5);
+    this.modalContainer.add(hint);
+
+    // Resume button
+    const resumeBtn = this.add.graphics();
+    resumeBtn.fillStyle(0x00ffaa, 1);
+    resumeBtn.fillRoundedRect(width / 2 - 120, height / 2 - 36, 240, 44, 6);
+    this.modalContainer.add(resumeBtn);
+
+    const resumeTxt = this.add.text(width / 2, height / 2 - 14, 'RESUME BATTLE', {
+      fontFamily: 'Inter, sans-serif',
+      fontSize: '15px',
+      fontStyle: 'bold',
+      color: '#0c0908',
+    }).setOrigin(0.5);
+    this.modalContainer.add(resumeTxt);
+
+    const resumeHit = this.add.zone(width / 2, height / 2 - 14, 240, 44).setInteractive({ useHandCursor: true });
+    resumeHit.on('pointerdown', () => {
+      SoundEngine.getInstance().click();
+      this.hidePauseModal();
+    });
+    this.modalContainer.add(resumeHit);
+
+    // Sound toggle button
+    const soundBtn = this.add.graphics();
+    soundBtn.fillStyle(0x231b15, 1);
+    soundBtn.lineStyle(1, 0x00f0ff, 1);
+    soundBtn.fillRoundedRect(width / 2 - 120, height / 2 + 22, 240, 40, 6);
+    soundBtn.strokeRoundedRect(width / 2 - 120, height / 2 + 22, 240, 40, 6);
+    this.modalContainer.add(soundBtn);
+
+    const soundTxt = this.add.text(
+      width / 2,
+      height / 2 + 42,
+      SoundEngine.getInstance().enabled ? 'AUDIO: ON (M)' : 'AUDIO: MUTED (M)',
+      {
+        fontFamily: 'Inter, sans-serif',
+        fontSize: '14px',
+        fontStyle: 'bold',
+        color: '#00f0ff',
+      }
+    ).setOrigin(0.5);
+    this.modalContainer.add(soundTxt);
+
+    const soundHit = this.add.zone(width / 2, height / 2 + 42, 240, 40).setInteractive({ useHandCursor: true });
+    soundHit.on('pointerdown', () => {
+      this.toggleAudioMute();
+      soundTxt.setText(SoundEngine.getInstance().enabled ? 'AUDIO: ON (M)' : 'AUDIO: MUTED (M)');
+    });
+    this.modalContainer.add(soundHit);
+
+    // Return to Hub button
+    const hubBtn = this.add.graphics();
+    hubBtn.fillStyle(0x231b15, 1);
+    hubBtn.lineStyle(1, 0x543b28, 1);
+    hubBtn.fillRoundedRect(width / 2 - 120, height / 2 + 76, 240, 40, 6);
+    hubBtn.strokeRoundedRect(width / 2 - 120, height / 2 + 76, 240, 40, 6);
+    this.modalContainer.add(hubBtn);
+
+    const hubTxt = this.add.text(width / 2, height / 2 + 96, 'RETURN TO HUB', {
+      fontFamily: 'Inter, sans-serif',
+      fontSize: '14px',
+      color: '#f5ede2',
+    }).setOrigin(0.5);
+    this.modalContainer.add(hubTxt);
+
+    const hubHit = this.add.zone(width / 2, height / 2 + 96, 240, 40).setInteractive({ useHandCursor: true });
+    hubHit.on('pointerdown', () => {
+      SoundEngine.getInstance().click();
+      this.activeModalType = 'none';
+      this.returnToHub();
+    });
+    this.modalContainer.add(hubHit);
+  }
+
+  public hidePauseModal(): void {
+    if (this.activeModalType !== 'pause') return;
+    this.activeModalType = 'none';
+    this.modalContainer.removeAll(true);
+    this.battleScene.setManualPause(false);
+  }
+
   public update(): void {
     if (!this.battleScene || !this.battleScene.player) return;
 
-    // 1. 키보드 데스크톱 조작 보조
-    if (!this.isJoystickActive && this.cursors && this.wasdKeys) {
+    // 1. 키보드 데스크톱 조작 보조 (mutate in place to avoid per-frame object allocation)
+    if (this.battleScene.isPaused) {
+      this.battleScene.inputVector.x = 0;
+      this.battleScene.inputVector.y = 0;
+    } else if (!this.isJoystickActive && this.cursors && this.wasdKeys) {
       let kx = 0;
       let ky = 0;
       if (this.cursors.left.isDown || this.wasdKeys.A.isDown) kx -= 1;
@@ -347,9 +676,11 @@ export class UIScene extends Phaser.Scene {
 
       if (kx !== 0 || ky !== 0) {
         const len = Math.sqrt(kx * kx + ky * ky);
-        this.battleScene.inputVector = { x: kx / len, y: ky / len };
+        this.battleScene.inputVector.x = kx / len;
+        this.battleScene.inputVector.y = ky / len;
       } else {
-        this.battleScene.inputVector = { x: 0, y: 0 };
+        this.battleScene.inputVector.x = 0;
+        this.battleScene.inputVector.y = 0;
       }
     }
 
@@ -402,6 +733,29 @@ export class UIScene extends Phaser.Scene {
     } else {
       this.bossHpContainer.setVisible(false);
     }
+
+    // 5. Kill Streak HUD badge update
+    const streak = this.battleScene.killStreak;
+    if (streak >= 10 && this.battleScene.killStreakTimer > 0) {
+      this.streakContainer.setVisible(true);
+      const ratio = Math.max(0, Math.min(1, this.battleScene.killStreakTimer / this.battleScene.killStreakMaxTime));
+      const accent = streak >= 200 ? 0x00f0ff : streak >= 100 ? 0xff2a6d : streak >= 50 ? 0xff8800 : 0xffd000;
+      const textColor = streak >= 200 ? '#00f0ff' : streak >= 100 ? '#ff5588' : streak >= 50 ? '#ffaa33' : '#ffd000';
+
+      this.streakBg.clear();
+      this.streakBg.fillStyle(0x140e0b, 0.88);
+      this.streakBg.lineStyle(1.5, accent, 1);
+      this.streakBg.fillRoundedRect(-60, -14, 120, 28, 6);
+      this.streakBg.strokeRoundedRect(-60, -14, 120, 28, 6);
+
+      this.streakBarFill.clear();
+      this.streakBarFill.fillStyle(accent, 0.9);
+      this.streakBarFill.fillRect(-54, 9, 108 * ratio, 3);
+
+      this.streakText.setText(`🔥 ${streak} STREAK`).setColor(textColor);
+    } else {
+      this.streakContainer.setVisible(false);
+    }
   }
 
   // 최초 시작 무기 스킬 선택 체크
@@ -419,6 +773,7 @@ export class UIScene extends Phaser.Scene {
 
   // 최초 시작 무기 선택 모달 (3종 무작위 제시 + 리롤 지원)
   public showStartingSkillModal(onSelect?: (skill: SkillData) => void): void {
+    this.activeModalType = 'blocking';
     this.battleScene.isPaused = true;
     this.modalContainer.removeAll(true);
     const width = this.cameras.main.width;
@@ -501,6 +856,7 @@ export class UIScene extends Phaser.Scene {
         this.battleScene.player.skillCooldowns.set(skill.id, 0);
         this.battleScene.syncNecroArmy();
         this.modalContainer.removeAll(true);
+        this.activeModalType = 'none';
         this.battleScene.isPaused = false;
         SoundEngine.getInstance().playTone(520, 'sine', 0.2, 0.2);
         if (onSelect) onSelect(skill);
@@ -543,6 +899,7 @@ export class UIScene extends Phaser.Scene {
 
   // 레벨업 카드 선택 모달
   public showLevelUpModal(): void {
+    this.activeModalType = 'blocking';
     this.modalContainer.removeAll(true);
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
@@ -679,12 +1036,14 @@ export class UIScene extends Phaser.Scene {
     } else {
       // 모달 닫고 게임 재개
       this.modalContainer.removeAll(true);
+      this.activeModalType = 'none';
       this.battleScene.isPaused = false;
     }
   }
 
   // 보물상자 진화 모달
   public showChestModal(awakenedSkill: SkillData | null): void {
+    this.activeModalType = 'blocking';
     this.battleScene.isPaused = true;
     this.modalContainer.removeAll(true);
     const width = this.cameras.main.width;
@@ -756,6 +1115,7 @@ export class UIScene extends Phaser.Scene {
     hit.on('pointerdown', () => {
       SoundEngine.getInstance().click();
       this.modalContainer.removeAll(true);
+      this.activeModalType = 'none';
       this.battleScene.isPaused = false;
     });
     this.modalContainer.add(hit);
@@ -763,6 +1123,7 @@ export class UIScene extends Phaser.Scene {
 
   // 📜 각성재료 선택권 모달 (정예 괴수/BOSS 처치 시 드랍되는 양피지 비급서)
   public showAwakeningSelectorModal(): void {
+    this.activeModalType = 'blocking';
     this.battleScene.isPaused = true;
     this.modalContainer.removeAll(true);
     const width = this.cameras.main.width;
@@ -867,6 +1228,7 @@ export class UIScene extends Phaser.Scene {
         player.maxHp = maxHp;
         player.hp = maxHp;
         this.modalContainer.removeAll(true);
+        this.activeModalType = 'none';
         this.battleScene.isPaused = false;
       });
       this.modalContainer.add(hit);
@@ -950,6 +1312,7 @@ export class UIScene extends Phaser.Scene {
         SoundEngine.getInstance().playTone(660, 'sine', 0.2, 0.25);
         player.passiveSkills.set(skill.id, nextLv);
         this.modalContainer.removeAll(true);
+        this.activeModalType = 'none';
         this.battleScene.isPaused = false;
         if (typeof (this.battleScene as any).showDamageText === 'function') {
           (this.battleScene as any).showDamageText(player.x, player.y - 30, `Learned ${skill.name} Lv.${nextLv}!`, 0x00ffaa, true);
@@ -989,6 +1352,7 @@ export class UIScene extends Phaser.Scene {
 
   // 결과 정산 모달 (클리어 또는 패배)
   public showResultModal(isVictory: boolean): void {
+    this.activeModalType = 'blocking';
     // Show interstitial ad on run end (GameMonetize / Yandex Games)
     AdBillingAdapter.getInstance().showInterstitial();
 
@@ -1025,7 +1389,8 @@ export class UIScene extends Phaser.Scene {
     this.modalContainer.add(sub);
 
     // 기록 정산
-    const kills = this.add.text(width / 2, height / 2 - 60, `Enemies Slain: ${this.battleScene.killCount}`, {
+    const streakSuffix = this.battleScene.maxKillStreak >= 10 ? `  (Best Streak: ${this.battleScene.maxKillStreak})` : '';
+    const kills = this.add.text(width / 2, height / 2 - 60, `Enemies Slain: ${this.battleScene.killCount}${streakSuffix}`, {
       fontFamily: 'Inter, sans-serif',
       fontSize: '15px',
       color: '#f5ede2',

@@ -31,6 +31,24 @@ export class BattleScene extends Phaser.Scene {
   public earnedGold: number = 0;
   public recentCorpses: { x: number; y: number; time: number }[] = [];
 
+  // Kill streak / horde combo state
+  public killStreak: number = 0;
+  public killStreakTimer: number = 0;
+  public readonly killStreakMaxTime: number = 4.0;
+  public maxKillStreak: number = 0;
+  private lastStreakMilestone: number = 0;
+
+  // Pause & lifecycle state (tab visibility / GameMonetize ads / manual)
+  private pausedByVisibility: boolean = false;
+  private pausedByAd: boolean = false;
+  private pausedManually: boolean = false;
+  private lastHitShakeTime: number = 0;
+  private activeBloodSplats: number = 0;
+  private damageTextPool: Phaser.GameObjects.Text[] = [];
+  private activeDamageTextCount: number = 0;
+  private visibilityHandler?: () => void;
+  private adEventHandler?: (e: Event) => void;
+
   // 조이스틱 이동 입력 벡터 (UIScene에서 매 프레임 전달)
   public inputVector = { x: 0, y: 0 };
 
@@ -48,7 +66,18 @@ export class BattleScene extends Phaser.Scene {
     this.region = REGIONS_DATA[this.regionId] || REGIONS_DATA[1];
     this.killCount = 0;
     this.earnedGold = 0;
+    this.killStreak = 0;
+    this.killStreakTimer = 0;
+    this.maxKillStreak = 0;
+    this.lastStreakMilestone = 0;
     this.isPaused = false;
+    this.pausedByVisibility = false;
+    this.pausedByAd = false;
+    this.pausedManually = false;
+    this.lastHitShakeTime = 0;
+    this.activeBloodSplats = 0;
+    this.damageTextPool = [];
+    this.activeDamageTextCount = 0;
     this.gameSpeed = 1.0;
     this.minions = [];
     this.enemies = [];
@@ -57,6 +86,8 @@ export class BattleScene extends Phaser.Scene {
     this.recentCorpses = [];
     this.evolutionChest = null;
     this.awakeningDrops = [];
+    this.inputVector.x = 0;
+    this.inputVector.y = 0;
   }
 
   public setGameSpeed(speed: number): void {
@@ -98,6 +129,81 @@ export class BattleScene extends Phaser.Scene {
 
     // 4. BGM 전투 모드 가동
     SoundEngine.getInstance().startBgm('battle');
+
+    // 5. Auto-pause on tab hidden & GameMonetize / Yandex ad pause/resume hooks
+    if (typeof document !== 'undefined') {
+      this.visibilityHandler = () => {
+        if (document.hidden && !this.isPaused) {
+          this.isPaused = true;
+          this.pausedByVisibility = true;
+          this.inputVector.x = 0;
+          this.inputVector.y = 0;
+          const uiScene = this.scene.get('UIScene') as UIScene | undefined;
+          if (uiScene && typeof uiScene.showPauseModal === 'function') {
+            uiScene.showPauseModal('AUTO-PAUSED');
+          }
+        }
+      };
+      document.addEventListener('visibilitychange', this.visibilityHandler);
+    }
+
+    if (typeof window !== 'undefined') {
+      this.adEventHandler = (e: Event) => {
+        const name = (e as CustomEvent).detail?.name as string | undefined;
+        if (name === 'SDK_GAME_PAUSE') {
+          if (!this.isPaused) {
+            this.isPaused = true;
+            this.pausedByAd = true;
+            this.inputVector.x = 0;
+            this.inputVector.y = 0;
+          }
+        } else if (name === 'SDK_GAME_START') {
+          if (this.pausedByAd) {
+            this.pausedByAd = false;
+            if (!this.pausedByVisibility && !this.pausedManually) {
+              this.isPaused = false;
+            }
+          }
+        }
+      };
+      window.addEventListener('gm-sdk-event', this.adEventHandler);
+    }
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      if (this.visibilityHandler && typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', this.visibilityHandler);
+        this.visibilityHandler = undefined;
+      }
+      if (this.adEventHandler && typeof window !== 'undefined') {
+        window.removeEventListener('gm-sdk-event', this.adEventHandler);
+        this.adEventHandler = undefined;
+      }
+      this.damageTextPool.length = 0;
+      this.activeDamageTextCount = 0;
+    });
+  }
+
+  public setManualPause(paused: boolean): void {
+    this.pausedManually = paused;
+    if (!paused) {
+      this.pausedByVisibility = false;
+      if (!this.pausedByAd) {
+        this.isPaused = false;
+      }
+    } else {
+      this.isPaused = true;
+      this.inputVector.x = 0;
+      this.inputVector.y = 0;
+    }
+  }
+
+  public triggerHitShake(intensity: number, duration: number = 65): void {
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    if (now - this.lastHitShakeTime < 90) return;
+    this.lastHitShakeTime = now;
+    if (this.cameras?.main) {
+      this.cameras.main.shake(duration, intensity);
+    }
   }
 
   public update(_time: number, delta: number): void {
@@ -112,6 +218,16 @@ export class BattleScene extends Phaser.Scene {
     // 2. 플레이어 이동 및 상태 갱신
     this.player.move(this.inputVector.x, this.inputVector.y, dt);
     this.player.update(dt);
+
+    // Kill streak decay timer
+    if (this.killStreakTimer > 0) {
+      this.killStreakTimer -= dt;
+      if (this.killStreakTimer <= 0) {
+        this.killStreakTimer = 0;
+        this.killStreak = 0;
+        this.lastStreakMilestone = 0;
+      }
+    }
 
     // 시체 수명 갱신 (시체 폭발 연쇄용)
     for (let i = this.recentCorpses.length - 1; i >= 0; i--) {
@@ -479,6 +595,32 @@ export class BattleScene extends Phaser.Scene {
   // 적 처치 시 보석/마력석 드랍 및 시체 저장, 상자 드랍 (문제점 5, 6, 11)
   public onEnemyKilled(enemy: Enemy): void {
     this.killCount++;
+    this.killStreak++;
+    this.killStreakTimer = this.killStreakMaxTime;
+    if (this.killStreak > this.maxKillStreak) {
+      this.maxKillStreak = this.killStreak;
+    }
+
+    // Check horde kill streak milestones (25 / 50 / 100 / 200 / 350 / 500+)
+    const nextMilestone =
+      this.lastStreakMilestone === 0 ? 25
+      : this.lastStreakMilestone === 25 ? 50
+      : this.lastStreakMilestone === 50 ? 100
+      : this.lastStreakMilestone === 100 ? 200
+      : this.lastStreakMilestone === 200 ? 350
+      : this.lastStreakMilestone === 350 ? 500
+      : this.lastStreakMilestone + 250;
+
+    if (this.killStreak >= nextMilestone) {
+      this.lastStreakMilestone = nextMilestone;
+      SoundEngine.getInstance().killStreak();
+      this.triggerHitShake(0.005, 85);
+      const uiScene = this.scene.get('UIScene') as UIScene | undefined;
+      if (uiScene && typeof uiScene.showKillStreakBanner === 'function') {
+        uiScene.showKillStreakBanner(nextMilestone);
+      }
+    }
+
     const dropX = enemy.sprite.x;
     const dropY = enemy.sprite.y;
 
@@ -503,14 +645,20 @@ export class BattleScene extends Phaser.Scene {
     this.recentCorpses.push({ x: dropX, y: dropY, time: 20 });
     if (this.recentCorpses.length > 35) this.recentCorpses.shift();
 
-    // 바닥 혈흔/뼈 잔해 연출 (depth: 2)
-    const splat = this.add.circle(dropX, dropY, 8, 0x4a1218, 0.6).setDepth(2);
-    this.tweens.add({
-      targets: splat,
-      alpha: 0,
-      duration: 3500,
-      onComplete: () => splat.destroy(),
-    });
+    // 바닥 혈흔/뼈 잔해 연출 (depth: 2, capped to avoid GC/tween overhead in dense waves)
+    if (this.activeBloodSplats < 24) {
+      this.activeBloodSplats++;
+      const splat = this.add.circle(dropX, dropY, 8, 0x4a1218, 0.6).setDepth(2);
+      this.tweens.add({
+        targets: splat,
+        alpha: 0,
+        duration: 3500,
+        onComplete: () => {
+          splat.destroy();
+          this.activeBloodSplats = Math.max(0, this.activeBloodSplats - 1);
+        },
+      });
+    }
 
     // 몬스터 실제 사망 위치에 보석 즉시 생성 (문제점 5 & 11)
     const gem = new ExpGem(this, dropX, dropY, enemy.expValue, enemy.goldValue);
@@ -723,6 +871,7 @@ export class BattleScene extends Phaser.Scene {
     corpsesToExplode.forEach((corpse, idx) => {
       this.time.delayedCall(idx * 25, () => {
         SoundEngine.getInstance().playTone(180 + idx * 25, 'triangle', 0.2, 0.15);
+        this.triggerHitShake(0.006, 80);
         this.createNovaVFX(corpse.x, corpse.y, 160, 0xd42828);
 
         const hits = this.spatialGrid.queryRadius(corpse.x, corpse.y, 160);
@@ -836,29 +985,55 @@ export class BattleScene extends Phaser.Scene {
     uiScene.showResultModal(false);
   }
 
-  private activeDamageTextCount: number = 0;
-
   public showDamageText(x: number, y: number, text: string, color: number, isCrit: boolean = false): void {
-    if (this.activeDamageTextCount >= 32 && !isCrit) {
+    // Hard cap concurrent floating texts (28 normal, 36 max including crits) to preserve 60fps in dense hordes
+    if (this.activeDamageTextCount >= (isCrit ? 36 : 28)) {
       return;
     }
     this.activeDamageTextCount++;
 
-    const t = this.add.text(x, y, text, {
-      fontFamily: 'NeoDunggeunmo, monospace',
-      fontSize: isCrit ? '17px' : '14px',
-      color: '#' + color.toString(16).padStart(6, '0'),
-      fontStyle: isCrit ? 'bold' : 'normal',
-    }).setOrigin(0.5).setDepth(30);
+    const hexColor = '#' + color.toString(16).padStart(6, '0');
+    let t = this.damageTextPool.pop();
+    if (t && t.scene) {
+      t.setPosition(x, y);
+      t.setText(text);
+      t.setColor(hexColor);
+      t.setFontSize(isCrit ? '17px' : '14px');
+      t.setFontStyle(isCrit ? 'bold' : 'normal');
+      t.setAlpha(1);
+      t.setScale(isCrit ? 1.2 : 1);
+      t.setVisible(true);
+      t.setActive(true);
+    } else {
+      t = this.add.text(x, y, text, {
+        fontFamily: 'NeoDunggeunmo, monospace',
+        fontSize: isCrit ? '17px' : '14px',
+        color: hexColor,
+        fontStyle: isCrit ? 'bold' : 'normal',
+      }).setOrigin(0.5).setDepth(30);
+      if (isCrit) {
+        t.setScale(1.2);
+      }
+    }
 
+    const textObj = t;
     this.tweens.add({
-      targets: t,
+      targets: textObj,
       y: y - (isCrit ? 36 : 24),
       alpha: 0,
+      scale: 1,
       duration: isCrit ? 650 : 450,
       onComplete: () => {
-        t.destroy();
-        this.activeDamageTextCount--;
+        this.activeDamageTextCount = Math.max(0, this.activeDamageTextCount - 1);
+        if (textObj.scene) {
+          textObj.setVisible(false);
+          textObj.setActive(false);
+          if (this.damageTextPool.length < 40) {
+            this.damageTextPool.push(textObj);
+          } else {
+            textObj.destroy();
+          }
+        }
       },
     });
   }
