@@ -29,6 +29,37 @@ export class AdBillingAdapter {
   }
 
   private runRewardedAd(): Promise<boolean> {
+    const w = window as unknown as {
+      __cgSdkReady?: boolean;
+      CrazyGames?: {
+        SDK?: {
+          ad?: { requestAd?: (type: 'midgame' | 'rewarded', cb: { adStarted?: () => void; adFinished?: () => void; adError?: () => void }) => void };
+          game?: { gameplayStart?: () => void; gameplayStop?: () => void };
+        };
+      };
+    };
+    if (w.__cgSdkReady && w.CrazyGames?.SDK?.ad?.requestAd) {
+      return new Promise((resolve) => {
+        try { w.CrazyGames?.SDK?.game?.gameplayStop?.(); } catch {}
+        try {
+          w.CrazyGames!.SDK!.ad!.requestAd!('rewarded', {
+            adStarted: () => window.dispatchEvent(new CustomEvent('gm-sdk-event', { detail: { name: 'SDK_GAME_PAUSE' } })),
+            adFinished: () => {
+              window.dispatchEvent(new CustomEvent('gm-sdk-event', { detail: { name: 'SDK_GAME_START' } }));
+              try { w.CrazyGames?.SDK?.game?.gameplayStart?.(); } catch {}
+              resolve(true);
+            },
+            adError: () => {
+              window.dispatchEvent(new CustomEvent('gm-sdk-event', { detail: { name: 'SDK_GAME_START' } }));
+              try { w.CrazyGames?.SDK?.game?.gameplayStart?.(); } catch {}
+              resolve(true);
+            },
+          });
+        } catch {
+          resolve(true);
+        }
+      });
+    }
     if (window.__ysdk?.adv?.showRewardedVideo) {
       return new Promise((resolve) => {
         let rewarded = false;
@@ -99,6 +130,30 @@ export class AdBillingAdapter {
 
   public showInterstitial(): void {
     try {
+      const w = window as unknown as {
+        __cgSdkReady?: boolean;
+        CrazyGames?: {
+          SDK?: {
+            ad?: { requestAd?: (type: 'midgame' | 'rewarded', cb: { adStarted?: () => void; adFinished?: () => void; adError?: () => void }) => void };
+            game?: { gameplayStart?: () => void; gameplayStop?: () => void };
+          };
+        };
+      };
+      if (w.__cgSdkReady && w.CrazyGames?.SDK?.ad?.requestAd) {
+        try { w.CrazyGames?.SDK?.game?.gameplayStop?.(); } catch {}
+        w.CrazyGames.SDK.ad.requestAd('midgame', {
+          adStarted: () => window.dispatchEvent(new CustomEvent('gm-sdk-event', { detail: { name: 'SDK_GAME_PAUSE' } })),
+          adFinished: () => {
+            window.dispatchEvent(new CustomEvent('gm-sdk-event', { detail: { name: 'SDK_GAME_START' } }));
+            try { w.CrazyGames?.SDK?.game?.gameplayStart?.(); } catch {}
+          },
+          adError: () => {
+            window.dispatchEvent(new CustomEvent('gm-sdk-event', { detail: { name: 'SDK_GAME_START' } }));
+            try { w.CrazyGames?.SDK?.game?.gameplayStart?.(); } catch {}
+          },
+        });
+        return;
+      }
       if (window.__ysdk?.adv?.showFullscreenAdv) {
         window.__ysdk.adv.showFullscreenAdv({});
         return;

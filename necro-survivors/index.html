@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#0c0908" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
     <title>Necro Survivors: Undead Horde</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -34,10 +36,26 @@
               }).catch(function () {});
             }
           };
+        } else if (/crazygames|1001juegos/i.test(host)) {
+          s.id = 'crazygames-sdk';
+          s.src = 'https://sdk.crazygames.com/crazygames-sdk-v3.js';
+          s.onload = function () {
+            if (window.CrazyGames && window.CrazyGames.SDK && typeof window.CrazyGames.SDK.init === 'function') {
+              window.CrazyGames.SDK.init().then(function () {
+                window.__cgSdkReady = true;
+                try { window.CrazyGames.SDK.game.gameplayStart(); } catch (e) {}
+              }).catch(function () {});
+            }
+          };
         } else if (/gamemonetize/i.test(host)) {
           s.id = 'gamemonetize-sdk';
           s.src = 'https://api.gamemonetize.com/sdk.js';
         } else {
+          if ('serviceWorker' in navigator && window.self === window.top) {
+            window.addEventListener('load', function () {
+              navigator.serviceWorker.register('./sw.js').catch(function () {});
+            });
+          }
           return;
         }
         document.head.appendChild(s);
