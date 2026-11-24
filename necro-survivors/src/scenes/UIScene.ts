@@ -536,10 +536,10 @@ export class UIScene extends Phaser.Scene {
       // Clear held keyboard/joystick inputs when browser window loses focus (prevents stuck movement)
       const clearHeldInputs = () => {
         this.input.keyboard?.resetKeys();
-        this.joystickActive = false;
-        this.joystickPointerId = -1;
-        this.joystickVector.x = 0;
-        this.joystickVector.y = 0;
+        this.isJoystickActive = false;
+        this.joystickPointer = null;
+        this.joystickBase?.setVisible(false);
+        this.joystickThumb?.setVisible(false);
         if (this.battleScene?.inputVector) {
           this.battleScene.inputVector.x = 0;
           this.battleScene.inputVector.y = 0;
