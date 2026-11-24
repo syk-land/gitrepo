@@ -117,6 +117,79 @@
           transition: none;
         }
       }
+      /* PC Landscape Side Panels (16:9 Portal Viewport) */
+      .portal-shell {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        width: 100%;
+        height: 100%;
+        max-width: 1200px;
+      }
+      .side-panel {
+        display: none;
+        width: 230px;
+        max-height: 640px;
+        background: linear-gradient(180deg, rgba(28, 20, 16, 0.94), rgba(14, 10, 8, 0.96));
+        border: 2px solid rgba(212, 163, 56, 0.45);
+        border-radius: 10px;
+        padding: 16px 14px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), inset 0 0 18px rgba(212, 163, 56, 0.08);
+        color: #f5ede2;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .side-panel h2 {
+        font-family: 'Cinzel', serif;
+        font-size: 13px;
+        letter-spacing: 1px;
+        color: #ffd000;
+        border-bottom: 1px solid rgba(212, 163, 56, 0.3);
+        padding-bottom: 6px;
+        text-transform: uppercase;
+      }
+      .side-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        font-size: 12px;
+        line-height: 1.45;
+        color: #d7c9b8;
+      }
+      .side-list li {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .side-kbd {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: rgba(212, 163, 56, 0.16);
+        border: 1px solid rgba(212, 163, 56, 0.45);
+        color: #ffd000;
+        font-family: monospace;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .side-tip {
+        font-size: 11.5px;
+        line-height: 1.5;
+        color: #bfb09e;
+        background: rgba(0, 0, 0, 0.3);
+        border-left: 3px solid #00ffaa;
+        padding: 8px 10px;
+        border-radius: 4px;
+      }
+      @media (min-width: 860px) {
+        .side-panel {
+          display: flex;
+        }
+      }
       canvas {
         display: block;
         width: 100% !important;
@@ -129,7 +202,34 @@
     </style>
   </head>
   <body>
-    <div id="app"></div>
+    <div class="portal-shell">
+      <aside class="side-panel" aria-label="Controls">
+        <h2>Controls</h2>
+        <ul class="side-list">
+          <li><span>Move Hero</span><span class="side-kbd">WASD / Arrows</span></li>
+          <li><span>Touch / Mouse</span><span class="side-kbd">Drag Joystick</span></li>
+          <li><span>Pause / Resume</span><span class="side-kbd">Space / P</span></li>
+          <li><span>Battle Speed</span><span class="side-kbd">1 · 2 · 3</span></li>
+          <li><span>Mute Audio</span><span class="side-kbd">M</span></li>
+        </ul>
+        <div class="side-tip">
+          Chain kills quickly to trigger <strong>Kill Streak</strong> tiers (25 / 50 / 100+) and watch for glowing <strong>Evolution Chests</strong>!
+        </div>
+      </aside>
+      <div id="app"></div>
+      <aside class="side-panel" aria-label="Survival Guide">
+        <h2>Undead Legion</h2>
+        <ul class="side-list">
+          <li><span>14 Portals</span><span class="side-kbd">Boss Rush</span></li>
+          <li><span>Minion Army</span><span class="side-kbd">Auto-Summon</span></li>
+          <li><span>Awakening</span><span class="side-kbd">Lv.5 + Relic</span></li>
+          <li><span>Soul Revive</span><span class="side-kbd">1× / Run</span></li>
+        </ul>
+        <div class="side-tip">
+          Spend earned Gold at the <strong>Altar of Souls</strong> in the Hub to permanently boost ATK, Max HP, and Minion count.
+        </div>
+      </aside>
+    </div>
     <script type="module" src="/src/main.ts"></script>
     <script src="./tutorial.js"></script>
   </body>
