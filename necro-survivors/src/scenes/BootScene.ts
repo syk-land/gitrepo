@@ -114,10 +114,6 @@ export class BootScene extends Phaser.Scene {
     for (const g of gateTypes) {
       this.load.image(`gate_${g}`, `assets/ui/gates/gate_${g}.webp`);
     }
-
-    this.load.image('ui_joseon_frame', 'assets/ui/ui_joseon_frame_cropped.webp');
-    this.load.image('ui_hanji_card', 'assets/ui/ui_hanji_card_cropped.webp');
-    this.load.image('ui_hanji_tile', 'assets/ui/ui_hanji_center_tile.webp');
   }
 
   create(): void {
