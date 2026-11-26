@@ -1,3 +1,4 @@
+import { t } from '../core/I18n';
 import { ALL_SKILLS_MAP } from '../data/skillsData';
 
 export interface DamageEntry {
@@ -9,18 +10,18 @@ export interface DamageEntry {
 }
 
 const SPECIAL_LABELS: Record<string, string> = {
-  corpse_explosion: '💥 사령 시체 폭발',
-  jin_blizzard: '❄️ 진(眞) 마력폭풍',
-  minion_melee: '💀 해골 근접 군단',
-  minion_ranged: '🏹 소환수 원거리 사격',
-  reaction_superconduct: '⚡ 원소반응: 초전도 파쇄',
-  reaction_melt: '🔥 원소반응: 융해 폭염',
-  reaction_blood_burst: '🩸 원소반응: 혈폭',
-  reaction_holy_purge: '✨ 원소반응: 성염 정화',
-  reaction_overload_railgun: '⚡ 원소반응: 과부하 레일건',
-  status_bleed: '🩸 출혈 지속 피해',
-  status_burn: '🔥 화상 지속 피해',
-  relic_poison: '☠️ 유물: 맹독 장판',
+  corpse_explosion: t('💥 사령 시체 폭발', '💥 Necro Corpse Explosion'),
+  jin_blizzard: t('❄️ 진(眞) 마력폭풍', '❄️ True Mana Storm'),
+  minion_melee: t('💀 해골 근접 군단', '💀 Skeleton Melee Legion'),
+  minion_ranged: t('🏹 소환수 원거리 사격', '🏹 Minion Ranged Fire'),
+  reaction_superconduct: t('⚡ 원소반응: 초전도 파쇄', '⚡ Reaction: Superconduct Shatter'),
+  reaction_melt: t('🔥 원소반응: 융해 폭염', '🔥 Reaction: Meltdown Blaze'),
+  reaction_blood_burst: t('🩸 원소반응: 혈폭', '🩸 Reaction: Blood Burst'),
+  reaction_holy_purge: t('✨ 원소반응: 성염 정화', '✨ Reaction: Holy Flame Purge'),
+  reaction_overload_railgun: t('⚡ 원소반응: 과부하 레일건', '⚡ Reaction: Overload Railgun'),
+  status_bleed: t('🩸 출혈 지속 피해', '🩸 Bleed Damage'),
+  status_burn: t('🔥 화상 지속 피해', '🔥 Burn Damage'),
+  relic_poison: t('☠️ 유물: 맹독 장판', '☠️ Relic: Venom Zone'),
 };
 
 export class DamageTracker {

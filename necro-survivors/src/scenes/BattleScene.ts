@@ -1,3 +1,4 @@
+import { t } from '../core/I18n';
 import Phaser from 'phaser';
 import { EnemyProjectileSpec, RegionData, SkillData } from '../data/types';
 import { REGIONS_DATA } from '../data/regionsData';
@@ -603,7 +604,7 @@ export class BattleScene extends Phaser.Scene {
           this.player.x + Math.cos(angle) * dist,
           this.player.y + Math.sin(angle) * dist
         );
-        this.showWaveBanner('⛩️ 저주받은 제단 출현! 5초간 점령하면 강력한 버프를 획득합니다.');
+        this.showWaveBanner(t('⛩️ 저주받은 제단 출현! 5초간 점령하면 강력한 버프를 획득합니다.', '⛩️ A cursed altar appears! Hold it for 5s to gain a powerful buff.'));
       }
     } else {
       const fastCapture = SaveManager.getInstance().hasEquippedRelicEffect('fast_shrine_capture');
@@ -613,7 +614,7 @@ export class BattleScene extends Phaser.Scene {
         this.earnedGold += Math.round(250 * this.player.getEffectiveStats().goldMul);
         SoundEngine.getInstance().chestOpen();
         this.createNovaVFX(this.activeShrine.x, this.activeShrine.y, 160, 0x00ffaa);
-        this.showDamageText(this.player.x, this.player.y - 36, '⛩️ 제단 점령! 공격력 +15%', 0x00ffaa, true);
+        this.showDamageText(this.player.x, this.player.y - 36, t('⛩️ 제단 점령! 공격력 +15%', '⛩️ Altar captured! ATK +15%'), 0x00ffaa, true);
         this.activeShrine.destroy();
         this.activeShrine = null;
       }
@@ -629,7 +630,7 @@ export class BattleScene extends Phaser.Scene {
       this.showDamageText(this.player.x, this.player.y - 30, `🍖 +${heal} HP`, 0x00ff88, true);
     } else if (prop.dropType === 'magnet') {
       for (const gem of this.expGems) gem.forceAttractAll();
-      this.showDamageText(this.player.x, this.player.y - 30, '🧲 전체 보석 흡인!', 0x33ccff, true);
+      this.showDamageText(this.player.x, this.player.y - 30, t('🧲 전체 보석 흡인!', '🧲 Magnet! All gems pulled!'), 0x33ccff, true);
     } else if (prop.dropType === 'bomb') {
       this.cameras.main.flash(180, 255, 180, 60);
       this.triggerHitstop();
@@ -638,7 +639,7 @@ export class BattleScene extends Phaser.Scene {
           enemy.takeDamage(enemy.hp + 999, 0, 0, 'corpse_explosion');
         }
       }
-      this.showDamageText(this.player.x, this.player.y - 30, '💣 영혼 폭탄 폭발!', 0xffaa00, true);
+      this.showDamageText(this.player.x, this.player.y - 30, t('💣 영혼 폭탄 폭발!', '💣 Soul Bomb detonated!'), 0xffaa00, true);
     } else {
       const bonus = Math.round((FIELD_PROP_CONFIG.goldBonusBase + this.regionId * 30) * stats.goldMul);
       this.earnedGold += bonus;
@@ -804,7 +805,7 @@ export class BattleScene extends Phaser.Scene {
     );
     this.minions.push(extracted);
     this.createNovaVFX(x, y, 80, 0x44ffcc);
-    this.showDamageText(x, y - 28, '💀 사령 추출 성공!', 0x44ffcc, true);
+    this.showDamageText(x, y - 28, t('💀 사령 추출 성공!', '💀 Minion extracted!'), 0x44ffcc, true);
   }
 
   private hasEvolvableSkill(): boolean {
@@ -829,7 +830,7 @@ export class BattleScene extends Phaser.Scene {
       this.feverKillProgress = 0;
       this.player.feverTimer = FEVER_CONFIG.durationSec;
       SoundEngine.getInstance().playTone(880, 'triangle', 0.25, 0.25, 440);
-      this.showDamageText(this.player.x, this.player.y - 38, '🔥 영혼 수확 피버! (10초)', 0xffd000, true);
+      this.showDamageText(this.player.x, this.player.y - 38, t('🔥 영혼 수확 피버! (10초)', '🔥 Soul Harvest Fever! (10s)'), 0xffd000, true);
     }
 
     const dropX = enemy.sprite.x;
@@ -900,7 +901,7 @@ export class BattleScene extends Phaser.Scene {
     sprite.setDepth(21);
 
     const label = this.add
-      .text(x, y - 24, '📜 각성 비급 양피지', {
+      .text(x, y - 24, t('📜 각성 비급 양피지', '📜 Awakening Scroll'), {
         fontFamily: 'NeoDunggeunmo, monospace',
         fontSize: '11px',
         color: '#ffd000',
@@ -1148,19 +1149,19 @@ export class BattleScene extends Phaser.Scene {
   private onNamedSpawned(_named: Enemy): void {
     SoundEngine.getInstance().bossWarning();
     const uiScene = this.scene.get('UIScene') as UIScene;
-    uiScene.showBossWarning(`⚠️ [수문장 네임드 강림] ${this.region.named}`);
+    uiScene.showBossWarning(t(`⚠️ [수문장 네임드 강림] ${this.region.named}`, `⚠️ [Gatekeeper Named Descends] ${this.region.named}`));
   }
 
   private onBossSpawned(_boss: Enemy): void {
     SoundEngine.getInstance().bossWarning();
     const uiScene = this.scene.get('UIScene') as UIScene;
-    uiScene.showBossWarning(`⚠️ [지역 최종 보스 출현] ${this.region.boss}`);
+    uiScene.showBossWarning(t(`⚠️ [지역 최종 보스 출현] ${this.region.boss}`, `⚠️ [Zone Final Boss Appears] ${this.region.boss}`));
   }
 
   public startEndlessMode(): void {
     this.waveSpawner.enableEndlessMode();
     this.isPaused = false;
-    this.showWaveBanner('♾️ 심연 무한 모드 돌입! 60초마다 괴수가 급격히 강해집니다!');
+    this.showWaveBanner(t('♾️ 심연 무한 모드 돌입! 60초마다 괴수가 급격히 강해집니다!', '♾️ Abyss Endless Mode! Monsters grow much stronger every 60s!'));
   }
 
   public handleStageClear(): void {

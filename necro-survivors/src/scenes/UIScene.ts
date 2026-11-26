@@ -1,3 +1,4 @@
+import { t } from '../core/I18n';
 import Phaser from 'phaser';
 import { BattleScene } from './BattleScene';
 import { LevelUpManager, LevelUpChoice } from '../systems/LevelUpManager';
@@ -114,7 +115,7 @@ export class UIScene extends Phaser.Scene {
     this.expBarFill = this.add.graphics();
 
     // 타이머 및 웨이브 정보
-    this.timerText = this.add.text(width / 2, 45, '⏱️ 00:00 (W1 척후병)', {
+    this.timerText = this.add.text(width / 2, 45, t('⏱️ 00:00 (W1 척후병)', '⏱️ 00:00 (W1 Scouts)'), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '14px',
       color: '#00ffaa',
@@ -240,7 +241,7 @@ export class UIScene extends Phaser.Scene {
     circle.strokeCircle(0, 0, 44);
     this.ultButtonContainer.add(circle);
 
-    this.ultIconText = this.add.text(0, -6, '💥\n시체폭발', {
+    this.ultIconText = this.add.text(0, -6, t('💥\n시체폭발', '💥\nCorpse Blast'), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '13px',
       color: '#f5ede2',
@@ -338,7 +339,7 @@ export class UIScene extends Phaser.Scene {
     });
 
     this.dashIconText = this.add
-      .text(btnX, btnY, '💨\n대시', {
+      .text(btnX, btnY, t('💨\n대시', '💨\nDash'), {
         fontFamily: 'NeoDunggeunmo, monospace',
         fontSize: '12px',
         color: '#00ffaa',
@@ -362,7 +363,7 @@ export class UIScene extends Phaser.Scene {
   private createFeverAndIndicatorHud(width: number): void {
     this.feverBarFill = this.add.graphics().setDepth(45);
     this.feverLabelText = this.add
-      .text(width - 14, 54, '🔥 피버 0/100', {
+      .text(width - 14, 54, t('🔥 피버 0/100', '🔥 Fever 0/100'), {
         fontFamily: 'NeoDunggeunmo, monospace',
         fontSize: '11px',
         color: '#ffaa66',
@@ -390,12 +391,12 @@ export class UIScene extends Phaser.Scene {
 
     let target: { x: number; y: number; icon: string } | null = null;
     if (this.battleScene.evolutionChest && this.battleScene.evolutionChest.active) {
-      target = { x: this.battleScene.evolutionChest.x, y: this.battleScene.evolutionChest.y, icon: '👑 각성상자' };
+      target = { x: this.battleScene.evolutionChest.x, y: this.battleScene.evolutionChest.y, icon: t('👑 각성상자', '👑 Chest') };
     } else if (this.battleScene.activeShrine && this.battleScene.activeShrine.active) {
-      target = { x: this.battleScene.activeShrine.x, y: this.battleScene.activeShrine.y, icon: '⛩️ 저주제단' };
+      target = { x: this.battleScene.activeShrine.x, y: this.battleScene.activeShrine.y, icon: t('⛩️ 저주제단', '⛩️ Altar') };
     } else {
       const drop = this.battleScene.awakeningDrops.find((d) => d.active);
-      if (drop) target = { x: drop.x, y: drop.y, icon: '📜 비급' };
+      if (drop) target = { x: drop.x, y: drop.y, icon: t('📜 비급', '📜 Scroll') };
     }
 
     if (!target) {
@@ -490,18 +491,18 @@ export class UIScene extends Phaser.Scene {
     const min = Math.floor(elapsed / 60).toString().padStart(2, '0');
     const sec = (elapsed % 60).toString().padStart(2, '0');
     const wave = this.battleScene.waveSpawner.currentWave;
-    const waveNames = ['', '척후병 출현', '본대 진격', '중견 괴수', '심층 대군세', '수문장 네임드', '최종 보스전'];
-    const waveLabel = this.battleScene.waveSpawner.isEndless ? `무한 W${wave}` : `W${wave} ${waveNames[wave] || ''}`;
+    const waveNames = ['', t('척후병 출현', 'Scouts'), t('본대 진격', 'Main Force'), t('중견 괴수', 'Elite Beasts'), t('심층 대군세', 'Deep Horde'), t('수문장 네임드', 'Gatekeeper'), t('최종 보스전', 'Final Boss')];
+    const waveLabel = this.battleScene.waveSpawner.isEndless ? t(`무한 W${wave}`, `Endless W${wave}`) : `W${wave} ${waveNames[wave] || ''}`;
     this.timerText.setText(`⏱️ ${min}:${sec} (${waveLabel})`);
 
     this.statsText.setText(`💀 ${this.battleScene.killCount}   💰 ${this.battleScene.earnedGold} G   HP: ${Math.max(0, Math.round(player.hp))}/${player.maxHp}`);
 
     // 3. 필살기 버튼 쿨타임 업데이트
     if (player.isJinBlizzard()) {
-      this.ultIconText.setText('✨\n진마력폭풍');
+      this.ultIconText.setText(t('✨\n진마력폭풍', '✨\nMana Storm'));
       this.ultIconText.setColor('#00f0ff');
     } else {
-      this.ultIconText.setText('💥\n시체폭발');
+      this.ultIconText.setText(t('💥\n시체폭발', '💥\nCorpse Blast'));
       this.ultIconText.setColor('#f5ede2');
     }
 
@@ -541,7 +542,7 @@ export class UIScene extends Phaser.Scene {
         const ratio = Math.min(1, this.battleScene.feverKillProgress / FEVER_CONFIG.killsRequired);
         this.feverBarFill.fillStyle(0xff6633, 0.9);
         this.feverBarFill.fillRect(fx, fy, barW * ratio, 8);
-        this.feverLabelText.setText(`🔥 피버 ${this.battleScene.feverKillProgress}/${FEVER_CONFIG.killsRequired}`).setColor('#ffaa66');
+        this.feverLabelText.setText(t(`🔥 피버 ${this.battleScene.feverKillProgress}/${FEVER_CONFIG.killsRequired}`, `🔥 Fever ${this.battleScene.feverKillProgress}/${FEVER_CONFIG.killsRequired}`)).setColor('#ffaa66');
       }
     }
 
@@ -587,14 +588,14 @@ export class UIScene extends Phaser.Scene {
     this.modalContainer.add(dim);
 
     // 상단 타이틀
-    const title = this.add.text(width / 2, 95, '⚔️ 시작 주무기 선택', {
+    const title = this.add.text(width / 2, 95, t('⚔️ 시작 주무기 선택', '⚔️ Choose Starting Weapon'), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '22px',
       color: '#ffd000',
     }).setOrigin(0.5);
     this.modalContainer.add(title);
 
-    const sub = this.add.text(width / 2, 125, '차원문 진입 전 주무기로 사용할 스킬을 선택하십시오.', {
+    const sub = this.add.text(width / 2, 125, t('차원문 진입 전 주무기로 사용할 스킬을 선택하십시오.', 'Choose a skill to use as your main weapon before entering the gate.'), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '13px',
       color: '#00ffaa',
@@ -620,7 +621,7 @@ export class UIScene extends Phaser.Scene {
       }
 
       // 스킬 이름 및 시작 배지
-      const badge = skill.isNecroSignature ? '[사령 전용 Lv.1]' : '[시작 주무기 Lv.1]';
+      const badge = skill.isNecroSignature ? t('[사령 전용 Lv.1]', '[Necro Exclusive Lv.1]') : t('[시작 주무기 Lv.1]', '[Starter Weapon Lv.1]');
       const name = this.add.text(width / 2 - 115, cardY - 45, `${skill.name} ${badge}`, {
         fontFamily: 'NeoDunggeunmo, monospace',
         fontSize: '16px',
@@ -642,7 +643,7 @@ export class UIScene extends Phaser.Scene {
       if (skill.requiredPassiveId) {
         const partner = ALL_SKILLS_MAP.get(skill.requiredPassiveId);
         if (partner) {
-          const hint = this.add.text(width / 2 - 115, cardY + 45, `💡 [각성 파트너: ${partner.name}]`, {
+          const hint = this.add.text(width / 2 - 115, cardY + 45, t(`💡 [각성 파트너: ${partner.name}]`, `💡 [Awakening Partner: ${partner.name}]`), {
             fontFamily: 'NeoDunggeunmo, monospace',
             fontSize: '12px',
             color: '#ffd000',
@@ -684,7 +685,7 @@ export class UIScene extends Phaser.Scene {
     rerollBtn.strokeRoundedRect(width / 2 - 110, height - 120, 220, 44, 6);
     this.modalContainer.add(rerollBtn);
 
-    const rerollText = this.add.text(width / 2, height - 98, '🎲 다른 무기 보기 (Reroll)', {
+    const rerollText = this.add.text(width / 2, height - 98, t('🎲 다른 무기 보기 (Reroll)', '🎲 Show Other Weapons (Reroll)'), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '14px',
       color: '#00f0ff',
@@ -710,14 +711,14 @@ export class UIScene extends Phaser.Scene {
     this.modalContainer.add(dim);
 
     // 상단 타이틀
-    const title = this.add.text(width / 2, 100, '✨ LEVEL UP! 전리품 선택', {
+    const title = this.add.text(width / 2, 100, t('✨ LEVEL UP! 전리품 선택', '✨ LEVEL UP! Choose a Reward'), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '22px',
       color: '#ffd000',
     }).setOrigin(0.5);
     this.modalContainer.add(title);
 
-    const sub = this.add.text(width / 2, 130, '스킬을 획득하거나 강화하여 생존력을 높이십시오.', {
+    const sub = this.add.text(width / 2, 130, t('스킬을 획득하거나 강화하여 생존력을 높이십시오.', 'Gain or upgrade skills to boost your survivability.'), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '13px',
       color: '#b8a692',
@@ -779,7 +780,7 @@ export class UIScene extends Phaser.Scene {
       // 제외(밴) 버튼 (런당 1회)
       if (!choice.isFallback && LevelUpManager.banishesLeft > 0) {
         const banBtn = this.add
-          .text(width / 2 + 195, cardY - 48, `🚫 제외(${LevelUpManager.banishesLeft})`, {
+          .text(width / 2 + 195, cardY - 48, t(`🚫 제외(${LevelUpManager.banishesLeft})`, `🚫 Banish (${LevelUpManager.banishesLeft})`), {
             fontFamily: 'NeoDunggeunmo, monospace',
             fontSize: '11px',
             color: '#ff6677',
@@ -807,7 +808,7 @@ export class UIScene extends Phaser.Scene {
     this.modalContainer.add(rerollBtn);
 
     const freeRerolls = LevelUpManager.rerollsLeft;
-    const rerollLabel = freeRerolls > 0 ? `🎲 무료 재굴림 (남은 ${freeRerolls}회)` : '🎲 광고 보고 재굴림 (Reroll)';
+    const rerollLabel = freeRerolls > 0 ? t(`🎲 무료 재굴림 (남은 ${freeRerolls}회)`, `🎲 Free Reroll (${freeRerolls} left)`) : t('🎲 광고 보고 재굴림 (Reroll)', '🎲 Watch Ad to Reroll');
     const rerollText = this.add.text(width / 2, height - 98, rerollLabel, {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '14px',
@@ -887,7 +888,7 @@ export class UIScene extends Phaser.Scene {
     });
     this.modalContainer.add(box);
 
-    const title = this.add.text(width / 2, height / 2 - 120, '🌟 수문장 보물상자 개봉!', {
+    const title = this.add.text(width / 2, height / 2 - 120, t('🌟 수문장 보물상자 개봉!', '🌟 Gatekeeper Chest Opened!'), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '20px',
       color: '#ffd000',
@@ -899,7 +900,7 @@ export class UIScene extends Phaser.Scene {
       icon.setDisplaySize(72, 72);
       this.modalContainer.add(icon);
 
-      const aName = this.add.text(width / 2, height / 2 + 25, `[궁극 각성 달성: ${awakenedSkill.name}]`, {
+      const aName = this.add.text(width / 2, height / 2 + 25, t(`[궁극 각성 달성: ${awakenedSkill.name}]`, `[Ultimate Awakening: ${awakenedSkill.name}]`), {
         fontFamily: 'NeoDunggeunmo, monospace',
         fontSize: '17px',
         color: '#00ffaa',
@@ -916,7 +917,7 @@ export class UIScene extends Phaser.Scene {
       }).setOrigin(0.5);
       this.modalContainer.add(aDesc);
     } else {
-      const gText = this.add.text(width / 2, height / 2 - 10, '💰 마력석 보물상자!\n+2,000 마력석 & 체력 완전 회복', {
+      const gText = this.add.text(width / 2, height / 2 - 10, t('💰 마력석 보물상자!\n+2,000 마력석 & 체력 완전 회복', '💰 Mana Stone Chest!\n+2,000 Mana Stones & Full Heal'), {
         fontFamily: 'NeoDunggeunmo, monospace',
         fontSize: '17px',
         color: '#ffd000',
@@ -930,7 +931,7 @@ export class UIScene extends Phaser.Scene {
     confirmBtn.fillRoundedRect(width / 2 - 80, height / 2 + 105, 160, 44, 6);
     this.modalContainer.add(confirmBtn);
 
-    const cText = this.add.text(width / 2, height / 2 + 127, '수령 완료', {
+    const cText = this.add.text(width / 2, height / 2 + 127, t('수령 완료', 'Claim'), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '16px',
       color: '#0c0908',
@@ -967,14 +968,14 @@ export class UIScene extends Phaser.Scene {
     }
 
     // 상단 타이틀
-    const title = this.add.text(width / 2, 110, '📜 각성 비급서 (양피지)', {
+    const title = this.add.text(width / 2, 110, t('📜 각성 비급서 (양피지)', '📜 Awakening Scrolls'), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '22px',
       color: '#ffd000',
     }).setOrigin(0.5);
     this.modalContainer.add(title);
 
-    const sub = this.add.text(width / 2, 138, '배운 스킬과 공명하는 각성 재료가 모두 펼쳐집니다! 원하는 비급 1종을 선택하십시오.', {
+    const sub = this.add.text(width / 2, 138, t('배운 스킬과 공명하는 각성 재료가 모두 펼쳐집니다! 원하는 비급 1종을 선택하십시오.', 'Awakening materials resonating with your skills are revealed! Choose one scroll.'), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '12px',
       color: '#00ffaa',
@@ -1024,7 +1025,7 @@ export class UIScene extends Phaser.Scene {
       });
       this.modalContainer.add(emptyBox);
 
-      const emptyText = this.add.text(width / 2, height / 2 - 30, '✨ 모든 각성재료가 최대치에 도달했습니다!\n\n💰 보상: +3,000 마력석 & 체력 완전 회복', {
+      const emptyText = this.add.text(width / 2, height / 2 - 30, t('✨ 모든 각성재료가 최대치에 도달했습니다!\n\n💰 보상: +3,000 마력석 & 체력 완전 회복', '✨ All awakening materials are maxed!\n\n💰 Reward: +3,000 Mana Stones & Full Heal'), {
         fontFamily: 'NeoDunggeunmo, monospace',
         fontSize: '15px',
         color: '#ffd000',
@@ -1037,7 +1038,7 @@ export class UIScene extends Phaser.Scene {
       confirmBtn.fillRoundedRect(width / 2 - 80, height / 2 + 30, 160, 40, 6);
       this.modalContainer.add(confirmBtn);
 
-      const confirmText = this.add.text(width / 2, height / 2 + 50, '수령 완료', {
+      const confirmText = this.add.text(width / 2, height / 2 + 50, t('수령 완료', 'Claim'), {
         fontFamily: 'NeoDunggeunmo, monospace',
         fontSize: '15px',
         color: '#0c0908',
@@ -1089,7 +1090,7 @@ export class UIScene extends Phaser.Scene {
       }
 
       // 이름 및 레벨 진행 배지
-      const lvBadge = curLv === 0 ? '[신규]' : `[Lv.${curLv} ➔ Lv.${nextLv}]`;
+      const lvBadge = curLv === 0 ? t('[신규]', '[New]') : `[Lv.${curLv} ➔ Lv.${nextLv}]`;
       const titleY = cardHeight <= 85 ? cardY - 24 : cardY - 32;
       const name = this.add.text(width / 2 - 135, titleY, `${skill.name} ${lvBadge}`, {
         fontFamily: 'NeoDunggeunmo, monospace',
@@ -1112,11 +1113,11 @@ export class UIScene extends Phaser.Scene {
       // 각성 시너지 정보
       let synergyText = '';
       if (matchingActive) {
-        synergyText = `📜 [${matchingActive.name}의 각성 파트너]`;
+        synergyText = t(`📜 [${matchingActive.name}의 각성 파트너]`, `📜 [Awakening partner of ${matchingActive.name}]`);
       } else {
         const anyPartner = ACTIVE_SKILLS.find((a) => a.requiredPassiveId === skill.id);
         if (anyPartner) {
-          synergyText = `💡 [${anyPartner.name} 각성 재료]`;
+          synergyText = t(`💡 [${anyPartner.name} 각성 재료]`, `💡 [${anyPartner.name} awakening material]`);
         }
       }
 
@@ -1138,7 +1139,7 @@ export class UIScene extends Phaser.Scene {
         this.modalContainer.removeAll(true);
         this.battleScene.isPaused = false;
         if (typeof (this.battleScene as any).showDamageText === 'function') {
-          (this.battleScene as any).showDamageText(player.x, player.y - 30, `📜 [${skill.name} Lv.${nextLv} 습득!]`, 0x00ffaa, true);
+          (this.battleScene as any).showDamageText(player.x, player.y - 30, t(`📜 [${skill.name} Lv.${nextLv} 습득!]`, `📜 [${skill.name} Lv.${nextLv} acquired!]`), 0x00ffaa, true);
         }
       });
       this.modalContainer.add(hitArea);
@@ -1190,7 +1191,7 @@ export class UIScene extends Phaser.Scene {
     });
     this.modalContainer.add(box);
 
-    const title = this.add.text(width / 2, height / 2 - 160, isVictory ? '🏆 차원문 평정 완료!' : '💀 사령군주 쓰러짐...', {
+    const title = this.add.text(width / 2, height / 2 - 160, isVictory ? t('🏆 차원문 평정 완료!', '🏆 Gate Conquered!') : t('💀 사령군주 쓰러짐...', '💀 Necro Lord Has Fallen...'), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '22px',
       color: isVictory ? '#00ffaa' : '#ff3344',
@@ -1198,7 +1199,7 @@ export class UIScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.modalContainer.add(title);
 
-    const sub = this.add.text(width / 2, height / 2 - 120, isVictory ? `${this.battleScene.region.name} 정복 성공` : '군단이 흩어졌습니다. 거점에서 힘을 기르십시오.', {
+    const sub = this.add.text(width / 2, height / 2 - 120, isVictory ? t(`${this.battleScene.region.name} 정복 성공`, `${this.battleScene.region.name} conquered`) : t('군단이 흩어졌습니다. 거점에서 힘을 기르십시오.', 'Your legion is scattered. Grow stronger at the hub.'), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '13px',
       color: '#b8a692',
@@ -1207,7 +1208,7 @@ export class UIScene extends Phaser.Scene {
     this.modalContainer.add(sub);
 
     // 기록 정산
-    const kills = this.add.text(width / 2, height / 2 - 60, `💀 처치한 괴수: ${this.battleScene.killCount} 마리`, {
+    const kills = this.add.text(width / 2, height / 2 - 60, t(`💀 처치한 괴수: ${this.battleScene.killCount} 마리`, `💀 Monsters slain: ${this.battleScene.killCount}`), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '15px',
       color: '#f5ede2',
@@ -1217,7 +1218,7 @@ export class UIScene extends Phaser.Scene {
     const elapsed = Math.floor(this.battleScene.waveSpawner.elapsedTime);
     const min = Math.floor(elapsed / 60);
     const sec = elapsed % 60;
-    const survival = this.add.text(width / 2, height / 2 - 30, `⏱️ 생존 시간: ${min}분 ${sec}초`, {
+    const survival = this.add.text(width / 2, height / 2 - 30, t(`⏱️ 생존 시간: ${min}분 ${sec}초`, `⏱️ Survival time: ${min}m ${sec}s`), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '15px',
       color: '#f5ede2',
@@ -1226,7 +1227,7 @@ export class UIScene extends Phaser.Scene {
 
     const bonusGold = Math.round((isVictory ? 3000 : 500) * this.battleScene.player.getEffectiveStats().goldMul);
     const goldReward = this.battleScene.earnedGold + bonusGold;
-    const goldText = this.add.text(width / 2, height / 2 - 2, `💰 획득 마력석: +${goldReward.toLocaleString()} G`, {
+    const goldText = this.add.text(width / 2, height / 2 - 2, t(`💰 획득 마력석: +${goldReward.toLocaleString()} G`, `💰 Mana Stones gained: +${goldReward.toLocaleString()} G`), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '16px',
       color: '#ffd000',
@@ -1237,7 +1238,7 @@ export class UIScene extends Phaser.Scene {
     if (isVictory && this.battleScene.newlyUnlockedRelicId) {
       const relic = RELICS_MAP.get(this.battleScene.newlyUnlockedRelicId);
       if (relic) {
-        const relicBadge = this.add.text(width / 2, height / 2 + 20, `🔮 신규 보스 유물 해금: ${relic.name}`, {
+        const relicBadge = this.add.text(width / 2, height / 2 + 20, t(`🔮 신규 보스 유물 해금: ${relic.name}`, `🔮 New boss relic unlocked: ${relic.name}`), {
           fontFamily: 'NeoDunggeunmo, monospace',
           fontSize: '12px',
           color: '#00ffaa',
@@ -1250,7 +1251,7 @@ export class UIScene extends Phaser.Scene {
     const dpsEntries = this.battleScene.damageTracker.getTopEntries(Math.max(1, elapsed), 4);
     if (dpsEntries.length > 0) {
       const maxDmg = Math.max(1, dpsEntries[0].totalDamage);
-      const meterHeader = this.add.text(width / 2 - 170, height / 2 + 36, '📊 주요 스킬 DPS 분석', {
+      const meterHeader = this.add.text(width / 2 - 170, height / 2 + 36, t('📊 주요 스킬 DPS 분석', '📊 Top Skill DPS'), {
         fontFamily: 'NeoDunggeunmo, monospace',
         fontSize: '11px',
         color: '#b8a692',
@@ -1289,7 +1290,7 @@ export class UIScene extends Phaser.Scene {
       endlessBtn.strokeRoundedRect(width / 2 - 140, height / 2 + 132, 280, 36, 6);
       this.modalContainer.add(endlessBtn);
 
-      const endlessTxt = this.add.text(width / 2, height / 2 + 150, '♾️ 심연 무한 도전 계속하기', {
+      const endlessTxt = this.add.text(width / 2, height / 2 + 150, t('♾️ 심연 무한 도전 계속하기', '♾️ Continue Abyss Endless'), {
         fontFamily: 'NeoDunggeunmo, monospace',
         fontSize: '13px',
         color: '#ee99ff',
@@ -1312,7 +1313,7 @@ export class UIScene extends Phaser.Scene {
     doubleBtn.fillRoundedRect(width / 2 - 140, height / 2 + 174, 280, 38, 6);
     this.modalContainer.add(doubleBtn);
 
-    const doubleText = this.add.text(width / 2, height / 2 + 193, '🎬 광고 보고 전리품 2배 수령', {
+    const doubleText = this.add.text(width / 2, height / 2 + 193, t('🎬 광고 보고 전리품 2배 수령', '🎬 Watch Ad for 2x Loot'), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '14px',
       color: '#0c0908',
@@ -1326,7 +1327,7 @@ export class UIScene extends Phaser.Scene {
       if (isClaiming) return;
       isClaiming = true;
       SoundEngine.getInstance().click();
-      doubleText.setText('⏳ 광고 재생 중...');
+      doubleText.setText(t('⏳ 광고 재생 중...', '⏳ Playing ad...'));
       const success = await AdBillingAdapter.getInstance().showDoubleRewardAd();
       if (success) {
         SaveManager.getInstance().addGold(goldReward * 2);
@@ -1334,7 +1335,7 @@ export class UIScene extends Phaser.Scene {
         this.returnToHub();
       } else {
         isClaiming = false;
-        doubleText.setText('🎬 광고 보고 전리품 2배 수령');
+        doubleText.setText(t('🎬 광고 보고 전리품 2배 수령', '🎬 Watch Ad for 2x Loot'));
       }
     });
     this.modalContainer.add(doubleHit);
@@ -1347,7 +1348,7 @@ export class UIScene extends Phaser.Scene {
     exitBtn.strokeRoundedRect(width / 2 - 140, height / 2 + 218, 280, 38, 6);
     this.modalContainer.add(exitBtn);
 
-    const exitText = this.add.text(width / 2, height / 2 + 237, '거점 마을로 귀환', {
+    const exitText = this.add.text(width / 2, height / 2 + 237, t('거점 마을로 귀환', 'Return to Hub'), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '15px',
       color: '#f5ede2',

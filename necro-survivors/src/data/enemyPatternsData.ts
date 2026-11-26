@@ -1,3 +1,4 @@
+import { t } from '../core/I18n';
 import { BossPatternId, EnemyBehaviorType, WaveFormationType } from './types';
 
 export interface ArchetypeTuning {
@@ -168,19 +169,19 @@ export const WAVE_FORMATION_EVENTS: WaveFormationEvent[] = [
     triggerTimeSec: 100,
     type: 'ring',
     count: 16,
-    bannerText: '⚠️ 포위망 형성! 사방에서 괴수가 몰려옵니다!',
+    bannerText: t('⚠️ 포위망 형성! 사방에서 괴수가 몰려옵니다!', '⚠️ Encirclement! Monsters swarm from every side!'),
   },
   {
     triggerTimeSec: 200,
     type: 'pincer_rush',
     count: 12,
-    bannerText: '⚠️ 양측 협공 러시! 좌우 돌파에 대비하세요!',
+    bannerText: t('⚠️ 양측 협공 러시! 좌우 돌파에 대비하세요!', '⚠️ Pincer Rush! Brace for a breakthrough from left and right!'),
   },
   {
     triggerTimeSec: 300,
     type: 'ring',
     count: 20,
-    bannerText: '⚠️ 대군단 포위! 돌파구를 열어 탈출하세요!',
+    bannerText: t('⚠️ 대군단 포위! 돌파구를 열어 탈출하세요!', '⚠️ Grand Legion Siege! Break through and escape!'),
   },
 ];
 

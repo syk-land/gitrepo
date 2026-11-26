@@ -1,3 +1,4 @@
+import { t } from '../core/I18n';
 import Phaser from 'phaser';
 import { CURSED_SHRINE_CONFIG, FIELD_PROP_CONFIG, FieldDropType, rollFieldDropType } from '../data/fieldEventsData';
 
@@ -20,7 +21,7 @@ export class FieldProp {
 
     this.graphics = scene.add.graphics().setDepth(14);
     this.label = scene.add
-      .text(x, y - 24, '🏺 영혼 항아리', {
+      .text(x, y - 24, t('🏺 영혼 항아리', '🏺 Soul Jar'), {
         fontFamily: 'NeoDunggeunmo, monospace',
         fontSize: '10px',
         color: '#ffe28a',
@@ -62,10 +63,10 @@ export class FieldProp {
     if (this.isBroken || !this.active) return;
     this.isBroken = true;
     const labelMap: Record<FieldDropType, string> = {
-      meat: '🍖 회복 육포',
-      magnet: '🧲 영혼 자석',
-      bomb: '💣 영혼 폭탄',
-      gold: '💰 골드 주머니',
+      meat: t('🍖 회복 육포', '🍖 Healing Jerky'),
+      magnet: t('🧲 영혼 자석', '🧲 Soul Magnet'),
+      bomb: t('💣 영혼 폭탄', '💣 Soul Bomb'),
+      gold: t('💰 골드 주머니', '💰 Gold Pouch'),
     };
     this.label.setText(labelMap[this.dropType]);
     this.redraw();
@@ -102,7 +103,7 @@ export class CursedShrine {
 
     this.graphics = scene.add.graphics().setDepth(9);
     this.label = scene.add
-      .text(x, y - 34, '⛩️ 저주받은 제단 (점령 0%)', {
+      .text(x, y - 34, t('⛩️ 저주받은 제단 (점령 0%)', '⛩️ Cursed Altar (Capture 0%)'), {
         fontFamily: 'NeoDunggeunmo, monospace',
         fontSize: '12px',
         color: '#ff66cc',
@@ -127,7 +128,7 @@ export class CursedShrine {
         1,
         this.progress + (dt * captureSpeedMul) / CURSED_SHRINE_CONFIG.captureDurationSec
       );
-      this.label.setText(`⛩️ 저주 제단 점령 중 (${Math.round(this.progress * 100)}%)`);
+      this.label.setText(t(`⛩️ 저주 제단 점령 중 (${Math.round(this.progress * 100)}%)`, `⛩️ Capturing Cursed Altar (${Math.round(this.progress * 100)}%)`));
       this.redraw();
       if (this.progress >= 1) {
         this.active = false;

@@ -1,3 +1,4 @@
+import { t, getLang, toggleLang } from '../core/I18n';
 import Phaser from 'phaser';
 import { REGIONS_DATA } from '../data/regionsData';
 import { SaveManager } from '../core/SaveManager';
@@ -58,7 +59,7 @@ export class HubScene extends Phaser.Scene {
     bar.fillRect(0, 0, width, 65);
     bar.strokeRect(0, 0, width, 65);
 
-    this.add.text(20, 15, '💀 사령군주 거점', {
+    this.add.text(20, 15, t('💀 사령군주 거점', '💀 Necro Lord Hub'), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '18px',
       color: '#ffd000',
@@ -70,6 +71,19 @@ export class HubScene extends Phaser.Scene {
       fontSize: '16px',
       color: '#00ffaa',
     }).setOrigin(1, 0);
+
+    const langLabel = getLang() === 'ko' ? '🌐 KR / en' : '🌐 kr / EN';
+    const langBtn = this.add.text(width - 25, 42, langLabel, {
+      fontFamily: 'NeoDunggeunmo, monospace',
+      fontSize: '12px',
+      color: '#ffd000',
+      backgroundColor: '#231b15',
+      padding: { x: 6, y: 2 },
+    }).setOrigin(1, 0).setInteractive({ useHandCursor: true });
+    langBtn.on('pointerdown', () => {
+      SoundEngine.getInstance().click();
+      toggleLang();
+    });
   }
 
   private renderRegionCard(width: number, height: number): void {
@@ -96,7 +110,7 @@ export class HubScene extends Phaser.Scene {
     this.regionCardContainer.add(gateIcon);
 
     // 지역 번호 및 명칭
-    const title = this.add.text(width / 2, cardY - 45, `[제 ${region.regionId} 구역] ${region.gateName}`, {
+    const title = this.add.text(width / 2, cardY - 45, t(`[제 ${region.regionId} 구역] ${region.gateName}`, `[Zone ${region.regionId}] ${region.gateName}`), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '15px',
       color: '#ffd000',
@@ -113,7 +127,7 @@ export class HubScene extends Phaser.Scene {
     this.regionCardContainer.add(name);
 
     // 보스 정보 및 상태
-    const bossInfo = this.add.text(width / 2, cardY + 45, `👑 보스: ${region.boss}`, {
+    const bossInfo = this.add.text(width / 2, cardY + 45, t(`👑 보스: ${region.boss}`, `👑 Boss: ${region.boss}`), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '14px',
       color: '#ff2a6d',
@@ -123,7 +137,7 @@ export class HubScene extends Phaser.Scene {
     const stars = save.regionStars?.[this.selectedRegionId] ?? (isCleared ? 1 : 0);
     const starStr = stars > 0 ? '★'.repeat(Math.min(3, stars)) + '☆'.repeat(Math.max(0, 3 - stars)) : '☆☆☆';
     const bestEndless = save.bestEndlessTime?.[this.selectedRegionId];
-    const endlessStr = bestEndless ? `  |  ♾️ 최고 ${Math.floor(bestEndless / 60)}분 ${bestEndless % 60}초` : '';
+    const endlessStr = bestEndless ? t(`  |  ♾️ 최고 ${Math.floor(bestEndless / 60)}분 ${bestEndless % 60}초`, `  |  ♾️ Best ${Math.floor(bestEndless / 60)}m ${bestEndless % 60}s`) : '';
     const missionText = this.add.text(width / 2, cardY + 72, `${starStr}${endlessStr}`, {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '13px',
@@ -131,7 +145,7 @@ export class HubScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.regionCardContainer.add(missionText);
 
-    const statusBadge = this.add.text(width / 2, cardY + 104, isCleared ? '🏆 차원문 평정 완료' : isUnlocked ? '⚔️ 정복 가능' : '🔒 이전 차원문 클리어 필요', {
+    const statusBadge = this.add.text(width / 2, cardY + 104, isCleared ? t('🏆 차원문 평정 완료', '🏆 Gate Conquered') : isUnlocked ? t('⚔️ 정복 가능', '⚔️ Ready to Conquer') : t('🔒 이전 차원문 클리어 필요', '🔒 Clear previous gate first'), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '15px',
       color: isCleared ? '#00ffaa' : isUnlocked ? '#00f0ff' : '#888888',
@@ -186,7 +200,7 @@ export class HubScene extends Phaser.Scene {
     startBtn.lineStyle(2, 0xfff0a0, 1);
     startBtn.strokeRoundedRect(width / 2 - 190, bottomY, 380, 56, 8);
 
-    const startText = this.add.text(width / 2, bottomY + 28, '⚔️ 차원문 출정 (전투 개시)', {
+    const startText = this.add.text(width / 2, bottomY + 28, t('⚔️ 차원문 출정 (전투 개시)', '⚔️ Enter Gate (Start Battle)'), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '18px',
       color: '#0c0908',
@@ -215,7 +229,7 @@ export class HubScene extends Phaser.Scene {
     altarBtn.lineStyle(1, 0x00ffaa, 1);
     altarBtn.strokeRoundedRect(width / 2 - 190, bottomY + 68, 185, 48, 8);
 
-    this.add.text(width / 2 - 97, bottomY + 92, '⚱️ 영혼 제단', {
+    this.add.text(width / 2 - 97, bottomY + 92, t('⚱️ 영혼 제단', '⚱️ Soul Altar'), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '14px',
       color: '#00ffaa',
@@ -234,7 +248,7 @@ export class HubScene extends Phaser.Scene {
     relicBtn.lineStyle(1, 0xcc66ff, 1);
     relicBtn.strokeRoundedRect(width / 2 + 5, bottomY + 68, 185, 48, 8);
 
-    this.add.text(width / 2 + 97, bottomY + 92, `🔮 영혼 유물 (${equippedCount}/${MAX_EQUIPPED_RELICS})`, {
+    this.add.text(width / 2 + 97, bottomY + 92, t(`🔮 영혼 유물 (${equippedCount}/${MAX_EQUIPPED_RELICS})`, `🔮 Soul Relics (${equippedCount}/${MAX_EQUIPPED_RELICS})`), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '14px',
       color: '#ee99ff',
@@ -269,7 +283,7 @@ export class HubScene extends Phaser.Scene {
     });
     this.altarModalContainer.add(panel);
 
-    const title = this.add.text(width / 2, 68, '⚱️ 영혼 각인의 제단 (영구 특성)', {
+    const title = this.add.text(width / 2, 68, t('⚱️ 영혼 각인의 제단 (영구 특성)', '⚱️ Altar of Soul Imprints (Permanent Traits)'), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '18px',
       color: '#ffd000',
@@ -307,7 +321,7 @@ export class HubScene extends Phaser.Scene {
     combatTab.strokeRoundedRect(35, tabY, tabW, tabH, 6);
     this.altarModalContainer.add(combatTab);
 
-    const combatText = this.add.text(35 + tabW / 2, tabY + tabH / 2, '⚔️ 전투 특성 (9종)', {
+    const combatText = this.add.text(35 + tabW / 2, tabY + tabH / 2, t('⚔️ 전투 특성 (9종)', '⚔️ Combat Traits (9)'), {
       fontFamily: 'NeoDunggeunmo, Pretendard, monospace',
       fontSize: '14px',
       color: isCombat ? '#ffd000' : '#887564',
@@ -331,7 +345,7 @@ export class HubScene extends Phaser.Scene {
     survivalTab.strokeRoundedRect(survivalX, tabY, tabW, tabH, 6);
     this.altarModalContainer.add(survivalTab);
 
-    const survivalText = this.add.text(survivalX + tabW / 2, tabY + tabH / 2, '🛡️ 생존 및 성장 (9종)', {
+    const survivalText = this.add.text(survivalX + tabW / 2, tabY + tabH / 2, t('🛡️ 생존 및 성장 (9종)', '🛡️ Survival & Growth (9)'), {
       fontFamily: 'NeoDunggeunmo, Pretendard, monospace',
       fontSize: '14px',
       color: !isCombat ? '#ffd000' : '#887564',
@@ -396,7 +410,7 @@ export class HubScene extends Phaser.Scene {
       }
       this.altarModalContainer!.add(upBtn);
 
-      const btnText = this.add.text(width - 100, rowY + 36, isMax ? '만렙 달성' : `${cost.toLocaleString()} G`, {
+      const btnText = this.add.text(width - 100, rowY + 36, isMax ? t('만렙 달성', 'MAX') : `${cost.toLocaleString()} G`, {
         fontFamily: 'NeoDunggeunmo, Pretendard, monospace',
         fontSize: '13px',
         color: isMax ? '#ffd000' : canAfford ? '#0c0908' : '#888888',
@@ -442,20 +456,20 @@ export class HubScene extends Phaser.Scene {
     });
     popup.add(box);
 
-    popup.add(this.add.text(width / 2, height / 2 - 80, '💀 사령 군단 원정 완료!', {
+    popup.add(this.add.text(width / 2, height / 2 - 80, t('💀 사령 군단 원정 완료!', '💀 Legion Expedition Complete!'), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '18px',
       color: '#00ffaa',
     }).setOrigin(0.5));
 
-    popup.add(this.add.text(width / 2, height / 2 - 35, `${reward.elapsedMinutes}분 동안 사령들이 차원문을 탐색하여\n전리품을 수확했습니다.`, {
+    popup.add(this.add.text(width / 2, height / 2 - 35, t(`${reward.elapsedMinutes}분 동안 사령들이 차원문을 탐색하여\n전리품을 수확했습니다.`, `Your minions explored the gate for ${reward.elapsedMinutes} min\nand harvested loot.`), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '14px',
       color: '#f5ede2',
       align: 'center',
     }).setOrigin(0.5));
 
-    popup.add(this.add.text(width / 2, height / 2 + 20, `💰 +${reward.gold.toLocaleString()} 마력석 획득!`, {
+    popup.add(this.add.text(width / 2, height / 2 + 20, t(`💰 +${reward.gold.toLocaleString()} 마력석 획득!`, `💰 +${reward.gold.toLocaleString()} Mana Stones gained!`), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '17px',
       color: '#ffd000',
@@ -466,7 +480,7 @@ export class HubScene extends Phaser.Scene {
     confirmBtn.fillRoundedRect(width / 2 - 75, height / 2 + 55, 150, 42, 6);
     popup.add(confirmBtn);
 
-    popup.add(this.add.text(width / 2, height / 2 + 76, '확인', {
+    popup.add(this.add.text(width / 2, height / 2 + 76, t('확인', 'OK'), {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '16px',
       color: '#0c0908',
@@ -510,7 +524,7 @@ export class HubScene extends Phaser.Scene {
     const title = this.add.text(
       width / 2,
       panelY + 26,
-      `🔮 보스 영혼 유물 (${equipped.size}/${MAX_EQUIPPED_RELICS} 장착)`,
+      t(`🔮 보스 영혼 유물 (${equipped.size}/${MAX_EQUIPPED_RELICS} 장착)`, `🔮 Boss Soul Relics (${equipped.size}/${MAX_EQUIPPED_RELICS} equipped)`),
       {
         fontFamily: 'NeoDunggeunmo, monospace',
         fontSize: '17px',
@@ -554,7 +568,7 @@ export class HubScene extends Phaser.Scene {
       const nameTxt = this.add.text(
         panelX + 28,
         rowY + 8,
-        `[${relic.regionId}구역] ${relic.name}${isEq ? ' ✅ 장착 중' : isUnl ? '' : ' 🔒 미해금'}`,
+        t(`[${relic.regionId}구역] ${relic.name}${isEq ? ' ✅ 장착 중' : isUnl ? '' : ' 🔒 미해금'}`, `[Zone ${relic.regionId}] ${relic.name}${isEq ? ' ✅ Equipped' : isUnl ? '' : ' 🔒 Locked'}`),
         {
           fontFamily: 'NeoDunggeunmo, monospace',
           fontSize: '13px',

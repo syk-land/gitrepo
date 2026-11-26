@@ -1,3 +1,4 @@
+import { t } from '../core/I18n';
 import Phaser from 'phaser';
 import { RegionData } from '../data/types';
 import { Enemy } from '../entities/Enemy';
@@ -325,7 +326,7 @@ export class WaveSpawner {
 
     this.enemies.push(elite);
     if (typeof (this.scene as any).showDamageText === 'function') {
-      (this.scene as any).showDamageText(pos.x, pos.y - 20, '⚠️ [정예 괴수 출현]', 0xffd000, true);
+      (this.scene as any).showDamageText(pos.x, pos.y - 20, t('⚠️ [정예 괴수 출현]', '⚠️ [Elite Monster Appears]'), 0xffd000, true);
     }
   }
 

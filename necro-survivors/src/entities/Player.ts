@@ -1,3 +1,4 @@
+import { t } from '../core/I18n';
 import Phaser from 'phaser';
 import { CombatStats } from '../data/types';
 import { ISkillCaster, Vector2 } from './ISkillCaster';
@@ -90,7 +91,7 @@ export class Player implements ISkillCaster {
   }
 
   public getCasterName(): string {
-    return '사령군주 최미남';
+    return t('사령군주 최미남', 'Necro Lord Choi Mi-nam');
   }
 
   public triggerDash(inputX: number, inputY: number): boolean {

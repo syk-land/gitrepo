@@ -1,3 +1,4 @@
+import { t } from '../core/I18n';
 import Phaser from 'phaser';
 import { SpatialEntity, SpatialHashGrid } from '../core/SpatialHashGrid';
 import { BossPatternId, EnemyBehaviorType, EnemyProjectileSpec } from '../data/types';
@@ -243,7 +244,7 @@ export class Enemy implements SpatialEntity {
       this.freezeTimer = Math.max(this.freezeTimer, effectiveDur);
       this.sprite.setTint(0x00f0ff);
       if (!wasFrozen && typeof (this.scene as any).showDamageText === 'function') {
-        (this.scene as any).showDamageText(this.x, this.y - 20, '❄️ 빙결!', 0x00f0ff, true);
+        (this.scene as any).showDamageText(this.x, this.y - 20, t('❄️ 빙결!', '❄️ Frozen!'), 0x00f0ff, true);
       }
     } else if (type === 'slow') {
       this.slowTimer = Math.max(this.slowTimer, duration);
@@ -257,7 +258,7 @@ export class Enemy implements SpatialEntity {
       this.stunTimer = Math.max(this.stunTimer, effectiveDur);
       this.sprite.setTint(0xffd000);
       if (!wasStunned && typeof (this.scene as any).showDamageText === 'function') {
-        (this.scene as any).showDamageText(this.x, this.y - 20, '⚡ 기절!', 0xffd000, true);
+        (this.scene as any).showDamageText(this.x, this.y - 20, t('⚡ 기절!', '⚡ Stunned!'), 0xffd000, true);
       }
     } else if (type === 'bleed') {
       this.bleedTimer = Math.max(this.bleedTimer, duration);
@@ -272,7 +273,7 @@ export class Enemy implements SpatialEntity {
         this.sprite.setTint(0xaa88ff);
       }
       if (!wasShocked && typeof (this.scene as any).showDamageText === 'function') {
-        (this.scene as any).showDamageText(this.x, this.y - 20, '⚡ 감전!', 0xbb88ff, true);
+        (this.scene as any).showDamageText(this.x, this.y - 20, t('⚡ 감전!', '⚡ Shocked!'), 0xbb88ff, true);
       }
     } else if (type === 'burn') {
       this.burnTimer = Math.max(this.burnTimer, duration);
@@ -524,7 +525,7 @@ export class Enemy implements SpatialEntity {
     if (this.isBoss && !this.bossPhase2Triggered && this.hp <= this.maxHp * 0.5) {
       this.bossPhase2Triggered = true;
       if (typeof (this.scene as any).showDamageText === 'function') {
-        (this.scene as any).showDamageText(this.x, this.y - 56, '🔥 보스 광폭화 (2페이즈)!', 0xff2a6d, true);
+        (this.scene as any).showDamageText(this.x, this.y - 56, t('🔥 보스 광폭화 (2페이즈)!', '🔥 Boss Enraged (Phase 2)!'), 0xff2a6d, true);
       }
     }
 

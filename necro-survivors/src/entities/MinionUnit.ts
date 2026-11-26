@@ -1,3 +1,4 @@
+import { t } from '../core/I18n';
 import Phaser from 'phaser';
 import { MinionDef, CombatStats } from '../data/types';
 import { ISkillCaster, Vector2 } from './ISkillCaster';
@@ -120,7 +121,7 @@ export class MinionUnit implements ISkillCaster {
   }
 
   public getCasterName(): string {
-    return this.isTemporary ? '추출된 정예 망령' : this.def.name;
+    return this.isTemporary ? t('추출된 정예 망령', 'Extracted Elite Wraith') : this.def.name;
   }
 
   public takeDamage(amount: number): boolean {

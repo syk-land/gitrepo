@@ -1,3 +1,4 @@
+import { t } from '../core/I18n';
 import { ElementTag, SkillData } from '../data/types';
 import { Player } from '../entities/Player';
 import { ACTIVE_SKILLS, AWAKENED_SKILLS, ALL_SKILLS_MAP } from '../data/skillsData';
@@ -142,18 +143,18 @@ export class LevelUpManager {
 
       if (curLv === 0 && isActive && !ownedActiveBranches.has(getActiveBranchId(skill.id))) {
         const elemHint = getSynergyHintForNewElement(ownedElements, candElem);
-        synergyHint = elemHint || `🆕 [새 무기 계열 (${ownedActiveBranches.size + 1}/3)]`;
+        synergyHint = elemHint || t(`🆕 [새 무기 계열 (${ownedActiveBranches.size + 1}/3)]`, `🆕 [New weapon branch (${ownedActiveBranches.size + 1}/3)]`);
       } else if (skill.tier === 2 && skill.prerequisiteSkillId) {
         const prereqSkill = ALL_SKILLS_MAP.get(skill.prerequisiteSkillId);
         if (prereqSkill) {
-          synergyHint = `⚡ [${prereqSkill.name} 상위 진화]`;
+          synergyHint = t(`⚡ [${prereqSkill.name} 상위 진화]`, `⚡ [${prereqSkill.name} upgrade]`);
         }
       }
 
       if (!synergyHint && isActive && curLv === 4) {
         const evo = AWAKENED_SKILLS.find((a) => a.evolvesFrom === skill.id);
         if (evo) {
-          synergyHint = `🌟 [Lv.5 달성 시 '${evo.name}' 각성 조건 충족]`;
+          synergyHint = t(`🌟 [Lv.5 달성 시 '${evo.name}' 각성 조건 충족]`, `🌟 [Reach Lv.5 to unlock '${evo.name}' awakening]`);
         }
       }
 
@@ -169,7 +170,7 @@ export class LevelUpManager {
     if (result.length === 0) {
       const fallbackSkill: SkillData = {
         id: 'fallback_gold_heal',
-        name: '마력석 보너스 & 체력 회복',
+        name: t('마력석 보너스 & 체력 회복', 'Mana Stone Bonus & Heal'),
         icon: 'vfx_priest_ult',
         category: 'passive',
         isNecroSignature: false,
@@ -179,7 +180,7 @@ export class LevelUpManager {
         levels: [
           {
             level: 1,
-            description: '체력 35% 회복 및 마력석 +300G 즉시 획득',
+            description: t('체력 35% 회복 및 마력석 +300G 즉시 획득', 'Restore 35% HP and instantly gain +300G Mana Stones'),
             damageCoeff: 0,
             cooldown: 0,
             projectileCount: 0,
