@@ -4,10 +4,10 @@ import { SpatialHashGrid } from '../core/SpatialHashGrid';
 import { Enemy } from './Enemy';
 import { ISkillCaster } from './ISkillCaster';
 import { SoundEngine } from '../core/SoundEngine';
+import { getSkillElementTag } from '../data/synergyData';
+import { ElementalReactionSystem } from '../systems/ElementalReactionSystem';
 
 export class Projectile {
-  private static hitScratch: Enemy[] = [];
-  private static splashScratch: Enemy[] = [];
   public skillId: string = '';
   public x: number;
   public y: number;
@@ -19,7 +19,7 @@ export class Projectile {
   public hitboxRadius: number = 20;
   public knockback: number;
   public behavior: ProjectileBehavior;
-  public statusEffect?: { type: 'slow' | 'freeze' | 'stun' | 'bleed' | 'pull' | 'shock'; chance: number; duration: number; value?: number };
+  public statusEffect?: StatusEffect;
   public critRate: number = 0;
   public critDamage: number = 1.5;
   private hasStruck: boolean = false;
@@ -49,7 +49,7 @@ export class Projectile {
     dirX: number = 1,
     dirY: number = 0,
     speed: number = 340,
-    statusEffect?: { type: 'slow' | 'freeze' | 'stun' | 'bleed' | 'pull' | 'shock'; chance: number; duration: number; value?: number },
+    statusEffect?: StatusEffect,
     orbitCaster?: ISkillCaster,
     orbitOffset: number = 0,
     skillId: string = '',
@@ -237,7 +237,7 @@ export class Projectile {
   private checkCollisions(grid: SpatialHashGrid<Enemy>): void {
     // 실제 스프라이트 피격 원형 판정: hitboxRadius + enemy.radius (문제점 4 해결)
     const queryR = this.hitboxRadius + 45;
-    const hits = grid.queryRadius(this.x, this.y, queryR, Projectile.hitScratch);
+    const hits = grid.queryRadius(this.x, this.y, queryR);
 
     for (const enemy of hits) {
       if (!enemy.active || this.hitEnemies.has(enemy)) continue;
@@ -282,16 +282,12 @@ export class Projectile {
         effKnockback = 0;
       }
 
-      const tookDmg = enemy.takeDamage(hitDmg, (dx / dist) * effKnockback, (dy / dist) * effKnockback);
+      const dmgSource = this.skillId || 'minion_ranged';
+      const tookDmg = enemy.takeDamage(hitDmg, (dx / dist) * effKnockback, (dy / dist) * effKnockback, dmgSource);
       if (!tookDmg) continue; // 화면 밖 1.2배 무적 적은 관통 및 데미지 미소모!
 
       if (isCrit) {
         SoundEngine.getInstance().crit();
-        if (typeof (this.scene as any).triggerHitShake === 'function') {
-          (this.scene as any).triggerHitShake(0.003, 60);
-        }
-      } else if ((enemy.isBoss || enemy.isNamed) && typeof (this.scene as any).triggerHitShake === 'function') {
-        (this.scene as any).triggerHitShake(0.0035, 65);
       }
 
       if (typeof (this.scene as any).showDamageText === 'function') {
@@ -302,6 +298,11 @@ export class Projectile {
 
       if (this.statusEffect && Math.random() <= this.statusEffect.chance) {
         enemy.applyStatus(this.statusEffect.type, this.statusEffect.duration, this.statusEffect.value);
+      }
+      if (this.skillId) {
+        const elemTag = getSkillElementTag(this.skillId);
+        ElementalReactionSystem.checkAndTrigger(this.scene, enemy, elemTag, hitDmg, grid);
+        ElementalReactionSystem.applyElementStatus(enemy, elemTag);
       }
 
       // [극한의 심장] 패시브 효과: 서리 동결 오라 (레벨당 20%~70% 확률로 적 1.2~2.0초 완전 빙결)
@@ -333,13 +334,13 @@ export class Projectile {
       if (this.skillId === 'necro_lich_curse' && this.scene) {
         const curseRadius = Math.max(55, this.areaRadius);
         const splashDmg = Math.round(hitDmg * 0.70);
-        const curseTargets = grid.queryRadius(enemy.x, enemy.y, curseRadius, Projectile.splashScratch);
+        const curseTargets = grid.queryRadius(enemy.x, enemy.y, curseRadius);
         for (const ct of curseTargets) {
           if (!ct.active || ct === enemy) continue;
           const cdx = ct.x - enemy.x;
           const cdy = ct.y - enemy.y;
           if (cdx * cdx + cdy * cdy <= (curseRadius + ct.radius) ** 2) {
-            ct.takeDamage(splashDmg, 0, 0);
+            ct.takeDamage(splashDmg, 0, 0, this.skillId || 'minion_ranged');
             if (this.statusEffect && Math.random() <= this.statusEffect.chance) {
               ct.applyStatus(this.statusEffect.type, this.statusEffect.duration, this.statusEffect.value);
             }
@@ -359,13 +360,13 @@ export class Projectile {
       if ((this.skillId === 'fire_ball' || this.skillId === 'awakened_fireball') && this.scene) {
         const expRadius = Math.max(45, this.areaRadius);
         const splashDmg = Math.round(hitDmg * 0.75);
-        const splashTargets = grid.queryRadius(enemy.x, enemy.y, expRadius, Projectile.splashScratch);
+        const splashTargets = grid.queryRadius(enemy.x, enemy.y, expRadius);
         for (const st of splashTargets) {
           if (!st.active || st === enemy) continue;
           const sdx = st.x - enemy.x;
           const sdy = st.y - enemy.y;
           if (sdx * sdx + sdy * sdy <= (expRadius + st.radius) ** 2) {
-            st.takeDamage(splashDmg, 0, 0);
+            st.takeDamage(splashDmg, 0, 0, this.skillId || 'minion_ranged');
             if (typeof (this.scene as any).showDamageText === 'function') {
               (this.scene as any).showDamageText(st.x, st.y - 10, `${splashDmg}`, 0xff7722);
             }
@@ -432,16 +433,11 @@ export class Projectile {
         hitDmg = Math.round(this.damage * this.critDamage);
       }
 
-      const tookDmg = nextTarget.takeDamage(hitDmg, 0, 0);
+      const tookDmg = nextTarget.takeDamage(hitDmg, 0, 0, this.skillId || 'storm_chain');
       if (!tookDmg) continue;
 
       if (isCrit) {
         SoundEngine.getInstance().crit();
-        if (typeof (this.scene as any).triggerHitShake === 'function') {
-          (this.scene as any).triggerHitShake(0.003, 60);
-        }
-      } else if ((nextTarget.isBoss || nextTarget.isNamed) && typeof (this.scene as any).triggerHitShake === 'function') {
-        (this.scene as any).triggerHitShake(0.0035, 65);
       }
 
       // 번개 아크 시각 효과 라인 렌더링
@@ -464,6 +460,11 @@ export class Projectile {
       }
       if (this.statusEffect && Math.random() <= this.statusEffect.chance) {
         nextTarget.applyStatus(this.statusEffect.type, this.statusEffect.duration, this.statusEffect.value);
+      }
+      if (this.skillId) {
+        const elemTag = getSkillElementTag(this.skillId);
+        ElementalReactionSystem.checkAndTrigger(this.scene, nextTarget, elemTag, hitDmg, grid);
+        ElementalReactionSystem.applyElementStatus(nextTarget, elemTag);
       }
       const battlePlayer = (this.scene as any)?.player;
       if (battlePlayer && battlePlayer.passiveSkills) {

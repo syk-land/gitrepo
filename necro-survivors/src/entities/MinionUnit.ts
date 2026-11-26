@@ -4,6 +4,13 @@ import { ISkillCaster, Vector2 } from './ISkillCaster';
 import { SpatialHashGrid } from '../core/SpatialHashGrid';
 import { Enemy } from './Enemy';
 
+export interface TemporaryMinionOptions {
+  textureKey: string;
+  lifeSeconds: number;
+  hpBonusMul?: number;
+  atkBonusMul?: number;
+}
+
 export class MinionUnit implements ISkillCaster {
   public x: number;
   public y: number;
@@ -13,6 +20,11 @@ export class MinionUnit implements ISkillCaster {
   public respawnTimer: number = 0;
   public invulnTimer: number = 0;
   public attackCooldown: number = 0;
+
+  // 사령 추출 임시 언데드 지원
+  public readonly isTemporary: boolean = false;
+  public lifeTimer: number = 0;
+  public expired: boolean = false;
 
   public def: MinionDef;
   public sprite: Phaser.GameObjects.Sprite;
@@ -31,22 +43,34 @@ export class MinionUnit implements ISkillCaster {
     x: number,
     y: number,
     orbitIndex: number,
-    ownerGetter: () => { x: number; y: number; stats: CombatStats; facing: Vector2 }
+    ownerGetter: () => { x: number; y: number; stats: CombatStats; facing: Vector2 },
+    tempOptions?: TemporaryMinionOptions
   ) {
     this.scene = scene;
     this.def = def;
     this.x = x;
     this.y = y;
     this.orbitIndex = orbitIndex;
-    this.orbitAngle = orbitIndex * 2.39996; // 황금비(Golden Angle) 각도로 겹침 완전 방지
+    this.orbitAngle = orbitIndex * 2.39996;
     this.ownerGetter = ownerGetter;
 
+    if (tempOptions) {
+      this.isTemporary = true;
+      this.lifeTimer = tempOptions.lifeSeconds;
+    }
+
     const stats = this.getEffectiveStats();
-    this.maxHp = Math.round(stats.maxHp * def.baseHpRatio * stats.minionHpMul);
+    const hpBonus = tempOptions?.hpBonusMul ?? 1.0;
+    this.maxHp = Math.round(stats.maxHp * def.baseHpRatio * stats.minionHpMul * hpBonus);
     this.hp = this.maxHp;
 
-    this.sprite = scene.add.sprite(x, y, def.id);
-    if (def.id === 'arthur') {
+    const tex = tempOptions ? tempOptions.textureKey : def.id;
+    this.sprite = scene.add.sprite(x, y, tex);
+    if (tempOptions) {
+      this.sprite.setDisplaySize(44, 44);
+      this.sprite.setTint(0x44ffcc);
+      this.sprite.setAlpha(0.85);
+    } else if (def.id === 'arthur') {
       this.sprite.setDisplaySize(48, 48);
     } else {
       this.sprite.setDisplaySize(36, 36);
@@ -76,26 +100,31 @@ export class MinionUnit implements ISkillCaster {
     const owner = this.ownerGetter();
     const isSkeleton = this.def.id !== 'drone';
     const legionLv = isSkeleton ? this.getLegionLevel() : 0;
-    const legionAtkBonus = legionLv >= 4 ? 1.30 : 1.0;
+    const legionAtkBonus = legionLv >= 4 ? 1.3 : 1.0;
     const legionHpBonus = legionLv >= 2 ? 1.25 : 1.0;
+    const tempAtkMul = this.isTemporary ? 1.45 : 1.0;
     return {
       ...owner.stats,
-      damageMul: owner.stats.damageMul * this.def.baseAtkRatio * owner.stats.minionDamageMul * legionAtkBonus,
+      damageMul:
+        owner.stats.damageMul *
+        this.def.baseAtkRatio *
+        owner.stats.minionDamageMul *
+        legionAtkBonus *
+        tempAtkMul,
       minionHpMul: owner.stats.minionHpMul * legionHpBonus,
     };
   }
 
   public isAlive(): boolean {
-    return this.state === 'ALIVE';
+    return this.state === 'ALIVE' && !this.expired;
   }
 
   public getCasterName(): string {
-    return this.def.name;
+    return this.isTemporary ? '추출된 정예 망령' : this.def.name;
   }
 
-  // 소환수 원콤 방지 보호 규칙: 1타 최대 25% 피해 제한 + 0.35초 무적
   public takeDamage(amount: number): boolean {
-    if (this.state !== 'ALIVE' || this.invulnTimer > 0) return false;
+    if (this.state !== 'ALIVE' || this.invulnTimer > 0 || this.expired) return false;
 
     const maxDamageCap = this.maxHp * 0.25;
     const finalDamage = Math.min(amount, maxDamageCap);
@@ -104,12 +133,17 @@ export class MinionUnit implements ISkillCaster {
 
     this.sprite.setTintFill(0xffffff);
     setTimeout(() => {
-      if (this.sprite.active) {
-        if (this.state === 'ALIVE') this.sprite.clearTint();
+      if (this.sprite.active && this.state === 'ALIVE') {
+        if (this.isTemporary) this.sprite.setTint(0x44ffcc);
+        else this.sprite.clearTint();
       }
     }, 60);
 
     if (this.hp <= 0) {
+      if (this.isTemporary) {
+        this.expired = true;
+        return true;
+      }
       const stats = this.getEffectiveStats();
       let respawn = this.def.respawnSeconds || 3.5;
       if (this.def.id !== 'drone' && this.getLegionLevel() >= 5) {
@@ -134,27 +168,23 @@ export class MinionUnit implements ISkillCaster {
   }
 
   public triggerCorpseExplosion(burstDmg: number, grid: SpatialHashGrid<Enemy>): void {
-    if (this.state !== 'ALIVE') return;
+    if (this.state !== 'ALIVE' || this.expired) return;
 
-    // 소환수 보조 충격파 시각 이펙트 (문제점 10: 소환물 생존 유지)
     if (typeof (this.scene as any).createNovaVFX === 'function') {
       (this.scene as any).createNovaVFX(this.x, this.y, 140, 0x00ffaa);
     }
 
-    // 주변 적들에게 사령 충격파 피해
     const enemies = grid.queryRadius(this.x, this.y, 140);
     for (const enemy of enemies) {
       if (!enemy.active) continue;
       const dx = enemy.x - this.x;
       const dy = enemy.y - this.y;
       const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-      enemy.takeDamage(burstDmg, (dx / dist) * 75, (dy / dist) * 75);
+      enemy.takeDamage(burstDmg, (dx / dist) * 90, (dy / dist) * 90, 'corpse_explosion');
       if (typeof (this.scene as any).showDamageText === 'function') {
-        (this.scene as any).showDamageText(enemy.x, enemy.y - 15, `💥 ${burstDmg}`, 0x00ffaa);
+        (this.scene as any).showDamageText(enemy.x, enemy.y - 16, `💥 ${burstDmg}`, 0x00ffaa, true);
       }
     }
-
-    // 소환수는 죽지 않고 전투를 지속함
   }
 
   public updateAI(
@@ -162,11 +192,23 @@ export class MinionUnit implements ISkillCaster {
     grid: SpatialHashGrid<Enemy>,
     onRangedAttack?: (minion: MinionUnit, target: Enemy) => void
   ): void {
+    if (this.expired) return;
+
+    if (this.isTemporary) {
+      this.lifeTimer -= dt;
+      if (this.lifeTimer <= 0) {
+        this.expired = true;
+        return;
+      }
+      if (this.lifeTimer < 3.0) {
+        this.sprite.setAlpha(0.35 + (this.lifeTimer / 3.0) * 0.5);
+      }
+    }
+
     if (this.invulnTimer > 0) {
       this.invulnTimer -= dt;
     }
 
-    // 사망 중이면 부활 카운트다운 (플레이어 근처를 반투명 영혼으로 부드럽게 추종)
     if (this.state === 'DEAD_RESPAWNING') {
       this.respawnTimer -= dt;
       const owner = this.ownerGetter();
@@ -181,7 +223,6 @@ export class MinionUnit implements ISkillCaster {
         this.hp = this.maxHp;
         this.sprite.setAlpha(1.0);
         this.sprite.clearTint();
-        // 부활 연출: 플레이어 바로 옆으로 소환
         this.x = owner.x + (Math.random() * 40 - 20);
         this.y = owner.y + (Math.random() * 40 - 20);
         this.sprite.setPosition(this.x, this.y);
@@ -192,8 +233,8 @@ export class MinionUnit implements ISkillCaster {
     const owner = this.ownerGetter();
 
     if (this.def.combatRole === 'melee_blocker') {
-      // 1. 근접 길막형 (해골 전사, 아서): 플레이어 반경 180px 내 적에게 돌격
-      const nearestEnemy = grid.findNearest(owner.x, owner.y, 180);
+      const searchRange = this.isTemporary ? 260 : 180;
+      const nearestEnemy = grid.findNearest(owner.x, owner.y, searchRange);
 
       if (nearestEnemy && nearestEnemy.active) {
         const dx = nearestEnemy.x - this.x;
@@ -208,26 +249,23 @@ export class MinionUnit implements ISkillCaster {
           this.y += (dy / dist) * this.def.moveSpeed * dt;
         }
 
-        // 공격 및 길막 바리케이드 충돌
         this.attackCooldown -= dt;
         if (this.attackCooldown <= 0 && dist <= this.def.attackRange + 15) {
           this.attackCooldown = this.def.attackInterval;
           const stats = this.getEffectiveStats();
           const dmg = Math.round(stats.damageMul * 35);
-          nearestEnemy.takeDamage(dmg, (dx / dist) * 35, (dy / dist) * 35);
+          nearestEnemy.takeDamage(dmg, (dx / dist) * 35, (dy / dist) * 35, 'minion_melee');
           if (typeof (this.scene as any).showDamageText === 'function') {
             (this.scene as any).showDamageText(nearestEnemy.x, nearestEnemy.y - 12, `${dmg}`, 0xffd000);
           }
         }
 
-        // 적을 몸으로 밀어내며 플레이어 보호 (바리케이드 물리)
         if (dist < this.def.bodyRadius + nearestEnemy.radius) {
           const pushForce = 35 * dt;
           nearestEnemy.x += (dx / dist) * pushForce;
           nearestEnemy.y += (dy / dist) * pushForce;
         }
       } else {
-        // 주변에 적이 없으면 플레이어 전방 반원 대형으로 복귀 (방진 다층 분산)
         const forwardX = owner.facing.x || 1;
         const forwardY = owner.facing.y || 0;
         const spreadRadius = 35 + (this.orbitIndex % 3) * 18;
@@ -245,7 +283,6 @@ export class MinionUnit implements ISkillCaster {
         }
       }
     } else {
-      // 2. 원거리 공전형 (해골 궁수, 마법사, 드론): 플레이어 주위 다층 공전 (겹침 방지)
       const orbitRadius = 65 + (this.orbitIndex % 3) * 22;
       this.orbitAngle += dt * 1.8;
       const targetX = owner.x + Math.cos(this.orbitAngle) * orbitRadius;
@@ -254,7 +291,6 @@ export class MinionUnit implements ISkillCaster {
       this.x = Phaser.Math.Linear(this.x, targetX, 0.15);
       this.y = Phaser.Math.Linear(this.y, targetY, 0.15);
 
-      // 사거리 내 가장 가까운 적 탐색 및 원거리 발사
       this.attackCooldown -= dt;
       const targetEnemy = grid.findNearest(this.x, this.y, this.def.attackRange);
 
@@ -272,8 +308,8 @@ export class MinionUnit implements ISkillCaster {
               interval *= 0.65;
             } else {
               const dLv = pSkills?.get('psi_drone') ?? 1;
-              if (dLv >= 5) interval *= 0.70;
-              else if (dLv >= 2) interval *= 0.80;
+              if (dLv >= 5) interval *= 0.7;
+              else if (dLv >= 2) interval *= 0.8;
             }
           }
           this.attackCooldown = interval;
@@ -293,7 +329,7 @@ export class MinionUnit implements ISkillCaster {
 
   private renderHpBar(hoverY: number = 0): void {
     this.hpBar.clear();
-    if (this.state !== 'ALIVE' || this.hp >= this.maxHp) return;
+    if (this.state !== 'ALIVE' || this.expired || this.hp >= this.maxHp) return;
 
     const barW = 32;
     const barH = 4;
@@ -304,7 +340,7 @@ export class MinionUnit implements ISkillCaster {
     this.hpBar.fillRect(barX - 1, barY - 1, barW + 2, barH + 2);
 
     const ratio = Math.max(0, this.hp / this.maxHp);
-    this.hpBar.fillStyle(0x00ffaa, 1.0);
+    this.hpBar.fillStyle(this.isTemporary ? 0x44ffcc : 0x00ffaa, 1.0);
     this.hpBar.fillRect(barX, barY, barW * ratio, barH);
   }
 

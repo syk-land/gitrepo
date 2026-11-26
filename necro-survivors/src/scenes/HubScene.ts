@@ -3,6 +3,8 @@ import { REGIONS_DATA } from '../data/regionsData';
 import { SaveManager } from '../core/SaveManager';
 import { SoundEngine } from '../core/SoundEngine';
 import { COMBAT_TRAITS, SURVIVAL_TRAITS, getAltarUpgradeCost, formatAltarBonus } from '../data/altarData';
+import { RELICS_DATA } from '../data/relicsData';
+import { MAX_EQUIPPED_RELICS } from '../core/SaveManager';
 import { drawHanokFrame } from '../utils/HanokFrameBuilder';
 
 export class HubScene extends Phaser.Scene {
@@ -11,6 +13,7 @@ export class HubScene extends Phaser.Scene {
   private goldText!: Phaser.GameObjects.Text;
   private regionCardContainer!: Phaser.GameObjects.Container;
   private altarModalContainer?: Phaser.GameObjects.Container;
+  private relicModalContainer?: Phaser.GameObjects.Container;
   private currentAltarTab: 'combat' | 'survival' = 'combat';
 
   constructor() {
@@ -55,18 +58,16 @@ export class HubScene extends Phaser.Scene {
     bar.fillRect(0, 0, width, 65);
     bar.strokeRect(0, 0, width, 65);
 
-    this.add.text(20, 18, 'NECRO SURVIVORS', {
-      fontFamily: 'Cinzel, serif',
+    this.add.text(20, 15, '💀 사령군주 거점', {
+      fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '18px',
-      fontStyle: 'bold',
       color: '#ffd000',
     });
 
     const save = SaveManager.getInstance().getData();
-    this.goldText = this.add.text(width - 25, 20, `${save.gold.toLocaleString()} G`, {
-      fontFamily: 'Inter, monospace',
+    this.goldText = this.add.text(width - 25, 20, `💰 ${save.gold.toLocaleString()} G`, {
+      fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '16px',
-      fontStyle: 'bold',
       color: '#00ffaa',
     }).setOrigin(1, 0);
   }
@@ -95,18 +96,16 @@ export class HubScene extends Phaser.Scene {
     this.regionCardContainer.add(gateIcon);
 
     // 지역 번호 및 명칭
-    const title = this.add.text(width / 2, cardY - 45, `[ZONE ${region.regionId}] ${region.gateName}`, {
-      fontFamily: 'Cinzel, serif',
+    const title = this.add.text(width / 2, cardY - 45, `[제 ${region.regionId} 구역] ${region.gateName}`, {
+      fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '15px',
-      fontStyle: 'bold',
       color: '#ffd000',
     }).setOrigin(0.5);
     this.regionCardContainer.add(title);
 
     const name = this.add.text(width / 2, cardY - 15, region.name, {
-      fontFamily: 'Inter, sans-serif',
+      fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '18px',
-      fontStyle: 'bold',
       color: '#f5ede2',
       align: 'center',
       wordWrap: { width: 380 },
@@ -114,18 +113,27 @@ export class HubScene extends Phaser.Scene {
     this.regionCardContainer.add(name);
 
     // 보스 정보 및 상태
-    const bossInfo = this.add.text(width / 2, cardY + 45, `BOSS: ${region.boss}`, {
-      fontFamily: 'Inter, sans-serif',
+    const bossInfo = this.add.text(width / 2, cardY + 45, `👑 보스: ${region.boss}`, {
+      fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '14px',
-      fontStyle: 'bold',
-      color: '#ff4d7d',
+      color: '#ff2a6d',
     }).setOrigin(0.5);
     this.regionCardContainer.add(bossInfo);
 
-    const statusBadge = this.add.text(width / 2, cardY + 95, isCleared ? 'CLEARED' : isUnlocked ? 'READY FOR BATTLE' : 'CLEAR PREVIOUS ZONE TO UNLOCK', {
-      fontFamily: 'Inter, sans-serif',
-      fontSize: '14px',
-      fontStyle: 'bold',
+    const stars = save.regionStars?.[this.selectedRegionId] ?? (isCleared ? 1 : 0);
+    const starStr = stars > 0 ? '★'.repeat(Math.min(3, stars)) + '☆'.repeat(Math.max(0, 3 - stars)) : '☆☆☆';
+    const bestEndless = save.bestEndlessTime?.[this.selectedRegionId];
+    const endlessStr = bestEndless ? `  |  ♾️ 최고 ${Math.floor(bestEndless / 60)}분 ${bestEndless % 60}초` : '';
+    const missionText = this.add.text(width / 2, cardY + 72, `${starStr}${endlessStr}`, {
+      fontFamily: 'NeoDunggeunmo, monospace',
+      fontSize: '13px',
+      color: '#ffd000',
+    }).setOrigin(0.5);
+    this.regionCardContainer.add(missionText);
+
+    const statusBadge = this.add.text(width / 2, cardY + 104, isCleared ? '🏆 차원문 평정 완료' : isUnlocked ? '⚔️ 정복 가능' : '🔒 이전 차원문 클리어 필요', {
+      fontFamily: 'NeoDunggeunmo, monospace',
+      fontSize: '15px',
       color: isCleared ? '#00ffaa' : isUnlocked ? '#00f0ff' : '#888888',
     }).setOrigin(0.5);
     this.regionCardContainer.add(statusBadge);
@@ -178,9 +186,9 @@ export class HubScene extends Phaser.Scene {
     startBtn.lineStyle(2, 0xfff0a0, 1);
     startBtn.strokeRoundedRect(width / 2 - 190, bottomY, 380, 56, 8);
 
-    const startText = this.add.text(width / 2, bottomY + 28, 'ENTER PORTAL (START BATTLE)', {
-      fontFamily: 'Cinzel, serif',
-      fontSize: '17px',
+    const startText = this.add.text(width / 2, bottomY + 28, '⚔️ 차원문 출정 (전투 개시)', {
+      fontFamily: 'NeoDunggeunmo, monospace',
+      fontSize: '18px',
       color: '#0c0908',
       fontStyle: 'bold',
     }).setOrigin(0.5);
@@ -200,24 +208,42 @@ export class HubScene extends Phaser.Scene {
       this.scene.launch('UIScene');
     });
 
-    // 2. 영혼 각인의 제단 열기 버튼
+    // 2. 영혼 각인의 제단 + 보스 영혼 유물 버튼 (2분할)
     const altarBtn = this.add.graphics();
     altarBtn.fillStyle(0x231b15, 0.95);
-    altarBtn.fillRoundedRect(width / 2 - 190, bottomY + 68, 380, 48, 8);
+    altarBtn.fillRoundedRect(width / 2 - 190, bottomY + 68, 185, 48, 8);
     altarBtn.lineStyle(1, 0x00ffaa, 1);
-    altarBtn.strokeRoundedRect(width / 2 - 190, bottomY + 68, 380, 48, 8);
+    altarBtn.strokeRoundedRect(width / 2 - 190, bottomY + 68, 185, 48, 8);
 
-    this.add.text(width / 2, bottomY + 92, 'ALTAR OF SOULS (UPGRADES)', {
-      fontFamily: 'Inter, sans-serif',
-      fontSize: '15px',
-      fontStyle: 'bold',
+    this.add.text(width / 2 - 97, bottomY + 92, '⚱️ 영혼 제단', {
+      fontFamily: 'NeoDunggeunmo, monospace',
+      fontSize: '14px',
       color: '#00ffaa',
     }).setOrigin(0.5);
 
-    const altarHitArea = this.add.zone(width / 2, bottomY + 92, 380, 48).setInteractive({ useHandCursor: true });
+    const altarHitArea = this.add.zone(width / 2 - 97, bottomY + 92, 185, 48).setInteractive({ useHandCursor: true });
     altarHitArea.on('pointerdown', () => {
       SoundEngine.getInstance().click();
       this.openAltarModal(width, height);
+    });
+
+    const equippedCount = (SaveManager.getInstance().getData().equippedRelics ?? []).length;
+    const relicBtn = this.add.graphics();
+    relicBtn.fillStyle(0x231829, 0.95);
+    relicBtn.fillRoundedRect(width / 2 + 5, bottomY + 68, 185, 48, 8);
+    relicBtn.lineStyle(1, 0xcc66ff, 1);
+    relicBtn.strokeRoundedRect(width / 2 + 5, bottomY + 68, 185, 48, 8);
+
+    this.add.text(width / 2 + 97, bottomY + 92, `🔮 영혼 유물 (${equippedCount}/${MAX_EQUIPPED_RELICS})`, {
+      fontFamily: 'NeoDunggeunmo, monospace',
+      fontSize: '14px',
+      color: '#ee99ff',
+    }).setOrigin(0.5);
+
+    const relicHitArea = this.add.zone(width / 2 + 97, bottomY + 92, 185, 48).setInteractive({ useHandCursor: true });
+    relicHitArea.on('pointerdown', () => {
+      SoundEngine.getInstance().click();
+      this.openRelicModal(width, height);
     });
   }
 
@@ -243,19 +269,17 @@ export class HubScene extends Phaser.Scene {
     });
     this.altarModalContainer.add(panel);
 
-    const title = this.add.text(width / 2, 68, 'ALTAR OF SOULS (PERMANENT)', {
-      fontFamily: 'Cinzel, serif',
-      fontSize: '17px',
-      fontStyle: 'bold',
+    const title = this.add.text(width / 2, 68, '⚱️ 영혼 각인의 제단 (영구 특성)', {
+      fontFamily: 'NeoDunggeunmo, monospace',
+      fontSize: '18px',
       color: '#ffd000',
     }).setOrigin(0.5);
     this.altarModalContainer.add(title);
 
     // 닫기 버튼
-    const closeBtn = this.add.text(width - 48, 68, 'X', {
-      fontFamily: 'Inter, sans-serif',
-      fontSize: '20px',
-      fontStyle: 'bold',
+    const closeBtn = this.add.text(width - 48, 68, '✖', {
+      fontFamily: 'NeoDunggeunmo, monospace',
+      fontSize: '22px',
       color: '#f5ede2',
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
@@ -269,7 +293,7 @@ export class HubScene extends Phaser.Scene {
     });
     this.altarModalContainer.add(closeBtn);
 
-    // 탭 버튼
+    // 탭 버튼 [⚔️ 전투 특성 (9종)] / [🛡️ 생존 및 성장 (9종)]
     const isCombat = this.currentAltarTab === 'combat';
     const tabY = 96;
     const tabW = 210;
@@ -283,10 +307,9 @@ export class HubScene extends Phaser.Scene {
     combatTab.strokeRoundedRect(35, tabY, tabW, tabH, 6);
     this.altarModalContainer.add(combatTab);
 
-    const combatText = this.add.text(35 + tabW / 2, tabY + tabH / 2, 'COMBAT TRAITS (9)', {
-      fontFamily: 'Inter, sans-serif',
-      fontSize: '13px',
-      fontStyle: 'bold',
+    const combatText = this.add.text(35 + tabW / 2, tabY + tabH / 2, '⚔️ 전투 특성 (9종)', {
+      fontFamily: 'NeoDunggeunmo, Pretendard, monospace',
+      fontSize: '14px',
       color: isCombat ? '#ffd000' : '#887564',
     }).setOrigin(0.5);
     this.altarModalContainer.add(combatText);
@@ -308,10 +331,9 @@ export class HubScene extends Phaser.Scene {
     survivalTab.strokeRoundedRect(survivalX, tabY, tabW, tabH, 6);
     this.altarModalContainer.add(survivalTab);
 
-    const survivalText = this.add.text(survivalX + tabW / 2, tabY + tabH / 2, 'SURVIVAL & GROWTH (9)', {
-      fontFamily: 'Inter, sans-serif',
-      fontSize: '13px',
-      fontStyle: 'bold',
+    const survivalText = this.add.text(survivalX + tabW / 2, tabY + tabH / 2, '🛡️ 생존 및 성장 (9종)', {
+      fontFamily: 'NeoDunggeunmo, Pretendard, monospace',
+      fontSize: '14px',
       color: !isCombat ? '#ffd000' : '#887564',
     }).setOrigin(0.5);
     this.altarModalContainer.add(survivalText);
@@ -374,10 +396,9 @@ export class HubScene extends Phaser.Scene {
       }
       this.altarModalContainer!.add(upBtn);
 
-      const btnText = this.add.text(width - 100, rowY + 36, isMax ? 'MAX' : `${cost.toLocaleString()} G`, {
-        fontFamily: 'Inter, sans-serif',
+      const btnText = this.add.text(width - 100, rowY + 36, isMax ? '만렙 달성' : `${cost.toLocaleString()} G`, {
+        fontFamily: 'NeoDunggeunmo, Pretendard, monospace',
         fontSize: '13px',
-        fontStyle: 'bold',
         color: isMax ? '#ffd000' : canAfford ? '#0c0908' : '#888888',
       }).setOrigin(0.5);
       this.altarModalContainer!.add(btnText);
@@ -398,7 +419,7 @@ export class HubScene extends Phaser.Scene {
 
   private updateGoldText(): void {
     const save = SaveManager.getInstance().getData();
-    this.goldText.setText(`${save.gold.toLocaleString()} G`);
+    this.goldText.setText(`💰 ${save.gold.toLocaleString()} G`);
   }
 
   // 오프라인 방치 보상 알림창
@@ -421,24 +442,22 @@ export class HubScene extends Phaser.Scene {
     });
     popup.add(box);
 
-    popup.add(this.add.text(width / 2, height / 2 - 80, 'EXPEDITION COMPLETE!', {
-      fontFamily: 'Cinzel, serif',
+    popup.add(this.add.text(width / 2, height / 2 - 80, '💀 사령 군단 원정 완료!', {
+      fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '18px',
-      fontStyle: 'bold',
       color: '#00ffaa',
     }).setOrigin(0.5));
 
-    popup.add(this.add.text(width / 2, height / 2 - 35, `Your undead legion raided portals for\n${reward.elapsedMinutes} min while you were away.`, {
-      fontFamily: 'Inter, sans-serif',
+    popup.add(this.add.text(width / 2, height / 2 - 35, `${reward.elapsedMinutes}분 동안 사령들이 차원문을 탐색하여\n전리품을 수확했습니다.`, {
+      fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '14px',
       color: '#f5ede2',
       align: 'center',
     }).setOrigin(0.5));
 
-    popup.add(this.add.text(width / 2, height / 2 + 20, `+${reward.gold.toLocaleString()} Gold Earned!`, {
-      fontFamily: 'Inter, sans-serif',
+    popup.add(this.add.text(width / 2, height / 2 + 20, `💰 +${reward.gold.toLocaleString()} 마력석 획득!`, {
+      fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '17px',
-      fontStyle: 'bold',
       color: '#ffd000',
     }).setOrigin(0.5));
 
@@ -447,8 +466,8 @@ export class HubScene extends Phaser.Scene {
     confirmBtn.fillRoundedRect(width / 2 - 75, height / 2 + 55, 150, 42, 6);
     popup.add(confirmBtn);
 
-    popup.add(this.add.text(width / 2, height / 2 + 76, 'CLAIM', {
-      fontFamily: 'Inter, sans-serif',
+    popup.add(this.add.text(width / 2, height / 2 + 76, '확인', {
+      fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '16px',
       color: '#0c0908',
       fontStyle: 'bold',
@@ -460,5 +479,107 @@ export class HubScene extends Phaser.Scene {
       popup.destroy();
     });
     popup.add(hit);
+  }
+
+  private openRelicModal(width: number, height: number): void {
+    if (this.relicModalContainer) {
+      this.relicModalContainer.destroy();
+    }
+    this.relicModalContainer = this.add.container(0, 0).setDepth(110);
+
+    const dim = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.84).setInteractive();
+    this.relicModalContainer.add(dim);
+
+    const panelW = Math.min(460, width - 24);
+    const panelH = Math.min(560, height - 60);
+    const panelX = width / 2 - panelW / 2;
+    const panelY = height / 2 - panelH / 2;
+
+    const frame = drawHanokFrame(this, panelX, panelY, panelW, panelH, {
+      bgColor: 0x18120e,
+      bgAlpha: 0.97,
+      accentColor: 0xcc66ff,
+      radius: 8,
+    });
+    this.relicModalContainer.add(frame);
+
+    const save = SaveManager.getInstance().getData();
+    const unlocked = new Set(save.unlockedRelics ?? []);
+    const equipped = new Set(save.equippedRelics ?? []);
+
+    const title = this.add.text(
+      width / 2,
+      panelY + 26,
+      `🔮 보스 영혼 유물 (${equipped.size}/${MAX_EQUIPPED_RELICS} 장착)`,
+      {
+        fontFamily: 'NeoDunggeunmo, monospace',
+        fontSize: '17px',
+        color: '#ee99ff',
+        fontStyle: 'bold',
+      }
+    ).setOrigin(0.5);
+    this.relicModalContainer.add(title);
+
+    const closeBtn = this.add.text(panelX + panelW - 22, panelY + 22, '✕', {
+      fontFamily: 'NeoDunggeunmo, monospace',
+      fontSize: '20px',
+      color: '#ff6677',
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    closeBtn.on('pointerdown', () => {
+      SoundEngine.getInstance().click();
+      this.relicModalContainer?.destroy();
+      this.relicModalContainer = undefined;
+    });
+    this.relicModalContainer.add(closeBtn);
+
+    // 최대 7개씩 2페이지 또는 상위 7개 표시 (현재 해금 우선 정렬)
+    const sorted = [...RELICS_DATA].sort((a, b) => {
+      const aUnl = unlocked.has(a.id) ? 0 : 1;
+      const bUnl = unlocked.has(b.id) ? 0 : 1;
+      return aUnl - bUnl || a.regionId - b.regionId;
+    }).slice(0, 7);
+
+    sorted.forEach((relic, idx) => {
+      const rowY = panelY + 66 + idx * 66;
+      const isUnl = unlocked.has(relic.id);
+      const isEq = equipped.has(relic.id);
+
+      const rowBg = this.add.graphics();
+      rowBg.fillStyle(isEq ? 0x2c1b3d : 0x211915, 0.95);
+      rowBg.lineStyle(1.5, isEq ? 0x00ffaa : isUnl ? 0x9966cc : 0x444444, 1);
+      rowBg.fillRoundedRect(panelX + 16, rowY, panelW - 32, 58, 6);
+      rowBg.strokeRoundedRect(panelX + 16, rowY, panelW - 32, 58, 6);
+      this.relicModalContainer!.add(rowBg);
+
+      const nameTxt = this.add.text(
+        panelX + 28,
+        rowY + 8,
+        `[${relic.regionId}구역] ${relic.name}${isEq ? ' ✅ 장착 중' : isUnl ? '' : ' 🔒 미해금'}`,
+        {
+          fontFamily: 'NeoDunggeunmo, monospace',
+          fontSize: '13px',
+          color: isEq ? '#00ffaa' : isUnl ? '#ffd000' : '#777777',
+        }
+      );
+      this.relicModalContainer!.add(nameTxt);
+
+      const descTxt = this.add.text(panelX + 28, rowY + 30, relic.desc, {
+        fontFamily: 'NeoDunggeunmo, monospace',
+        fontSize: '11px',
+        color: isUnl ? '#e8dfd5' : '#666666',
+        wordWrap: { width: panelW - 60 },
+      });
+      this.relicModalContainer!.add(descTxt);
+
+      if (isUnl) {
+        const hit = this.add.zone(width / 2, rowY + 29, panelW - 32, 58).setInteractive({ useHandCursor: true });
+        hit.on('pointerdown', () => {
+          SoundEngine.getInstance().click();
+          SaveManager.getInstance().toggleEquipRelic(relic.id);
+          this.openRelicModal(width, height);
+        });
+        this.relicModalContainer!.add(hit);
+      }
+    });
   }
 }

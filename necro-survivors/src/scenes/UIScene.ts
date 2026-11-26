@@ -3,6 +3,8 @@ import { BattleScene } from './BattleScene';
 import { LevelUpManager, LevelUpChoice } from '../systems/LevelUpManager';
 import { SoundEngine } from '../core/SoundEngine';
 import { SaveManager } from '../core/SaveManager';
+import { FEVER_CONFIG } from '../data/fieldEventsData';
+import { RELICS_MAP } from '../data/relicsData';
 import { AdBillingAdapter } from '../systems/AdBillingAdapter';
 import { SkillData } from '../data/types';
 import { ACTIVE_SKILLS, PASSIVE_SKILLS, ALL_SKILLS_MAP } from '../data/skillsData';
@@ -34,6 +36,12 @@ export class UIScene extends Phaser.Scene {
   // 하단 수동 필살기 버튼
   private ultButtonContainer!: Phaser.GameObjects.Container;
   private ultCooldownText!: Phaser.GameObjects.Text;
+  private dashIconText!: Phaser.GameObjects.Text;
+  private dashCooldownText!: Phaser.GameObjects.Text;
+  private feverBarFill!: Phaser.GameObjects.Graphics;
+  private feverLabelText!: Phaser.GameObjects.Text;
+  private offscreenArrowText!: Phaser.GameObjects.Text;
+  private lastLevelUpSkillIds = new Set<string>();
   private ultIconText!: Phaser.GameObjects.Text;
 
   // 모달 레이어 컨테이너
@@ -45,16 +53,6 @@ export class UIScene extends Phaser.Scene {
   private speedText!: Phaser.GameObjects.Text;
   private currentSpeedIndex: number = 0;
   private readonly speedOptions: number[] = [1.0, 1.5, 2.0, 3.0];
-
-  // Compact HUD utility buttons (Pause / Mute) & Kill Streak badge
-  private muteText!: Phaser.GameObjects.Text;
-  private muteBg!: Phaser.GameObjects.Graphics;
-  private streakContainer!: Phaser.GameObjects.Container;
-  private streakBg!: Phaser.GameObjects.Graphics;
-  private streakBarFill!: Phaser.GameObjects.Graphics;
-  private streakText!: Phaser.GameObjects.Text;
-  private activeModalType: 'none' | 'pause' | 'blocking' = 'none';
-  private toastText?: Phaser.GameObjects.Text;
 
   constructor() {
     super('UIScene');
@@ -69,8 +67,10 @@ export class UIScene extends Phaser.Scene {
     // 1. 상단 HUD 구축
     this.createTopHUD(width);
 
-    // 2. 하단 필살기 버튼 (CORPSE BLAST / TRUE BLIZZARD)
+    // 2. 하단 필살기 버튼 (시체 폭발 / 진 블리자드)
     this.createUltButton(width, height);
+    this.createDashButton(width, height);
+    this.createFeverAndIndicatorHud(width);
 
     // 3. 플로팅 조이스틱 및 키보드 입력
     this.createJoystick(width, height);
@@ -114,7 +114,7 @@ export class UIScene extends Phaser.Scene {
     this.expBarFill = this.add.graphics();
 
     // 타이머 및 웨이브 정보
-    this.timerText = this.add.text(width / 2, 45, '00:00 (W1 Scouts)', {
+    this.timerText = this.add.text(width / 2, 45, '⏱️ 00:00 (W1 척후병)', {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '14px',
       color: '#00ffaa',
@@ -127,7 +127,7 @@ export class UIScene extends Phaser.Scene {
       color: '#f5ede2',
     }).setOrigin(0.5);
 
-    // BOSS HP 바 (평소에는 숨김)
+    // 보스 HP 바 (평소에는 숨김)
     this.bossHpContainer = this.add.container(width / 2, 105).setVisible(false);
     const bossBox = this.add.graphics();
     bossBox.fillStyle(0x18120e, 0.9);
@@ -148,179 +148,6 @@ export class UIScene extends Phaser.Scene {
 
     // 배속 조절 버튼 (1x / 1.5x / 2x / 3x)
     this.createSpeedButton(width - 48, 54);
-
-    // Compact Pause & Mute buttons on top-left HUD
-    this.createUtilityButtons();
-
-    // Compact Kill Streak / Horde Combo badge below top HUD
-    this.createKillStreakBadge(width);
-  }
-
-  private createUtilityButtons(): void {
-    // Pause button (x = 26, y = 54)
-    const pauseContainer = this.add.container(26, 54).setDepth(150);
-    const pauseBg = this.add.graphics();
-    pauseBg.fillStyle(0x18120e, 0.95);
-    pauseBg.lineStyle(1.5, 0x543b28, 1);
-    pauseBg.fillRoundedRect(-14, -14, 28, 28, 6);
-    pauseBg.strokeRoundedRect(-14, -14, 28, 28, 6);
-    pauseContainer.add(pauseBg);
-
-    const pauseTxt = this.add.text(0, 0, 'II', {
-      fontFamily: 'Inter, sans-serif',
-      fontSize: '12px',
-      fontStyle: 'bold',
-      color: '#f5ede2',
-    }).setOrigin(0.5);
-    pauseContainer.add(pauseTxt);
-
-    const pauseHit = this.add.rectangle(0, 0, 32, 32, 0x000000, 0.001).setInteractive({ useHandCursor: true });
-    pauseHit.on('pointerdown', (_pointer: Phaser.Input.Pointer, _lx: number, _ly: number, event: Phaser.Types.Input.EventData) => {
-      if (event && event.stopPropagation) event.stopPropagation();
-      this.togglePause();
-    });
-    pauseContainer.add(pauseHit);
-
-    // Mute button (x = 60, y = 54)
-    const muteContainer = this.add.container(60, 54).setDepth(150);
-    this.muteBg = this.add.graphics();
-    muteContainer.add(this.muteBg);
-
-    this.muteText = this.add.text(0, 0, '🔊', {
-      fontFamily: 'Inter, sans-serif',
-      fontSize: '13px',
-      color: '#f5ede2',
-    }).setOrigin(0.5);
-    muteContainer.add(this.muteText);
-    this.updateMuteButtonVisual();
-
-    const muteHit = this.add.rectangle(0, 0, 32, 32, 0x000000, 0.001).setInteractive({ useHandCursor: true });
-    muteHit.on('pointerdown', (_pointer: Phaser.Input.Pointer, _lx: number, _ly: number, event: Phaser.Types.Input.EventData) => {
-      if (event && event.stopPropagation) event.stopPropagation();
-      this.toggleAudioMute();
-    });
-    muteContainer.add(muteHit);
-  }
-
-  private updateMuteButtonVisual(): void {
-    if (!this.muteBg || !this.muteText) return;
-    const enabled = SoundEngine.getInstance().enabled;
-    this.muteBg.clear();
-    this.muteBg.fillStyle(0x18120e, 0.95);
-    this.muteBg.lineStyle(1.5, enabled ? 0x00ffaa : 0xff3344, 1);
-    this.muteBg.fillRoundedRect(-14, -14, 28, 28, 6);
-    this.muteBg.strokeRoundedRect(-14, -14, 28, 28, 6);
-    this.muteText.setText(enabled ? '🔊' : '🔇');
-  }
-
-  public toggleAudioMute(): void {
-    const enabled = SoundEngine.getInstance().toggleMute();
-    this.updateMuteButtonVisual();
-    if (enabled) {
-      SoundEngine.getInstance().click();
-    }
-    this.showHudToast(enabled ? 'AUDIO: ON (M)' : 'AUDIO: MUTED (M)', enabled ? '#00ffaa' : '#ff5566');
-  }
-
-  private showHudToast(message: string, color: string = '#ffd000'): void {
-    if (this.toastText && this.toastText.scene) {
-      this.toastText.destroy();
-    }
-    const width = this.cameras.main.width;
-    const toast = this.add.text(width / 2, 98, message, {
-      fontFamily: 'Inter, sans-serif',
-      fontSize: '12px',
-      fontStyle: 'bold',
-      color,
-      backgroundColor: '#120d0a',
-      padding: { x: 10, y: 4 },
-    }).setOrigin(0.5).setDepth(190);
-    this.toastText = toast;
-
-    this.tweens.add({
-      targets: toast,
-      alpha: 0,
-      y: 88,
-      delay: 750,
-      duration: 350,
-      onComplete: () => {
-        if (toast.scene) toast.destroy();
-        if (this.toastText === toast) this.toastText = undefined;
-      },
-    });
-  }
-
-  private createKillStreakBadge(width: number): void {
-    this.streakContainer = this.add.container(width - 74, 102).setDepth(145).setVisible(false);
-    this.streakBg = this.add.graphics();
-    this.streakContainer.add(this.streakBg);
-
-    this.streakBarFill = this.add.graphics();
-    this.streakContainer.add(this.streakBarFill);
-
-    this.streakText = this.add.text(0, -3, '🔥 0 STREAK', {
-      fontFamily: 'Inter, sans-serif',
-      fontSize: '12px',
-      fontStyle: 'bold',
-      color: '#ffd000',
-    }).setOrigin(0.5);
-    this.streakContainer.add(this.streakText);
-  }
-
-  public showKillStreakBanner(milestone: number): void {
-    const width = this.cameras.main.width;
-    let label = `${milestone} KILL STREAK!`;
-    let accent = 0xffd000;
-    let textColor = '#ffd000';
-
-    if (milestone >= 200) {
-      label = `${milestone} NECRO OVERLORD!`;
-      accent = 0x00f0ff;
-      textColor = '#00f0ff';
-    } else if (milestone >= 100) {
-      label = `${milestone} HORDE SLAYER!`;
-      accent = 0xff2a6d;
-      textColor = '#ff5588';
-    } else if (milestone >= 50) {
-      label = `${milestone} UNSTOPPABLE!`;
-      accent = 0xff8800;
-      textColor = '#ffaa33';
-    }
-
-    const banner = this.add.container(width / 2, 152).setDepth(155).setScale(0.85).setAlpha(0);
-    const bg = this.add.graphics();
-    bg.fillStyle(0x120c09, 0.9);
-    bg.lineStyle(2, accent, 1);
-    bg.fillRoundedRect(-145, -18, 290, 36, 8);
-    bg.strokeRoundedRect(-145, -18, 290, 36, 8);
-    banner.add(bg);
-
-    const txt = this.add.text(0, 0, `🔥 ${label}`, {
-      fontFamily: 'Cinzel, serif',
-      fontSize: '16px',
-      fontStyle: 'bold',
-      color: textColor,
-    }).setOrigin(0.5);
-    banner.add(txt);
-
-    this.tweens.add({
-      targets: banner,
-      scale: 1,
-      alpha: 1,
-      duration: 180,
-      ease: 'Back.easeOut',
-      onComplete: () => {
-        this.tweens.add({
-          targets: banner,
-          alpha: 0,
-          y: 138,
-          delay: 1100,
-          duration: 380,
-          ease: 'Quad.easeIn',
-          onComplete: () => banner.destroy(),
-        });
-      },
-    });
   }
 
   private createSpeedButton(x: number, y: number): void {
@@ -413,7 +240,7 @@ export class UIScene extends Phaser.Scene {
     circle.strokeCircle(0, 0, 44);
     this.ultButtonContainer.add(circle);
 
-    this.ultIconText = this.add.text(0, -6, 'CORPSE\nBLAST', {
+    this.ultIconText = this.add.text(0, -6, '💥\n시체폭발', {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '13px',
       color: '#f5ede2',
@@ -477,11 +304,9 @@ export class UIScene extends Phaser.Scene {
       }
 
       if (dist > 5) {
-        this.battleScene.inputVector.x = dx / dist;
-        this.battleScene.inputVector.y = dy / dist;
+        this.battleScene.inputVector = { x: dx / dist, y: dy / dist };
       } else {
-        this.battleScene.inputVector.x = 0;
-        this.battleScene.inputVector.y = 0;
+        this.battleScene.inputVector = { x: 0, y: 0 };
       }
     });
 
@@ -492,12 +317,119 @@ export class UIScene extends Phaser.Scene {
       this.joystickPointer = null;
       this.joystickBase.setVisible(false);
       this.joystickThumb.setVisible(false);
-      this.battleScene.inputVector.x = 0;
-      this.battleScene.inputVector.y = 0;
+      this.battleScene.inputVector = { x: 0, y: 0 };
     };
 
     this.input.on('pointerup', onPointerRelease);
     this.input.on('pointercancel', onPointerRelease);
+  }
+
+  private createDashButton(width: number, height: number): void {
+    const btnX = width - 148;
+    const btnY = height - 86;
+
+    const bg = this.add.circle(btnX, btnY, 32, 0x18120e, 0.92).setStrokeStyle(2, 0x00ffaa, 0.95).setDepth(50);
+    bg.setInteractive({ useHandCursor: true });
+    bg.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      pointer.event?.stopPropagation?.();
+      if (this.battleScene && !this.battleScene.isPaused) {
+        this.battleScene.triggerPlayerDash();
+      }
+    });
+
+    this.dashIconText = this.add
+      .text(btnX, btnY, '💨\n대시', {
+        fontFamily: 'NeoDunggeunmo, monospace',
+        fontSize: '12px',
+        color: '#00ffaa',
+        align: 'center',
+      })
+      .setOrigin(0.5)
+      .setDepth(51);
+
+    this.dashCooldownText = this.add
+      .text(btnX, btnY, '', {
+        fontFamily: 'NeoDunggeunmo, monospace',
+        fontSize: '14px',
+        color: '#ffffff',
+        fontStyle: 'bold',
+      })
+      .setOrigin(0.5)
+      .setDepth(52)
+      .setVisible(false);
+  }
+
+  private createFeverAndIndicatorHud(width: number): void {
+    this.feverBarFill = this.add.graphics().setDepth(45);
+    this.feverLabelText = this.add
+      .text(width - 14, 54, '🔥 피버 0/100', {
+        fontFamily: 'NeoDunggeunmo, monospace',
+        fontSize: '11px',
+        color: '#ffaa66',
+      })
+      .setOrigin(1, 0)
+      .setDepth(46);
+
+    this.offscreenArrowText = this.add
+      .text(width / 2, 110, '', {
+        fontFamily: 'NeoDunggeunmo, monospace',
+        fontSize: '13px',
+        color: '#ffd000',
+        backgroundColor: '#18120ecc',
+        padding: { x: 6, y: 3 },
+      })
+      .setOrigin(0.5)
+      .setDepth(48)
+      .setVisible(false);
+  }
+
+  private updateOffscreenIndicator(): void {
+    if (!this.offscreenArrowText || !this.battleScene) return;
+    const cam = this.battleScene.cameras?.main;
+    if (!cam) return;
+
+    let target: { x: number; y: number; icon: string } | null = null;
+    if (this.battleScene.evolutionChest && this.battleScene.evolutionChest.active) {
+      target = { x: this.battleScene.evolutionChest.x, y: this.battleScene.evolutionChest.y, icon: '👑 각성상자' };
+    } else if (this.battleScene.activeShrine && this.battleScene.activeShrine.active) {
+      target = { x: this.battleScene.activeShrine.x, y: this.battleScene.activeShrine.y, icon: '⛩️ 저주제단' };
+    } else {
+      const drop = this.battleScene.awakeningDrops.find((d) => d.active);
+      if (drop) target = { x: drop.x, y: drop.y, icon: '📜 비급' };
+    }
+
+    if (!target) {
+      this.offscreenArrowText.setVisible(false);
+      return;
+    }
+
+    const view = cam.worldView;
+    const isInside =
+      target.x >= view.x &&
+      target.x <= view.x + view.width &&
+      target.y >= view.y &&
+      target.y <= view.y + view.height;
+
+    if (isInside) {
+      this.offscreenArrowText.setVisible(false);
+      return;
+    }
+
+    const dx = target.x - this.battleScene.player.x;
+    const dy = target.y - this.battleScene.player.y;
+    const angle = Math.atan2(dy, dx);
+    const dist = Math.round(Math.sqrt(dx * dx + dy * dy));
+    const sw = this.cameras.main.width;
+    const sh = this.cameras.main.height;
+    const edgeX = Phaser.Math.Clamp(sw / 2 + Math.cos(angle) * (sw * 0.42), 64, sw - 64);
+    const edgeY = Phaser.Math.Clamp(sh / 2 + Math.sin(angle) * (sh * 0.38), 100, sh - 120);
+
+    const arrow =
+      Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? '▶' : '◀') : dy > 0 ? '▼' : '▲';
+    this.offscreenArrowText
+      .setPosition(edgeX, edgeY)
+      .setText(`${arrow} ${target.icon} (${dist}m)`)
+      .setVisible(true);
   }
 
   private createKeyboardInput(): void {
@@ -506,184 +438,28 @@ export class UIScene extends Phaser.Scene {
       this.wasdKeys = this.input.keyboard.addKeys('W,A,S,D') as typeof this.wasdKeys;
 
       this.input.keyboard.on('keydown', (event: KeyboardEvent) => {
-        if (event.repeat) return;
-        const key = event.key;
-
-        if (key === ' ' || key === 'p' || key === 'P' || key === 'Escape') {
-          if (key === ' ') event.preventDefault();
-          this.togglePause();
-          return;
-        }
-
-        if (key === 'm' || key === 'M') {
-          this.toggleAudioMute();
-          return;
-        }
-
-        if (this.activeModalType === 'blocking') return;
-
-        if (key === 'b' || key === 'B' || key === 'x' || key === 'X') {
+        if (event.key === 'b' || event.key === 'B' || event.key === 'x' || event.key === 'X') {
           this.toggleGameSpeed();
-        } else if (key === '1') {
+        } else if (event.key === '1') {
           this.setGameSpeedByValue(1.0);
-        } else if (key === '2') {
+        } else if (event.key === '2') {
           this.setGameSpeedByValue(2.0);
-        } else if (key === '3') {
+        } else if (event.key === '3') {
           this.setGameSpeedByValue(3.0);
+        } else if (event.code === 'Space' || event.key === 'Shift') {
+          if (this.battleScene && !this.battleScene.isPaused) {
+            this.battleScene.triggerPlayerDash();
+          }
         }
       });
-
-      // Clear held keyboard/joystick inputs when browser window loses focus (prevents stuck movement)
-      const clearHeldInputs = () => {
-        this.input.keyboard?.resetKeys();
-        this.isJoystickActive = false;
-        this.joystickPointer = null;
-        this.joystickBase?.setVisible(false);
-        this.joystickThumb?.setVisible(false);
-        if (this.battleScene?.inputVector) {
-          this.battleScene.inputVector.x = 0;
-          this.battleScene.inputVector.y = 0;
-        }
-      };
-      window.addEventListener('blur', clearHeldInputs);
-      this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-        window.removeEventListener('blur', clearHeldInputs);
-      });
     }
-  }
-
-  public togglePause(): void {
-    if (this.activeModalType === 'blocking') return;
-    if (this.activeModalType === 'pause') {
-      this.hidePauseModal();
-    } else if (!this.battleScene.isPaused) {
-      this.showPauseModal('PAUSED');
-    }
-  }
-
-  public showPauseModal(titleLabel: string = 'PAUSED'): void {
-    if (this.activeModalType === 'blocking') return;
-    this.activeModalType = 'pause';
-    this.battleScene.setManualPause(true);
-    this.modalContainer.removeAll(true);
-
-    const width = this.cameras.main.width;
-    const height = this.cameras.main.height;
-
-    const dim = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.72).setInteractive();
-    this.modalContainer.add(dim);
-
-    const box = drawHanokFrame(this, width / 2 - 170, height / 2 - 145, 340, 290, {
-      bgColor: 0x18120e,
-      bgAlpha: 0.97,
-      accentColor: 0xd4a338,
-      radius: 8,
-    });
-    this.modalContainer.add(box);
-
-    const title = this.add.text(width / 2, height / 2 - 102, titleLabel, {
-      fontFamily: 'Cinzel, serif',
-      fontSize: '22px',
-      fontStyle: 'bold',
-      color: '#ffd000',
-    }).setOrigin(0.5);
-    this.modalContainer.add(title);
-
-    const hint = this.add.text(width / 2, height / 2 - 70, 'WASD / Arrows: Move  |  Space / P: Pause  |  M: Mute', {
-      fontFamily: 'Inter, sans-serif',
-      fontSize: '11px',
-      color: '#b8a692',
-    }).setOrigin(0.5);
-    this.modalContainer.add(hint);
-
-    // Resume button
-    const resumeBtn = this.add.graphics();
-    resumeBtn.fillStyle(0x00ffaa, 1);
-    resumeBtn.fillRoundedRect(width / 2 - 120, height / 2 - 36, 240, 44, 6);
-    this.modalContainer.add(resumeBtn);
-
-    const resumeTxt = this.add.text(width / 2, height / 2 - 14, 'RESUME BATTLE', {
-      fontFamily: 'Inter, sans-serif',
-      fontSize: '15px',
-      fontStyle: 'bold',
-      color: '#0c0908',
-    }).setOrigin(0.5);
-    this.modalContainer.add(resumeTxt);
-
-    const resumeHit = this.add.zone(width / 2, height / 2 - 14, 240, 44).setInteractive({ useHandCursor: true });
-    resumeHit.on('pointerdown', () => {
-      SoundEngine.getInstance().click();
-      this.hidePauseModal();
-    });
-    this.modalContainer.add(resumeHit);
-
-    // Sound toggle button
-    const soundBtn = this.add.graphics();
-    soundBtn.fillStyle(0x231b15, 1);
-    soundBtn.lineStyle(1, 0x00f0ff, 1);
-    soundBtn.fillRoundedRect(width / 2 - 120, height / 2 + 22, 240, 40, 6);
-    soundBtn.strokeRoundedRect(width / 2 - 120, height / 2 + 22, 240, 40, 6);
-    this.modalContainer.add(soundBtn);
-
-    const soundTxt = this.add.text(
-      width / 2,
-      height / 2 + 42,
-      SoundEngine.getInstance().enabled ? 'AUDIO: ON (M)' : 'AUDIO: MUTED (M)',
-      {
-        fontFamily: 'Inter, sans-serif',
-        fontSize: '14px',
-        fontStyle: 'bold',
-        color: '#00f0ff',
-      }
-    ).setOrigin(0.5);
-    this.modalContainer.add(soundTxt);
-
-    const soundHit = this.add.zone(width / 2, height / 2 + 42, 240, 40).setInteractive({ useHandCursor: true });
-    soundHit.on('pointerdown', () => {
-      this.toggleAudioMute();
-      soundTxt.setText(SoundEngine.getInstance().enabled ? 'AUDIO: ON (M)' : 'AUDIO: MUTED (M)');
-    });
-    this.modalContainer.add(soundHit);
-
-    // Return to Hub button
-    const hubBtn = this.add.graphics();
-    hubBtn.fillStyle(0x231b15, 1);
-    hubBtn.lineStyle(1, 0x543b28, 1);
-    hubBtn.fillRoundedRect(width / 2 - 120, height / 2 + 76, 240, 40, 6);
-    hubBtn.strokeRoundedRect(width / 2 - 120, height / 2 + 76, 240, 40, 6);
-    this.modalContainer.add(hubBtn);
-
-    const hubTxt = this.add.text(width / 2, height / 2 + 96, 'RETURN TO HUB', {
-      fontFamily: 'Inter, sans-serif',
-      fontSize: '14px',
-      color: '#f5ede2',
-    }).setOrigin(0.5);
-    this.modalContainer.add(hubTxt);
-
-    const hubHit = this.add.zone(width / 2, height / 2 + 96, 240, 40).setInteractive({ useHandCursor: true });
-    hubHit.on('pointerdown', () => {
-      SoundEngine.getInstance().click();
-      this.activeModalType = 'none';
-      this.returnToHub();
-    });
-    this.modalContainer.add(hubHit);
-  }
-
-  public hidePauseModal(): void {
-    if (this.activeModalType !== 'pause') return;
-    this.activeModalType = 'none';
-    this.modalContainer.removeAll(true);
-    this.battleScene.setManualPause(false);
   }
 
   public update(): void {
     if (!this.battleScene || !this.battleScene.player) return;
 
-    // 1. 키보드 데스크톱 조작 보조 (mutate in place to avoid per-frame object allocation)
-    if (this.battleScene.isPaused) {
-      this.battleScene.inputVector.x = 0;
-      this.battleScene.inputVector.y = 0;
-    } else if (!this.isJoystickActive && this.cursors && this.wasdKeys) {
+    // 1. 키보드 데스크톱 조작 보조
+    if (!this.isJoystickActive && this.cursors && this.wasdKeys) {
       let kx = 0;
       let ky = 0;
       if (this.cursors.left.isDown || this.wasdKeys.A.isDown) kx -= 1;
@@ -693,11 +469,9 @@ export class UIScene extends Phaser.Scene {
 
       if (kx !== 0 || ky !== 0) {
         const len = Math.sqrt(kx * kx + ky * ky);
-        this.battleScene.inputVector.x = kx / len;
-        this.battleScene.inputVector.y = ky / len;
+        this.battleScene.inputVector = { x: kx / len, y: ky / len };
       } else {
-        this.battleScene.inputVector.x = 0;
-        this.battleScene.inputVector.y = 0;
+        this.battleScene.inputVector = { x: 0, y: 0 };
       }
     }
 
@@ -716,17 +490,18 @@ export class UIScene extends Phaser.Scene {
     const min = Math.floor(elapsed / 60).toString().padStart(2, '0');
     const sec = (elapsed % 60).toString().padStart(2, '0');
     const wave = this.battleScene.waveSpawner.currentWave;
-    const waveNames = ['', 'Scouts', 'Vanguard', 'Elites', 'Deep Horde', 'Gatekeeper', 'FINAL BOSS'];
-    this.timerText.setText(`⏱️ ${min}:${sec} (W${wave} ${waveNames[wave] || ''})`);
+    const waveNames = ['', '척후병 출현', '본대 진격', '중견 괴수', '심층 대군세', '수문장 네임드', '최종 보스전'];
+    const waveLabel = this.battleScene.waveSpawner.isEndless ? `무한 W${wave}` : `W${wave} ${waveNames[wave] || ''}`;
+    this.timerText.setText(`⏱️ ${min}:${sec} (${waveLabel})`);
 
     this.statsText.setText(`💀 ${this.battleScene.killCount}   💰 ${this.battleScene.earnedGold} G   HP: ${Math.max(0, Math.round(player.hp))}/${player.maxHp}`);
 
     // 3. 필살기 버튼 쿨타임 업데이트
     if (player.isJinBlizzard()) {
-      this.ultIconText.setText('TRUE\nSTORM');
+      this.ultIconText.setText('✨\n진마력폭풍');
       this.ultIconText.setColor('#00f0ff');
     } else {
-      this.ultIconText.setText('CORPSE\nBLAST');
+      this.ultIconText.setText('💥\n시체폭발');
       this.ultIconText.setColor('#f5ede2');
     }
 
@@ -738,7 +513,42 @@ export class UIScene extends Phaser.Scene {
       this.ultIconText.setAlpha(1.0);
     }
 
-    // 4. BOSS HP 바 갱신
+    // 3-1. 그림자 대시 쿨타임 업데이트
+    if (this.dashCooldownText && this.dashIconText) {
+      if (player.dashCooldown > 0) {
+        this.dashCooldownText.setVisible(true).setText(`${player.dashCooldown.toFixed(1)}s`);
+        this.dashIconText.setAlpha(0.25);
+      } else {
+        this.dashCooldownText.setVisible(false);
+        this.dashIconText.setAlpha(1.0);
+      }
+    }
+
+    // 3-2. 연속 처치 피버 게이지 업데이트
+    if (this.feverBarFill && this.feverLabelText) {
+      const barW = 140;
+      const fx = this.cameras.main.width - barW - 14;
+      const fy = 68;
+      this.feverBarFill.clear();
+      this.feverBarFill.fillStyle(0x18120e, 0.85);
+      this.feverBarFill.fillRect(fx, fy, barW, 8);
+      if (player.feverTimer > 0) {
+        const ratio = Math.min(1, player.feverTimer / FEVER_CONFIG.durationSec);
+        this.feverBarFill.fillStyle(0xffd000, 1);
+        this.feverBarFill.fillRect(fx, fy, barW * ratio, 8);
+        this.feverLabelText.setText(`🔥 FEVER ${player.feverTimer.toFixed(1)}s`).setColor('#ffd000');
+      } else {
+        const ratio = Math.min(1, this.battleScene.feverKillProgress / FEVER_CONFIG.killsRequired);
+        this.feverBarFill.fillStyle(0xff6633, 0.9);
+        this.feverBarFill.fillRect(fx, fy, barW * ratio, 8);
+        this.feverLabelText.setText(`🔥 피버 ${this.battleScene.feverKillProgress}/${FEVER_CONFIG.killsRequired}`).setColor('#ffaa66');
+      }
+    }
+
+    // 3-3. 오프스크린 핵심 오브젝트 방향 화살표 업데이트
+    this.updateOffscreenIndicator();
+
+    // 4. 보스 HP 바 갱신
     const boss = this.battleScene.waveSpawner.bossInstance;
     if (boss && boss.active) {
       this.bossHpContainer.setVisible(true);
@@ -749,29 +559,6 @@ export class UIScene extends Phaser.Scene {
       this.bossHpTitle.setText(`⚠️ [BOSS] ${this.battleScene.region.boss} (${Math.floor(bRatio * 100)}%)`);
     } else {
       this.bossHpContainer.setVisible(false);
-    }
-
-    // 5. Kill Streak HUD badge update
-    const streak = this.battleScene.killStreak;
-    if (streak >= 10 && this.battleScene.killStreakTimer > 0) {
-      this.streakContainer.setVisible(true);
-      const ratio = Math.max(0, Math.min(1, this.battleScene.killStreakTimer / this.battleScene.killStreakMaxTime));
-      const accent = streak >= 200 ? 0x00f0ff : streak >= 100 ? 0xff2a6d : streak >= 50 ? 0xff8800 : 0xffd000;
-      const textColor = streak >= 200 ? '#00f0ff' : streak >= 100 ? '#ff5588' : streak >= 50 ? '#ffaa33' : '#ffd000';
-
-      this.streakBg.clear();
-      this.streakBg.fillStyle(0x140e0b, 0.88);
-      this.streakBg.lineStyle(1.5, accent, 1);
-      this.streakBg.fillRoundedRect(-60, -14, 120, 28, 6);
-      this.streakBg.strokeRoundedRect(-60, -14, 120, 28, 6);
-
-      this.streakBarFill.clear();
-      this.streakBarFill.fillStyle(accent, 0.9);
-      this.streakBarFill.fillRect(-54, 9, 108 * ratio, 3);
-
-      this.streakText.setText(`🔥 ${streak} STREAK`).setColor(textColor);
-    } else {
-      this.streakContainer.setVisible(false);
     }
   }
 
@@ -790,7 +577,6 @@ export class UIScene extends Phaser.Scene {
 
   // 최초 시작 무기 선택 모달 (3종 무작위 제시 + 리롤 지원)
   public showStartingSkillModal(onSelect?: (skill: SkillData) => void): void {
-    this.activeModalType = 'blocking';
     this.battleScene.isPaused = true;
     this.modalContainer.removeAll(true);
     const width = this.cameras.main.width;
@@ -801,14 +587,14 @@ export class UIScene extends Phaser.Scene {
     this.modalContainer.add(dim);
 
     // 상단 타이틀
-    const title = this.add.text(width / 2, 95, 'CHOOSE STARTING WEAPON', {
+    const title = this.add.text(width / 2, 95, '⚔️ 시작 주무기 선택', {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '22px',
       color: '#ffd000',
     }).setOrigin(0.5);
     this.modalContainer.add(title);
 
-    const sub = this.add.text(width / 2, 125, 'Select your primary weapon before entering the portal.', {
+    const sub = this.add.text(width / 2, 125, '차원문 진입 전 주무기로 사용할 스킬을 선택하십시오.', {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '13px',
       color: '#00ffaa',
@@ -834,7 +620,7 @@ export class UIScene extends Phaser.Scene {
       }
 
       // 스킬 이름 및 시작 배지
-      const badge = skill.isNecroSignature ? '[Necro Signature Lv.1]' : '[Starter Weapon Lv.1]';
+      const badge = skill.isNecroSignature ? '[사령 전용 Lv.1]' : '[시작 주무기 Lv.1]';
       const name = this.add.text(width / 2 - 115, cardY - 45, `${skill.name} ${badge}`, {
         fontFamily: 'NeoDunggeunmo, monospace',
         fontSize: '16px',
@@ -856,7 +642,7 @@ export class UIScene extends Phaser.Scene {
       if (skill.requiredPassiveId) {
         const partner = ALL_SKILLS_MAP.get(skill.requiredPassiveId);
         if (partner) {
-          const hint = this.add.text(width / 2 - 115, cardY + 45, `Synergy Partner: ${partner.name}`, {
+          const hint = this.add.text(width / 2 - 115, cardY + 45, `💡 [각성 파트너: ${partner.name}]`, {
             fontFamily: 'NeoDunggeunmo, monospace',
             fontSize: '12px',
             color: '#ffd000',
@@ -873,7 +659,6 @@ export class UIScene extends Phaser.Scene {
         this.battleScene.player.skillCooldowns.set(skill.id, 0);
         this.battleScene.syncNecroArmy();
         this.modalContainer.removeAll(true);
-        this.activeModalType = 'none';
         this.battleScene.isPaused = false;
         SoundEngine.getInstance().playTone(520, 'sine', 0.2, 0.2);
         if (onSelect) onSelect(skill);
@@ -899,7 +684,7 @@ export class UIScene extends Phaser.Scene {
     rerollBtn.strokeRoundedRect(width / 2 - 110, height - 120, 220, 44, 6);
     this.modalContainer.add(rerollBtn);
 
-    const rerollText = this.add.text(width / 2, height - 98, 'REROLL WEAPONS (AD)', {
+    const rerollText = this.add.text(width / 2, height - 98, '🎲 다른 무기 보기 (Reroll)', {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '14px',
       color: '#00f0ff',
@@ -916,7 +701,6 @@ export class UIScene extends Phaser.Scene {
 
   // 레벨업 카드 선택 모달
   public showLevelUpModal(): void {
-    this.activeModalType = 'blocking';
     this.modalContainer.removeAll(true);
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
@@ -926,21 +710,22 @@ export class UIScene extends Phaser.Scene {
     this.modalContainer.add(dim);
 
     // 상단 타이틀
-    const title = this.add.text(width / 2, 100, 'LEVEL UP! CHOOSE SKILL', {
+    const title = this.add.text(width / 2, 100, '✨ LEVEL UP! 전리품 선택', {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '22px',
       color: '#ffd000',
     }).setOrigin(0.5);
     this.modalContainer.add(title);
 
-    const sub = this.add.text(width / 2, 130, 'Pick a new skill or upgrade an existing one.', {
+    const sub = this.add.text(width / 2, 130, '스킬을 획득하거나 강화하여 생존력을 높이십시오.', {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '13px',
       color: '#b8a692',
     }).setOrigin(0.5);
     this.modalContainer.add(sub);
 
-    const choices = LevelUpManager.getChoices(this.battleScene.player, 3);
+    const choices = LevelUpManager.getChoices(this.battleScene.player, 3, this.lastLevelUpSkillIds);
+    this.lastLevelUpSkillIds = new Set(choices.map((c) => c.skill.id));
 
     choices.forEach((choice, idx) => {
       const cardY = 220 + idx * 165;
@@ -990,6 +775,27 @@ export class UIScene extends Phaser.Scene {
         this.applyLevelUpChoice(choice);
       });
       this.modalContainer.add(hitArea);
+
+      // 제외(밴) 버튼 (런당 1회)
+      if (!choice.isFallback && LevelUpManager.banishesLeft > 0) {
+        const banBtn = this.add
+          .text(width / 2 + 195, cardY - 48, `🚫 제외(${LevelUpManager.banishesLeft})`, {
+            fontFamily: 'NeoDunggeunmo, monospace',
+            fontSize: '11px',
+            color: '#ff6677',
+            backgroundColor: '#2a1216',
+            padding: { x: 5, y: 2 },
+          })
+          .setOrigin(1, 0)
+          .setInteractive({ useHandCursor: true });
+        banBtn.on('pointerdown', () => {
+          SoundEngine.getInstance().click();
+          if (LevelUpManager.banishSkill(choice.skill.id)) {
+            this.showLevelUpModal();
+          }
+        });
+        this.modalContainer.add(banBtn);
+      }
     });
 
     // 리롤 버튼 (보상형 광고 2)
@@ -1000,7 +806,9 @@ export class UIScene extends Phaser.Scene {
     rerollBtn.strokeRoundedRect(width / 2 - 110, height - 120, 220, 44, 6);
     this.modalContainer.add(rerollBtn);
 
-    const rerollText = this.add.text(width / 2, height - 98, 'REROLL SKILLS (AD)', {
+    const freeRerolls = LevelUpManager.rerollsLeft;
+    const rerollLabel = freeRerolls > 0 ? `🎲 무료 재굴림 (남은 ${freeRerolls}회)` : '🎲 광고 보고 재굴림 (Reroll)';
+    const rerollText = this.add.text(width / 2, height - 98, rerollLabel, {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '14px',
       color: '#00f0ff',
@@ -1010,6 +818,10 @@ export class UIScene extends Phaser.Scene {
     const rerollHit = this.add.zone(width / 2, height - 98, 220, 44).setInteractive({ useHandCursor: true });
     rerollHit.on('pointerdown', async () => {
       SoundEngine.getInstance().click();
+      if (LevelUpManager.consumeReroll()) {
+        this.showLevelUpModal();
+        return;
+      }
       const success = await AdBillingAdapter.getInstance().showRerollAd();
       if (success) {
         this.showLevelUpModal();
@@ -1053,14 +865,12 @@ export class UIScene extends Phaser.Scene {
     } else {
       // 모달 닫고 게임 재개
       this.modalContainer.removeAll(true);
-      this.activeModalType = 'none';
       this.battleScene.isPaused = false;
     }
   }
 
   // 보물상자 진화 모달
   public showChestModal(awakenedSkill: SkillData | null): void {
-    this.activeModalType = 'blocking';
     this.battleScene.isPaused = true;
     this.modalContainer.removeAll(true);
     const width = this.cameras.main.width;
@@ -1077,7 +887,7 @@ export class UIScene extends Phaser.Scene {
     });
     this.modalContainer.add(box);
 
-    const title = this.add.text(width / 2, height / 2 - 120, 'GATEKEEPER CHEST OPENED!', {
+    const title = this.add.text(width / 2, height / 2 - 120, '🌟 수문장 보물상자 개봉!', {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '20px',
       color: '#ffd000',
@@ -1089,7 +899,7 @@ export class UIScene extends Phaser.Scene {
       icon.setDisplaySize(72, 72);
       this.modalContainer.add(icon);
 
-      const aName = this.add.text(width / 2, height / 2 + 25, `AWAKENED: ${awakenedSkill.name}`, {
+      const aName = this.add.text(width / 2, height / 2 + 25, `[궁극 각성 달성: ${awakenedSkill.name}]`, {
         fontFamily: 'NeoDunggeunmo, monospace',
         fontSize: '17px',
         color: '#00ffaa',
@@ -1106,7 +916,7 @@ export class UIScene extends Phaser.Scene {
       }).setOrigin(0.5);
       this.modalContainer.add(aDesc);
     } else {
-      const gText = this.add.text(width / 2, height / 2 - 10, 'Treasure Chest!\n+2,000 Gold & Full HP Restore', {
+      const gText = this.add.text(width / 2, height / 2 - 10, '💰 마력석 보물상자!\n+2,000 마력석 & 체력 완전 회복', {
         fontFamily: 'NeoDunggeunmo, monospace',
         fontSize: '17px',
         color: '#ffd000',
@@ -1120,7 +930,7 @@ export class UIScene extends Phaser.Scene {
     confirmBtn.fillRoundedRect(width / 2 - 80, height / 2 + 105, 160, 44, 6);
     this.modalContainer.add(confirmBtn);
 
-    const cText = this.add.text(width / 2, height / 2 + 127, 'CLAIM', {
+    const cText = this.add.text(width / 2, height / 2 + 127, '수령 완료', {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '16px',
       color: '#0c0908',
@@ -1132,15 +942,13 @@ export class UIScene extends Phaser.Scene {
     hit.on('pointerdown', () => {
       SoundEngine.getInstance().click();
       this.modalContainer.removeAll(true);
-      this.activeModalType = 'none';
       this.battleScene.isPaused = false;
     });
     this.modalContainer.add(hit);
   }
 
-  // 📜 각성재료 선택권 모달 (정예 괴수/BOSS 처치 시 드랍되는 양피지 비급서)
+  // 📜 각성재료 선택권 모달 (정예 괴수/보스 처치 시 드랍되는 양피지 비급서)
   public showAwakeningSelectorModal(): void {
-    this.activeModalType = 'blocking';
     this.battleScene.isPaused = true;
     this.modalContainer.removeAll(true);
     const width = this.cameras.main.width;
@@ -1159,14 +967,14 @@ export class UIScene extends Phaser.Scene {
     }
 
     // 상단 타이틀
-    const title = this.add.text(width / 2, 110, 'AWAKENING SCROLL', {
+    const title = this.add.text(width / 2, 110, '📜 각성 비급서 (양피지)', {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '22px',
       color: '#ffd000',
     }).setOrigin(0.5);
     this.modalContainer.add(title);
 
-    const sub = this.add.text(width / 2, 138, 'Choose 1 resonance passive to evolve your weapons!', {
+    const sub = this.add.text(width / 2, 138, '배운 스킬과 공명하는 각성 재료가 모두 펼쳐집니다! 원하는 비급 1종을 선택하십시오.', {
       fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '12px',
       color: '#00ffaa',
@@ -1216,7 +1024,7 @@ export class UIScene extends Phaser.Scene {
       });
       this.modalContainer.add(emptyBox);
 
-      const emptyText = this.add.text(width / 2, height / 2 - 30, 'All synergy passives maxed!\n\nReward: +3,000 Gold & Full HP Restore', {
+      const emptyText = this.add.text(width / 2, height / 2 - 30, '✨ 모든 각성재료가 최대치에 도달했습니다!\n\n💰 보상: +3,000 마력석 & 체력 완전 회복', {
         fontFamily: 'NeoDunggeunmo, monospace',
         fontSize: '15px',
         color: '#ffd000',
@@ -1229,7 +1037,7 @@ export class UIScene extends Phaser.Scene {
       confirmBtn.fillRoundedRect(width / 2 - 80, height / 2 + 30, 160, 40, 6);
       this.modalContainer.add(confirmBtn);
 
-      const confirmText = this.add.text(width / 2, height / 2 + 50, 'CLAIM', {
+      const confirmText = this.add.text(width / 2, height / 2 + 50, '수령 완료', {
         fontFamily: 'NeoDunggeunmo, monospace',
         fontSize: '15px',
         color: '#0c0908',
@@ -1245,7 +1053,6 @@ export class UIScene extends Phaser.Scene {
         player.maxHp = maxHp;
         player.hp = maxHp;
         this.modalContainer.removeAll(true);
-        this.activeModalType = 'none';
         this.battleScene.isPaused = false;
       });
       this.modalContainer.add(hit);
@@ -1282,7 +1089,7 @@ export class UIScene extends Phaser.Scene {
       }
 
       // 이름 및 레벨 진행 배지
-      const lvBadge = curLv === 0 ? '[NEW]' : `[Lv.${curLv} ➔ Lv.${nextLv}]`;
+      const lvBadge = curLv === 0 ? '[신규]' : `[Lv.${curLv} ➔ Lv.${nextLv}]`;
       const titleY = cardHeight <= 85 ? cardY - 24 : cardY - 32;
       const name = this.add.text(width / 2 - 135, titleY, `${skill.name} ${lvBadge}`, {
         fontFamily: 'NeoDunggeunmo, monospace',
@@ -1305,11 +1112,11 @@ export class UIScene extends Phaser.Scene {
       // 각성 시너지 정보
       let synergyText = '';
       if (matchingActive) {
-        synergyText = `Evolves: ${matchingActive.name}`;
+        synergyText = `📜 [${matchingActive.name}의 각성 파트너]`;
       } else {
         const anyPartner = ACTIVE_SKILLS.find((a) => a.requiredPassiveId === skill.id);
         if (anyPartner) {
-          synergyText = `Synergy: ${anyPartner.name}`;
+          synergyText = `💡 [${anyPartner.name} 각성 재료]`;
         }
       }
 
@@ -1329,17 +1136,16 @@ export class UIScene extends Phaser.Scene {
         SoundEngine.getInstance().playTone(660, 'sine', 0.2, 0.25);
         player.passiveSkills.set(skill.id, nextLv);
         this.modalContainer.removeAll(true);
-        this.activeModalType = 'none';
         this.battleScene.isPaused = false;
         if (typeof (this.battleScene as any).showDamageText === 'function') {
-          (this.battleScene as any).showDamageText(player.x, player.y - 30, `Learned ${skill.name} Lv.${nextLv}!`, 0x00ffaa, true);
+          (this.battleScene as any).showDamageText(player.x, player.y - 30, `📜 [${skill.name} Lv.${nextLv} 습득!]`, 0x00ffaa, true);
         }
       });
       this.modalContainer.add(hitArea);
     });
   }
 
-  // BOSS 경고 배너 (Section 9)
+  // 보스 경고 배너 (Section 9)
   public showBossWarning(msg: string): void {
     const width = this.cameras.main.width;
     const banner = this.add.container(width / 2, 190).setDepth(150);
@@ -1369,10 +1175,6 @@ export class UIScene extends Phaser.Scene {
 
   // 결과 정산 모달 (클리어 또는 패배)
   public showResultModal(isVictory: boolean): void {
-    this.activeModalType = 'blocking';
-    // Show interstitial ad on run end (GameMonetize / Yandex Games)
-    AdBillingAdapter.getInstance().showInterstitial();
-
     this.modalContainer.removeAll(true);
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
@@ -1380,9 +1182,7 @@ export class UIScene extends Phaser.Scene {
     const dim = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.88).setInteractive();
     this.modalContainer.add(dim);
 
-    const canRevive = !isVictory && !this.battleScene.hasUsedRevive;
-    const boxHeight = canRevive ? 480 : 420;
-    const box = drawHanokFrame(this, width / 2 - 200, height / 2 - 210, 400, boxHeight, {
+    const box = drawHanokFrame(this, width / 2 - 200, height / 2 - 220, 400, 490, {
       bgColor: 0x18120e,
       bgAlpha: 0.97,
       accentColor: isVictory ? 0x00ffaa : 0xff3344,
@@ -1390,27 +1190,25 @@ export class UIScene extends Phaser.Scene {
     });
     this.modalContainer.add(box);
 
-    const title = this.add.text(width / 2, height / 2 - 160, isVictory ? 'PORTAL CLEARED!' : 'FALLEN IN BATTLE', {
-      fontFamily: 'Cinzel, serif',
+    const title = this.add.text(width / 2, height / 2 - 160, isVictory ? '🏆 차원문 평정 완료!' : '💀 사령군주 쓰러짐...', {
+      fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '22px',
       color: isVictory ? '#00ffaa' : '#ff3344',
       fontStyle: 'bold',
     }).setOrigin(0.5);
     this.modalContainer.add(title);
 
-    const sub = this.add.text(width / 2, height / 2 - 120, isVictory ? `Conquered ${this.battleScene.region.name}` : 'Your legion fell. Upgrade at the Altar and return!', {
-      fontFamily: 'Inter, sans-serif',
+    const sub = this.add.text(width / 2, height / 2 - 120, isVictory ? `${this.battleScene.region.name} 정복 성공` : '군단이 흩어졌습니다. 거점에서 힘을 기르십시오.', {
+      fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '13px',
       color: '#b8a692',
       align: 'center',
-      wordWrap: { width: 340 },
     }).setOrigin(0.5);
     this.modalContainer.add(sub);
 
     // 기록 정산
-    const streakSuffix = this.battleScene.maxKillStreak >= 10 ? `  (Best Streak: ${this.battleScene.maxKillStreak})` : '';
-    const kills = this.add.text(width / 2, height / 2 - 60, `Enemies Slain: ${this.battleScene.killCount}${streakSuffix}`, {
-      fontFamily: 'Inter, sans-serif',
+    const kills = this.add.text(width / 2, height / 2 - 60, `💀 처치한 괴수: ${this.battleScene.killCount} 마리`, {
+      fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '15px',
       color: '#f5ede2',
     }).setOrigin(0.5);
@@ -1419,8 +1217,8 @@ export class UIScene extends Phaser.Scene {
     const elapsed = Math.floor(this.battleScene.waveSpawner.elapsedTime);
     const min = Math.floor(elapsed / 60);
     const sec = elapsed % 60;
-    const survival = this.add.text(width / 2, height / 2 - 30, `Survived: ${min}m ${sec}s`, {
-      fontFamily: 'Inter, sans-serif',
+    const survival = this.add.text(width / 2, height / 2 - 30, `⏱️ 생존 시간: ${min}분 ${sec}초`, {
+      fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '15px',
       color: '#f5ede2',
     }).setOrigin(0.5);
@@ -1428,71 +1226,107 @@ export class UIScene extends Phaser.Scene {
 
     const bonusGold = Math.round((isVictory ? 3000 : 500) * this.battleScene.player.getEffectiveStats().goldMul);
     const goldReward = this.battleScene.earnedGold + bonusGold;
-    const goldText = this.add.text(width / 2, height / 2 + 10, `Gold Earned: +${goldReward.toLocaleString()} G`, {
-      fontFamily: 'Inter, sans-serif',
-      fontSize: '18px',
-      fontStyle: 'bold',
+    const goldText = this.add.text(width / 2, height / 2 - 2, `💰 획득 마력석: +${goldReward.toLocaleString()} G`, {
+      fontFamily: 'NeoDunggeunmo, monospace',
+      fontSize: '16px',
       color: '#ffd000',
     }).setOrigin(0.5);
     this.modalContainer.add(goldText);
 
-    let isClaiming = false;
-    const btnOffsetY = canRevive ? 56 : 0;
+    // 신규 보스 영혼 유물 해금 배지
+    if (isVictory && this.battleScene.newlyUnlockedRelicId) {
+      const relic = RELICS_MAP.get(this.battleScene.newlyUnlockedRelicId);
+      if (relic) {
+        const relicBadge = this.add.text(width / 2, height / 2 + 20, `🔮 신규 보스 유물 해금: ${relic.name}`, {
+          fontFamily: 'NeoDunggeunmo, monospace',
+          fontSize: '12px',
+          color: '#00ffaa',
+        }).setOrigin(0.5);
+        this.modalContainer.add(relicBadge);
+      }
+    }
 
-    // 버튼 0 (패배 시 1회 한정): 광고 보고 100% 체력 부활
-    if (canRevive) {
-      const reviveBtn = this.add.graphics();
-      reviveBtn.fillStyle(0x00cc88, 1);
-      reviveBtn.fillRoundedRect(width / 2 - 140, height / 2 + 54, 280, 46, 6);
-      this.modalContainer.add(reviveBtn);
+    // 스킬별 DPS 미터 (상위 4개 컴팩트 그래프)
+    const dpsEntries = this.battleScene.damageTracker.getTopEntries(Math.max(1, elapsed), 4);
+    if (dpsEntries.length > 0) {
+      const maxDmg = Math.max(1, dpsEntries[0].totalDamage);
+      const meterHeader = this.add.text(width / 2 - 170, height / 2 + 36, '📊 주요 스킬 DPS 분석', {
+        fontFamily: 'NeoDunggeunmo, monospace',
+        fontSize: '11px',
+        color: '#b8a692',
+      });
+      this.modalContainer.add(meterHeader);
 
-      const reviveText = this.add.text(width / 2, height / 2 + 77, 'REVIVE FULL HP (WATCH AD)', {
-        fontFamily: 'Inter, sans-serif',
-        fontSize: '14px',
-        color: '#0c0908',
+      dpsEntries.forEach((entry, i) => {
+        const rowY = height / 2 + 54 + i * 18;
+        const barBg = this.add.graphics();
+        barBg.fillStyle(0x2a211b, 0.9);
+        barBg.fillRect(width / 2 - 170, rowY, 340, 14);
+        barBg.fillStyle(i === 0 ? 0xffd000 : 0x00ccaa, 0.45);
+        barBg.fillRect(width / 2 - 170, rowY, Math.max(6, (entry.totalDamage / maxDmg) * 340), 14);
+        this.modalContainer.add(barBg);
+
+        const rowTxt = this.add.text(
+          width / 2 - 164,
+          rowY + 1,
+          `${entry.label.slice(0, 14)}  ${entry.dps.toLocaleString()}/s (${entry.sharePercent}%)`,
+          {
+            fontFamily: 'NeoDunggeunmo, monospace',
+            fontSize: '10px',
+            color: '#f5ede2',
+          }
+        );
+        this.modalContainer.add(rowTxt);
+      });
+    }
+
+    // 클리어 시 무한 모드 진입 버튼 (최초 보스 처치 시)
+    if (isVictory && !this.battleScene.waveSpawner.isEndless) {
+      const endlessBtn = this.add.graphics();
+      endlessBtn.fillStyle(0x3a184a, 0.95);
+      endlessBtn.lineStyle(1.5, 0xcc66ff, 1);
+      endlessBtn.fillRoundedRect(width / 2 - 140, height / 2 + 132, 280, 36, 6);
+      endlessBtn.strokeRoundedRect(width / 2 - 140, height / 2 + 132, 280, 36, 6);
+      this.modalContainer.add(endlessBtn);
+
+      const endlessTxt = this.add.text(width / 2, height / 2 + 150, '♾️ 심연 무한 도전 계속하기', {
+        fontFamily: 'NeoDunggeunmo, monospace',
+        fontSize: '13px',
+        color: '#ee99ff',
         fontStyle: 'bold',
       }).setOrigin(0.5);
-      this.modalContainer.add(reviveText);
+      this.modalContainer.add(endlessTxt);
 
-      const reviveHit = this.add.zone(width / 2, height / 2 + 77, 280, 46).setInteractive({ useHandCursor: true });
-      reviveHit.on('pointerdown', async () => {
-        if (isClaiming) return;
-        isClaiming = true;
+      const endlessHit = this.add.zone(width / 2, height / 2 + 150, 280, 36).setInteractive({ useHandCursor: true });
+      endlessHit.on('pointerdown', () => {
         SoundEngine.getInstance().click();
-        reviveText.setText('LOADING AD...');
-        const success = await AdBillingAdapter.getInstance().showReviveAd();
-        if (success) {
-          this.modalContainer.removeAll(true);
-          this.activeModalType = 'none';
-          this.battleScene.revivePlayer();
-        } else {
-          isClaiming = false;
-          reviveText.setText('REVIVE FULL HP (WATCH AD)');
-        }
+        this.modalContainer.removeAll(true);
+        this.battleScene.startEndlessMode();
       });
-      this.modalContainer.add(reviveHit);
+      this.modalContainer.add(endlessHit);
     }
 
     // 버튼 1: 보상형 광고 2배 수령
     const doubleBtn = this.add.graphics();
     doubleBtn.fillStyle(0xd4a338, 1);
-    doubleBtn.fillRoundedRect(width / 2 - 140, height / 2 + 60 + btnOffsetY, 280, 46, 6);
+    doubleBtn.fillRoundedRect(width / 2 - 140, height / 2 + 174, 280, 38, 6);
     this.modalContainer.add(doubleBtn);
 
-    const doubleText = this.add.text(width / 2, height / 2 + 83 + btnOffsetY, 'WATCH AD: 2X GOLD LOOT', {
-      fontFamily: 'Inter, sans-serif',
+    const doubleText = this.add.text(width / 2, height / 2 + 193, '🎬 광고 보고 전리품 2배 수령', {
+      fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '14px',
       color: '#0c0908',
       fontStyle: 'bold',
     }).setOrigin(0.5);
     this.modalContainer.add(doubleText);
 
-    const doubleHit = this.add.zone(width / 2, height / 2 + 83 + btnOffsetY, 280, 46).setInteractive({ useHandCursor: true });
+    let isClaiming = false;
+    const doubleHit = this.add.zone(width / 2, height / 2 + 193, 280, 46).setInteractive({ useHandCursor: true });
     doubleHit.on('pointerdown', async () => {
       if (isClaiming) return;
       isClaiming = true;
       SoundEngine.getInstance().click();
-      doubleText.setText('LOADING AD...');
+      doubleText.setText('⏳ 광고 재생 중...');
       const success = await AdBillingAdapter.getInstance().showDoubleRewardAd();
       if (success) {
         SaveManager.getInstance().addGold(goldReward * 2);
@@ -1500,28 +1334,27 @@ export class UIScene extends Phaser.Scene {
         this.returnToHub();
       } else {
         isClaiming = false;
-        doubleText.setText('WATCH AD: 2X GOLD LOOT');
+        doubleText.setText('🎬 광고 보고 전리품 2배 수령');
       }
     });
     this.modalContainer.add(doubleHit);
 
-    // 버튼 2: EXIT TO HUB 버튼
+    // 버튼 2: 거점 귀환 버튼
     const exitBtn = this.add.graphics();
     exitBtn.fillStyle(0x231b15, 1);
     exitBtn.lineStyle(1, 0x543b28, 1);
-    exitBtn.fillRoundedRect(width / 2 - 140, height / 2 + 120 + btnOffsetY, 280, 44, 6);
-    exitBtn.strokeRoundedRect(width / 2 - 140, height / 2 + 120 + btnOffsetY, 280, 44, 6);
+    exitBtn.fillRoundedRect(width / 2 - 140, height / 2 + 218, 280, 38, 6);
+    exitBtn.strokeRoundedRect(width / 2 - 140, height / 2 + 218, 280, 38, 6);
     this.modalContainer.add(exitBtn);
 
-    const exitText = this.add.text(width / 2, height / 2 + 142 + btnOffsetY, 'RETURN TO HUB', {
-      fontFamily: 'Inter, sans-serif',
+    const exitText = this.add.text(width / 2, height / 2 + 237, '거점 마을로 귀환', {
+      fontFamily: 'NeoDunggeunmo, monospace',
       fontSize: '15px',
-      fontStyle: 'bold',
       color: '#f5ede2',
     }).setOrigin(0.5);
     this.modalContainer.add(exitText);
 
-    const exitHit = this.add.zone(width / 2, height / 2 + 142 + btnOffsetY, 280, 44).setInteractive({ useHandCursor: true });
+    const exitHit = this.add.zone(width / 2, height / 2 + 237, 280, 44).setInteractive({ useHandCursor: true });
     exitHit.on('pointerdown', () => {
       if (isClaiming) return;
       isClaiming = true;

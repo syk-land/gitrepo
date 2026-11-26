@@ -1,7 +1,9 @@
 import { SaveData } from '../data/types';
 import { ALL_ALTAR_MAP } from '../data/altarData';
+import { getRelicByRegion } from '../data/relicsData';
 
 const SAVE_KEY = 'PROJECT_NECRO_SURVIVORS_SAVE_V1';
+export const MAX_EQUIPPED_RELICS = 3;
 
 export class SaveManager {
   private static instance: SaveManager;
@@ -24,9 +26,9 @@ export class SaveManager {
 
   private getDefaultData(): SaveData {
     return {
-      version: 1,
+      version: 2,
       gold: 1500,
-      highestClearedRegion: 0, // 0이면 1지역 도전 가능
+      highestClearedRegion: 0,
       selectedRegion: 1,
       traits: {
         trait_undead_cmd: 1,
@@ -38,6 +40,10 @@ export class SaveManager {
       masterSlotId: null,
       hasAdFreePass: false,
       lastLogoutTime: Date.now(),
+      unlockedRelics: [],
+      equippedRelics: [],
+      bestEndlessTime: {},
+      regionStars: {},
     };
   }
 
@@ -46,12 +52,32 @@ export class SaveManager {
       const raw = localStorage.getItem(SAVE_KEY);
       if (!raw) return this.getDefaultData();
       const parsed = JSON.parse(raw) as Partial<SaveData>;
-      return {
+      const merged: SaveData = {
         ...this.getDefaultData(),
         ...parsed,
+        version: 2,
         traits: { ...this.getDefaultData().traits, ...(parsed.traits || {}) },
         talents: { ...this.getDefaultData().talents, ...(parsed.talents || {}) },
+        unlockedRelics: Array.isArray(parsed.unlockedRelics) ? [...parsed.unlockedRelics] : [],
+        equippedRelics: Array.isArray(parsed.equippedRelics)
+          ? parsed.equippedRelics.slice(0, MAX_EQUIPPED_RELICS)
+          : [],
+        bestEndlessTime: parsed.bestEndlessTime ? { ...parsed.bestEndlessTime } : {},
+        regionStars: parsed.regionStars ? { ...parsed.regionStars } : {},
       };
+
+      // 기존 클리어 유저 보스 영혼 유물 소급 해금
+      for (let r = 1; r <= merged.highestClearedRegion; r++) {
+        const relic = getRelicByRegion(r);
+        if (relic && !merged.unlockedRelics!.includes(relic.id)) {
+          merged.unlockedRelics!.push(relic.id);
+        }
+        if ((merged.regionStars![r] ?? 0) < 1) {
+          merged.regionStars![r] = 1;
+        }
+      }
+
+      return merged;
     } catch {
       return this.getDefaultData();
     }
@@ -78,11 +104,66 @@ export class SaveManager {
     return false;
   }
 
-  public markRegionCleared(regionId: number): void {
+  public markRegionCleared(regionId: number, stars: number = 1): string | null {
     if (regionId > this.data.highestClearedRegion) {
       this.data.highestClearedRegion = regionId;
-      this.save();
     }
+    if (!this.data.regionStars) this.data.regionStars = {};
+    this.data.regionStars[regionId] = Math.max(this.data.regionStars[regionId] ?? 0, stars);
+
+    if (!this.data.unlockedRelics) this.data.unlockedRelics = [];
+    const relic = getRelicByRegion(regionId);
+    let newlyUnlocked: string | null = null;
+    if (relic && !this.data.unlockedRelics.includes(relic.id)) {
+      this.data.unlockedRelics.push(relic.id);
+      newlyUnlocked = relic.id;
+    }
+
+    this.save();
+    return newlyUnlocked;
+  }
+
+  public recordEndlessTime(regionId: number, totalSec: number): void {
+    if (!this.data.bestEndlessTime) this.data.bestEndlessTime = {};
+    const prev = this.data.bestEndlessTime[regionId] ?? 0;
+    if (totalSec > prev) {
+      this.data.bestEndlessTime[regionId] = Math.floor(totalSec);
+    }
+    if (totalSec >= 600) {
+      if (!this.data.regionStars) this.data.regionStars = {};
+      this.data.regionStars[regionId] = Math.max(this.data.regionStars[regionId] ?? 0, 3);
+    }
+    this.save();
+  }
+
+  public toggleEquipRelic(relicId: string): boolean {
+    const unlocked = this.data.unlockedRelics ?? [];
+    if (!unlocked.includes(relicId)) return false;
+    if (!this.data.equippedRelics) this.data.equippedRelics = [];
+
+    const idx = this.data.equippedRelics.indexOf(relicId);
+    if (idx >= 0) {
+      this.data.equippedRelics.splice(idx, 1);
+      this.save();
+      return true;
+    }
+
+    if (this.data.equippedRelics.length >= MAX_EQUIPPED_RELICS) {
+      return false;
+    }
+    this.data.equippedRelics.push(relicId);
+    this.save();
+    return true;
+  }
+
+  public hasEquippedRelicEffect(effect: string): boolean {
+    const equipped = this.data.equippedRelics ?? [];
+    for (const id of equipped) {
+      const regionNum = parseInt(id.replace('relic_boss_', ''), 10);
+      const relic = getRelicByRegion(regionNum);
+      if (relic && relic.specialEffect === effect) return true;
+    }
+    return false;
   }
 
   public setSelectedRegion(regionId: number): void {
@@ -110,7 +191,6 @@ export class SaveManager {
     this.save();
   }
 
-  // 오프라인 방치 보상 계산 (최대 12시간)
   public calculateOfflineReward(): { elapsedMinutes: number; gold: number } {
     const now = Date.now();
     const diffMs = now - (this.data.lastLogoutTime || now);

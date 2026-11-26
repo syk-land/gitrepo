@@ -24,6 +24,39 @@ export interface CombatStats {
   startLevel?: number;       // 초기 시작 레벨 보너스 (기본 0, 최대 2)
 }
 
+export type EnemyBehaviorType = 'chaser' | 'charger' | 'ranged' | 'exploder';
+
+export type BossPatternId = 'telegraph_dash' | 'aoe_ring' | 'radial_barrage';
+
+export type WaveFormationType = 'ring' | 'pincer_rush';
+
+export interface EnemyProjectileSpec {
+  speed: number;
+  radius: number;
+  damage: number;
+  duration: number;
+  color: number;
+}
+
+export type ElementTag =
+  | 'none'
+  | 'necro'
+  | 'holy'
+  | 'dark'
+  | 'slash'
+  | 'sf'
+  | 'lightning'
+  | 'ice'
+  | 'fire'
+  | 'spear';
+
+export type ReactionId =
+  | 'superconduct'
+  | 'melt'
+  | 'blood_burst'
+  | 'holy_purge'
+  | 'overload_railgun';
+
 export type TargetingType =
   | 'nearest'        // 가장 가까운 적
   | 'highest_hp'     // 화면 내 최대 체력이 가장 높은 적 (보스/엘리트 우선)
@@ -42,7 +75,7 @@ export type ProjectileBehavior =
   | 'orbit';         // 시전자 주위 회전
 
 export interface StatusEffect {
-  type: 'slow' | 'freeze' | 'stun' | 'bleed' | 'pull' | 'shock';
+  type: 'slow' | 'freeze' | 'stun' | 'bleed' | 'pull' | 'shock' | 'burn' | 'curse';
   chance: number;          // 0.0 ~ 1.0
   duration: number;        // 초
   value?: number;          // 둔화율(0.4), 도트 계수, 또는 감전 받는피해 증가율(0.3)
@@ -69,7 +102,7 @@ export interface SkillLevelData {
 export interface SkillData {
   id: string;
   name: string;
-  icon: string;              // assets/pixel_vfx/skills/vfx_*.webp
+  icon: string;              // assets/pixel_vfx/skills/vfx_*.png
   category: 'weapon' | 'summon' | 'passive' | 'awakened';
   isNecroSignature: boolean; // 강령술사 고유 스킬 여부 (레벨업 가중치 우대)
   targeting: TargetingType;
@@ -104,7 +137,7 @@ export interface RegionData {
   name: string;
   gateType: 'iron' | 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
   gateName: string;
-  battleBg: string;          // assets/ui/regions/battle_bg_{r}.webp
+  battleBg: string;          // assets/ui/regions/battle_bg_{r}.png
   monsters: [string, string, string, string]; // W1 ~ W4
   named: string;             // W5 수문장
   boss: string;              // W6 최종 보스
@@ -118,18 +151,47 @@ export interface TraitTalentDef {
   category: 'trait' | 'talent';
   desc: string;
   baseVal: number;
-  statKey: keyof CombatStats | 'enemyHpReduction' | 'doubleCastChance' | 'lowHpDamageReduction';
-  maxLevel: number;          // 기본 10
+  statKey: string;
+  maxLevel: number;
+}
+
+export interface RelicDef {
+  id: string;
+  regionId: number;
+  bossName: string;
+  name: string;
+  icon: string;
+  desc: string;
+  statBonuses?: Partial<Record<keyof CombatStats, number>>;
+  specialEffect?:
+    | 'dash_poison_zone'
+    | 'start_skeleton'
+    | 'extra_rerolls'
+    | 'crit_sword_wave'
+    | 'fast_shrine_capture'
+    | 'dash_crit_boost'
+    | 'shock_chain_bonus'
+    | 'freeze_shatter_bonus'
+    | 'hp_regen_aura'
+    | 'dragon_breath_ult'
+    | 'sand_evasion'
+    | 'lava_burn_aura'
+    | 'drone_overclock'
+    | 'emperor_dominion';
 }
 
 export interface SaveData {
   version: number;
   gold: number;
-  highestClearedRegion: number; // 0이면 1지역 입장 가능
+  highestClearedRegion: number;
   selectedRegion: number;
-  traits: Record<string, number>; // id -> level (1~10)
+  traits: Record<string, number>;
   talents: Record<string, number>;
-  masterSlotId: string | null;   // 만렙 특성/재능 장착 시 1.5배 증폭
+  masterSlotId: string | null;
   hasAdFreePass: boolean;
-  lastLogoutTime: number;        // 방치 보상 계산용 타임스탬프
+  lastLogoutTime: number;
+  unlockedRelics?: string[];
+  equippedRelics?: string[];
+  bestEndlessTime?: Record<number, number>;
+  regionStars?: Record<number, number>;
 }

@@ -1,8 +1,10 @@
 import Phaser from 'phaser';
-import { CombatStats, SkillData } from '../data/types';
+import { CombatStats } from '../data/types';
 import { ISkillCaster, Vector2 } from './ISkillCaster';
 import { ALL_SKILLS_MAP } from '../data/skillsData';
 import { ALL_ALTAR_MAP, getAltarEffectiveValue } from '../data/altarData';
+import { RELICS_MAP } from '../data/relicsData';
+import { DASH_CONFIG, FEVER_CONFIG } from '../data/fieldEventsData';
 import { SaveManager } from '../core/SaveManager';
 import { SoundEngine } from '../core/SoundEngine';
 
@@ -25,6 +27,20 @@ export class Player implements ISkillCaster {
   public ultCooldown: number = 0;
   public readonly ultMaxCooldown: number = 12.0;
 
+  // 그림자 대시 (회피기)
+  public dashCooldown: number = 0;
+  public dashMaxCooldown: number = DASH_CONFIG.baseCooldown;
+  public isDashing: boolean = false;
+  private dashTimer: number = 0;
+  private dashDirX: number = 1;
+  private dashDirY: number = 0;
+
+  // 런 한정 버프 (저주 제단, 피버, 대시 치명타 유물)
+  public runDamageBonus: number = 0;
+  public feverTimer: number = 0;
+  public dashCritBoostTimer: number = 0;
+  public tookDamageDuringBoss: boolean = false;
+
   public sprite: Phaser.GameObjects.Sprite;
   private footShadow: Phaser.GameObjects.Ellipse;
   private necroAuraRing: Phaser.GameObjects.Ellipse;
@@ -33,7 +49,6 @@ export class Player implements ISkillCaster {
   private moveTimer: number = 0;
   private currentBounceY: number = 0;
 
-  // 피격 넉백 물리 가속도
   public knockbackVx: number = 0;
   public knockbackVy: number = 0;
   private scene: Phaser.Scene;
@@ -43,13 +58,15 @@ export class Player implements ISkillCaster {
     this.x = x;
     this.y = y;
 
-    // 시작 스킬은 게임 시작 시 시작 주무기 선택 모달에서 자유롭게 1종을 선택하여 장착
     const initialStats = this.getEffectiveStats();
     this.maxHp = initialStats.maxHp;
     this.hp = this.maxHp;
 
     this.footShadow = scene.add.ellipse(x, y + 24, 30, 10, 0x000000, 0.5).setDepth(23);
-    this.necroAuraRing = scene.add.ellipse(x, y + 24, 44, 15, 0x00ffaa, 0.14).setStrokeStyle(1.5, 0x00ffaa, 0.45).setDepth(24);
+    this.necroAuraRing = scene.add
+      .ellipse(x, y + 24, 44, 15, 0x00ffaa, 0.14)
+      .setStrokeStyle(1.5, 0x00ffaa, 0.45)
+      .setDepth(24);
 
     this.sprite = scene.add.sprite(x, y, 'hero_nemesis');
     this.sprite.setDisplaySize(54, 54);
@@ -73,10 +90,72 @@ export class Player implements ISkillCaster {
   }
 
   public getCasterName(): string {
-    return 'Necromancer Lord';
+    return '사령군주 최미남';
   }
 
-  // 기본 스탯 + 영혼 각인의 제단 + 인게임 패시브 실시간 합산
+  public triggerDash(inputX: number, inputY: number): boolean {
+    if (this.dashCooldown > 0 || this.isDashing || this.hp <= 0) return false;
+
+    const stats = this.getEffectiveStats();
+    const hasMask = SaveManager.getInstance().hasEquippedRelicEffect('dash_crit_boost');
+    const cdMul = 1 - (1 - stats.cooldownMul) * 0.5;
+    this.dashMaxCooldown = Math.max(
+      DASH_CONFIG.minCooldown,
+      DASH_CONFIG.baseCooldown * cdMul * (hasMask ? 0.75 : 1.0)
+    );
+    this.dashCooldown = this.dashMaxCooldown;
+
+    const len = Math.sqrt(inputX * inputX + inputY * inputY);
+    if (len > 0.05) {
+      this.dashDirX = inputX / len;
+      this.dashDirY = inputY / len;
+      this.facingDir = { x: this.dashDirX, y: this.dashDirY };
+    } else {
+      this.dashDirX = this.facingDir.x || 1;
+      this.dashDirY = this.facingDir.y || 0;
+    }
+
+    // 1지역 보스 유물: 대시 출발 지점에 맹독 장판 생성
+    if (
+      SaveManager.getInstance().hasEquippedRelicEffect('dash_poison_zone') &&
+      typeof (this.scene as any).spawnDashPoisonZone === 'function'
+    ) {
+      (this.scene as any).spawnDashPoisonZone(this.x, this.y);
+    }
+
+    // 6지역 보스 유물: 대시 직후 2초간 치명타 확률 +25%
+    if (hasMask) {
+      this.dashCritBoostTimer = 2.0;
+    }
+
+    this.isDashing = true;
+    this.dashTimer = DASH_CONFIG.duration;
+    this.invulnTimer = Math.max(this.invulnTimer, DASH_CONFIG.invulnSec);
+    SoundEngine.getInstance().playTone(540, 'triangle', 0.12, 0.22, 220);
+
+    // 그림자 잔상 3개 연출
+    for (let i = 0; i < DASH_CONFIG.afterimageCount; i++) {
+      this.scene.time.delayedCall(i * 55, () => {
+        if (!this.sprite.active) return;
+        const ghost = this.scene.add
+          .sprite(this.x, this.y, 'hero_nemesis')
+          .setDisplaySize(54, 54)
+          .setFlipX(this.sprite.flipX)
+          .setTint(0x00ffaa)
+          .setAlpha(0.55)
+          .setDepth(24);
+        this.scene.tweens.add({
+          targets: ghost,
+          alpha: 0,
+          duration: 240,
+          onComplete: () => ghost.destroy(),
+        });
+      });
+    }
+
+    return true;
+  }
+
   public getEffectiveStats(): CombatStats {
     const save = SaveManager.getInstance().getData();
 
@@ -86,8 +165,8 @@ export class Player implements ISkillCaster {
       armor: 5,
       moveSpeed: 165,
       pickupRadius: 95,
-      damageMul: 1.0,
-      critRate: 0.15,
+      damageMul: 1.0 + this.runDamageBonus,
+      critRate: 0.15 + (this.dashCritBoostTimer > 0 ? 0.25 : 0),
       critDamage: 1.5,
       cooldownMul: 1.0,
       areaMul: 1.0,
@@ -102,7 +181,7 @@ export class Player implements ISkillCaster {
       goldMul: 1.0,
     };
 
-    // 1. 영혼 각인의 제단 (영구 특성/재능) 적용
+    // 1. 영혼 각인의 제단 적용
     const applyAltarRecords = (records: Record<string, number>) => {
       for (const [id, lv] of Object.entries(records)) {
         const def = ALL_ALTAR_MAP.get(id);
@@ -135,7 +214,18 @@ export class Player implements ISkillCaster {
     applyAltarRecords(save.traits);
     applyAltarRecords(save.talents);
 
-    // 2. 인게임 패시브 스킬 8종 적용
+    // 2. 장착 보스 영혼 유물 3슬롯 적용
+    for (const relicId of save.equippedRelics ?? []) {
+      const relic = RELICS_MAP.get(relicId);
+      if (!relic?.statBonuses) continue;
+      for (const [key, val] of Object.entries(relic.statBonuses)) {
+        if (typeof val !== 'number') continue;
+        const statKey = key as keyof CombatStats;
+        (stats[statKey] as number) = ((stats[statKey] as number) ?? 0) + val;
+      }
+    }
+
+    // 3. 인게임 패시브 스킬 적용
     for (const [skillId, level] of this.passiveSkills.entries()) {
       const skill = ALL_SKILLS_MAP.get(skillId);
       if (!skill || level <= 0) continue;
@@ -151,39 +241,43 @@ export class Player implements ISkillCaster {
       }
     }
 
-    // 쿨타임 하한선 보호 (최소 0.25)
-    stats.cooldownMul = Math.max(0.25, stats.cooldownMul);
+    // 4. 연속 처치 피버 버프 적용
+    if (this.feverTimer > 0) {
+      stats.moveSpeed = Math.round(stats.moveSpeed * (1 + FEVER_CONFIG.moveSpeedBonus));
+      stats.cooldownMul = Math.max(0.25, stats.cooldownMul * (1 - FEVER_CONFIG.cooldownBonus));
+    }
 
+    stats.cooldownMul = Math.max(0.25, stats.cooldownMul);
     return stats;
   }
 
   public takeDamage(amount: number, knockbackDirX: number = 0, knockbackDirY: number = 0): boolean {
-    if (this.invulnTimer > 0 || this.hp <= 0) return false;
+    if (this.invulnTimer > 0 || this.isDashing || this.hp <= 0) return false;
 
     const stats = this.getEffectiveStats();
     const finalDamage = Math.max(5, Math.round(amount - stats.armor));
-    this.hp -= finalDamage;
-    this.invulnTimer = 0.75; // 0.75초 피격 무적 시간 (i-frame)
+    this.hp = Math.max(0, this.hp - finalDamage);
+    this.invulnTimer = 0.65;
 
-    // 피격 시 넉백 물리 가속도 부여 (부드러운 감속 넉백)
+    if ((this.scene as any)?.waveSpawner?.bossInstance?.active) {
+      this.tookDamageDuringBoss = true;
+    }
+
     if (knockbackDirX !== 0 || knockbackDirY !== 0) {
-      const knockbackSpeed = 420; // 420px/s 넉백 속도
+      const knockbackSpeed = 420;
       this.knockbackVx = knockbackDirX * knockbackSpeed;
       this.knockbackVy = knockbackDirY * knockbackSpeed;
     }
 
-    // 피격 붉은색 플래시
     this.sprite.setTint(0xff3333);
     setTimeout(() => {
       if (this.sprite && this.sprite.active) this.sprite.clearTint();
     }, 120);
 
-    // 플레이어 머리 위 피격 데미지 텍스트 팝업
     if (typeof (this.scene as any).showDamageText === 'function') {
       (this.scene as any).showDamageText(this.x, this.y - 30, `-${finalDamage}`, 0xff3333, false);
     }
 
-    // 피격 사운드
     SoundEngine.getInstance().playTone(180, 'sawtooth', 0.15, 0.25);
 
     this.renderHpBar(0);
@@ -223,6 +317,17 @@ export class Player implements ISkillCaster {
   }
 
   public move(dx: number, dy: number, dt: number): void {
+    if (this.isDashing) {
+      this.x += this.dashDirX * DASH_CONFIG.speed * dt;
+      this.y += this.dashDirY * DASH_CONFIG.speed * dt;
+      this.sprite.setFlipX(this.dashDirX < 0);
+      this.sprite.setPosition(this.x, this.y);
+      this.footShadow.setPosition(this.x, this.y + 24);
+      this.necroAuraRing.setPosition(this.x, this.y + 24);
+      this.renderHpBar(0);
+      return;
+    }
+
     const stats = this.getEffectiveStats();
     const len = Math.sqrt(dx * dx + dy * dy);
 
@@ -236,7 +341,6 @@ export class Player implements ISkillCaster {
 
       this.sprite.setFlipX(nx < 0);
 
-      // 이동 중 상하 바운스 및 좌우 기울기 모션 연출 (Enemy.ts와 동일한 경쾌한 호핑 바운스)
       this.moveTimer += dt * 12;
       this.currentBounceY = Math.abs(Math.sin(this.moveTimer)) * -4.0;
       this.sprite.setPosition(this.x, this.y + this.currentBounceY);
@@ -245,7 +349,6 @@ export class Player implements ISkillCaster {
       this.necroAuraRing.setPosition(this.x, this.y + 24);
       this.renderHpBar(this.currentBounceY);
     } else {
-      // 대기 중에도 다른 캐릭터처럼 부드러운 숨쉬기/바운스 모션 유지
       this.moveTimer += dt * 4.5;
       this.currentBounceY = Math.abs(Math.sin(this.moveTimer)) * -2.2;
       this.sprite.setPosition(this.x, this.y + this.currentBounceY);
@@ -257,7 +360,26 @@ export class Player implements ISkillCaster {
   }
 
   public update(dt: number): void {
-    // 피격 넉백 물리 업데이트 (부드러운 지수 감쇠)
+    if (this.isDashing) {
+      this.dashTimer -= dt;
+      if (this.dashTimer <= 0) {
+        this.isDashing = false;
+      }
+    }
+
+    if (this.dashCooldown > 0) {
+      this.dashCooldown = Math.max(0, this.dashCooldown - dt);
+    }
+    if (this.feverTimer > 0) {
+      this.feverTimer = Math.max(0, this.feverTimer - dt);
+      this.necroAuraRing.setStrokeStyle(2.5, 0xffd000, 0.85);
+    } else {
+      this.necroAuraRing.setStrokeStyle(1.5, 0x00ffaa, 0.45);
+    }
+    if (this.dashCritBoostTimer > 0) {
+      this.dashCritBoostTimer = Math.max(0, this.dashCritBoostTimer - dt);
+    }
+
     if (this.knockbackVx !== 0 || this.knockbackVy !== 0) {
       this.x += this.knockbackVx * dt;
       this.y += this.knockbackVy * dt;
@@ -275,21 +397,18 @@ export class Player implements ISkillCaster {
 
     if (this.invulnTimer > 0) {
       this.invulnTimer -= dt;
-      // 피격 무적 상태일 때 캐릭터 깜빡임 연출
-      this.sprite.setAlpha(Math.floor(this.invulnTimer * 16) % 2 === 0 ? 0.35 : 1.0);
+      this.sprite.setAlpha(Math.floor(this.invulnTimer * 16) % 2 === 0 ? 0.45 : 1.0);
       if (this.invulnTimer <= 0) {
         this.sprite.setAlpha(1.0);
       }
     }
 
-    // 초당 체력 회복 및 최대 체력 동기화
     const stats = this.getEffectiveStats();
     this.maxHp = stats.maxHp;
     if (this.hp < stats.maxHp) {
       this.hp = Math.min(stats.maxHp, this.hp + stats.hpRegenPerSec * dt);
     }
 
-    // 필살기 쿨타임 감소
     if (this.ultCooldown > 0) {
       this.ultCooldown = Math.max(0, this.ultCooldown - dt);
     }
@@ -306,7 +425,6 @@ export class Player implements ISkillCaster {
     const barX = this.x - barW / 2;
     const barY = this.y + bounceY - 34;
 
-    // 바깥 어두운 배경 및 테두리
     this.hpBarGraphics.fillStyle(0x0c0908, 0.85);
     this.hpBarGraphics.lineStyle(1.5, 0x3d3024, 1);
     this.hpBarGraphics.strokeRoundedRect(barX - 1, barY - 1, barW + 2, barH + 2, 2);
