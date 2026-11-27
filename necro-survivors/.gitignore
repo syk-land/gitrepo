@@ -23,3 +23,13 @@ dist-ssr
 *.sln
 *.sw?
 .firebase/
+
+# Android / Capacitor secrets & build outputs
+*.jks
+*.keystore
+android/keystore.properties
+android/local.properties
+android/.gradle/
+android/build/
+android/app/build/
+

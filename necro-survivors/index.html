@@ -51,7 +51,7 @@
           s.id = 'gamemonetize-sdk';
           s.src = 'https://api.gamemonetize.com/sdk.js';
         } else {
-          if ('serviceWorker' in navigator && window.self === window.top) {
+          if ('serviceWorker' in navigator && window.self === window.top && !(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) {
             window.addEventListener('load', function () {
               navigator.serviceWorker.register('./sw.js').catch(function () {});
             });
@@ -87,37 +87,23 @@
         padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
       }
       #app {
-        width: 360px;
-        height: 640px;
+        width: min(100vw, calc(100dvh * 9 / 16));
+        height: min(100dvh, calc(100vw * 16 / 9));
+        max-width: 540px;
+        max-height: 960px;
+        aspect-ratio: 9 / 16;
         display: flex;
         justify-content: center;
         align-items: center;
         position: relative;
+        flex-shrink: 0;
         border: 1px solid rgba(212, 163, 56, 0.35);
         box-shadow: 0 0 45px rgba(0, 0, 0, 0.9), 0 0 24px rgba(212, 163, 56, 0.14);
         transition: width 0.15s ease, height 0.15s ease;
       }
-      /* Laptop / Medium (450x800) */
-      @media (min-width: 480px) and (min-height: 840px) {
+      /* Mobile (작은 화면에서는 보더 제거) */
+      @media (max-width: 540px), (max-height: 660px) {
         #app {
-          width: 450px;
-          height: 800px;
-        }
-      }
-      /* Desktop Large (540x960 원본) */
-      @media (min-width: 580px) and (min-height: 1000px) {
-        #app {
-          width: 540px;
-          height: 960px;
-        }
-      }
-      /* Mobile (작은 화면 대응) */
-      @media (max-width: 479px), (max-height: 660px) {
-        #app {
-          width: 100vw;
-          height: 100dvh;
-          max-width: 360px;
-          max-height: 640px;
           border: none;
           box-shadow: none;
         }
@@ -195,19 +181,66 @@
         padding: 8px 10px;
         border-radius: 4px;
       }
-      @media (min-width: 860px) {
+      @media (min-width: 860px) and (min-height: 600px) {
         .side-panel {
           display: flex;
         }
       }
       canvas {
         display: block;
-        width: 100% !important;
-        height: 100% !important;
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
         image-rendering: pixelated !important;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         text-rendering: optimizeLegibility;
+      }
+      /* Mobile Landscape Guard (Portrait game) */
+      .rotate-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: rgba(12, 9, 8, 0.94);
+        color: #f5ede2;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 20px;
+        text-align: center;
+      }
+      .rotate-overlay.dismissed {
+        display: none !important;
+      }
+      .rotate-overlay-title {
+        font-family: 'Cinzel', serif;
+        font-size: 16px;
+        font-weight: 700;
+        color: #ffd000;
+      }
+      .rotate-overlay-desc {
+        font-size: 13px;
+        color: #d7c9b8;
+        max-width: 320px;
+        line-height: 1.45;
+      }
+      .rotate-overlay-btn {
+        margin-top: 4px;
+        padding: 7px 14px;
+        border-radius: 6px;
+        border: 1px solid rgba(212, 163, 56, 0.55);
+        background: rgba(212, 163, 56, 0.18);
+        color: #ffd000;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      @media (max-height: 520px) and (orientation: landscape) {
+        .rotate-overlay {
+          display: flex;
+        }
       }
     </style>
   </head>
@@ -239,6 +272,11 @@
           Spend earned Gold at the <strong>Altar of Souls</strong> in the Hub to permanently boost ATK, Max HP, and Minion count.
         </div>
       </aside>
+    </div>
+    <div class="rotate-overlay" id="rotate-overlay" role="dialog" aria-label="Portrait orientation recommended">
+      <div class="rotate-overlay-title">Rotate to Portrait Mode</div>
+      <div class="rotate-overlay-desc">Necro Survivors is designed for vertical portrait play. Rotate your device upright for the best experience.</div>
+      <button type="button" class="rotate-overlay-btn" onclick="document.getElementById('rotate-overlay').classList.add('dismissed')">Continue Anyway</button>
     </div>
     <script type="module" src="/src/main.ts"></script>
     <script src="./tutorial.js"></script>

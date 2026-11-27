@@ -1,4 +1,17 @@
+import { Capacitor } from '@capacitor/core';
+import { AdMob, RewardAdPluginEvents } from '@capacitor-community/admob';
 import { SaveManager } from '../core/SaveManager';
+
+// Google official test rewarded ad unit ID (replaced via VITE_ADMOB_* env vars once Necro AdMob units are created)
+const TEST_REWARDED_ID = 'ca-app-pub-3940256099942544/5224354917';
+const VITE_ENV = ((import.meta as unknown as { env?: Record<string, string | undefined> }).env) ?? {};
+const ADMOB_REWARDED_IDS = {
+  revive: VITE_ENV.VITE_ADMOB_REVIVE_ID || TEST_REWARDED_ID,
+  reroll: VITE_ENV.VITE_ADMOB_REROLL_ID || TEST_REWARDED_ID,
+  double: VITE_ENV.VITE_ADMOB_DOUBLE_ID || TEST_REWARDED_ID,
+} as const;
+
+type RewardPlacement = keyof typeof ADMOB_REWARDED_IDS;
 
 declare global {
   interface Window {
@@ -18,6 +31,7 @@ declare global {
 
 export class AdBillingAdapter {
   private static instance: AdBillingAdapter;
+  private admobInitialized = false;
 
   private constructor() {}
 
@@ -28,7 +42,48 @@ export class AdBillingAdapter {
     return AdBillingAdapter.instance;
   }
 
-  private runRewardedAd(): Promise<boolean> {
+  private async runNativeRewardedAd(placement: RewardPlacement): Promise<boolean> {
+    try {
+      if (!this.admobInitialized) {
+        await AdMob.initialize({});
+        this.admobInitialized = true;
+      }
+      const adId = ADMOB_REWARDED_IDS[placement] || TEST_REWARDED_ID;
+      let rewarded = false;
+      const handles = await Promise.all([
+        AdMob.addListener(RewardAdPluginEvents.Showed, () => {
+          window.dispatchEvent(new CustomEvent('gm-sdk-event', { detail: { name: 'SDK_GAME_PAUSE' } }));
+        }),
+        AdMob.addListener(RewardAdPluginEvents.Rewarded, () => {
+          rewarded = true;
+        }),
+        AdMob.addListener(RewardAdPluginEvents.Dismissed, () => {
+          window.dispatchEvent(new CustomEvent('gm-sdk-event', { detail: { name: 'SDK_GAME_START' } }));
+        }),
+        AdMob.addListener(RewardAdPluginEvents.FailedToShow, () => {
+          window.dispatchEvent(new CustomEvent('gm-sdk-event', { detail: { name: 'SDK_GAME_START' } }));
+        }),
+      ]);
+      try {
+        await AdMob.prepareRewardVideoAd({ adId });
+        await AdMob.showRewardVideoAd();
+        return rewarded;
+      } catch {
+        window.dispatchEvent(new CustomEvent('gm-sdk-event', { detail: { name: 'SDK_GAME_START' } }));
+        return true;
+      } finally {
+        await Promise.all(handles.map((h) => h.remove().catch(() => {})));
+      }
+    } catch {
+      window.dispatchEvent(new CustomEvent('gm-sdk-event', { detail: { name: 'SDK_GAME_START' } }));
+      return true;
+    }
+  }
+
+  private runRewardedAd(placement: RewardPlacement = 'revive'): Promise<boolean> {
+    if (Capacitor.isNativePlatform()) {
+      return this.runNativeRewardedAd(placement);
+    }
     const w = window as unknown as {
       __cgSdkReady?: boolean;
       CrazyGames?: {
@@ -129,6 +184,7 @@ export class AdBillingAdapter {
   }
 
   public showInterstitial(): void {
+    if (Capacitor.isNativePlatform()) return;
     try {
       const w = window as unknown as {
         __cgSdkReady?: boolean;
@@ -172,21 +228,21 @@ export class AdBillingAdapter {
   public async showReviveAd(): Promise<boolean> {
     const save = SaveManager.getInstance().getData();
     if (save.hasAdFreePass) return true;
-    return this.runRewardedAd();
+    return this.runRewardedAd('revive');
   }
 
   // Rewarded Ad 2: Fate Reroll
   public async showRerollAd(): Promise<boolean> {
     const save = SaveManager.getInstance().getData();
     if (save.hasAdFreePass) return true;
-    return this.runRewardedAd();
+    return this.runRewardedAd('reroll');
   }
 
   // Rewarded Ad 3: 2x Portal Loot
   public async showDoubleRewardAd(): Promise<boolean> {
     const save = SaveManager.getInstance().getData();
     if (save.hasAdFreePass) return true;
-    return this.runRewardedAd();
+    return this.runRewardedAd('double');
   }
 
   public async buyAdFreePass(): Promise<boolean> {
